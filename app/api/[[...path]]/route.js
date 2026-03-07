@@ -12,6 +12,7 @@ import { handleAdmin } from '@/lib/handlers/admin'
 import { handleHousePoints } from '@/lib/handlers/house-points'
 import { handleGovernance } from '@/lib/handlers/governance'
 import { cache } from '@/lib/cache'
+import { moderateContent, getModerationConfig } from '@/lib/moderation'
 
 // ========== CORS ==========
 function cors(response) {
@@ -123,7 +124,22 @@ async function handleRoute(request, { params }) {
     }
 
     if (route === '/cache/stats' && method === 'GET') {
-      return jsonOk(cache.getStats())
+      return jsonOk(await cache.getStats())
+    }
+
+    if (route === '/moderation/config' && method === 'GET') {
+      return jsonOk(getModerationConfig())
+    }
+
+    if (route === '/moderation/check' && method === 'POST') {
+      try {
+        const body = await request.json()
+        if (!body.text) return jsonErr('text is required', 'VALIDATION', 400)
+        const result = await moderateContent(body.text)
+        return jsonOk(result)
+      } catch (err) {
+        return jsonErr(err.message, 'INTERNAL', 500)
+      }
     }
 
     // ---- Route dispatch ----
