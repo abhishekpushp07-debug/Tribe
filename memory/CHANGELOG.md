@@ -1,40 +1,45 @@
-# Tribe Changelog
+# Tribe — Changelog
 
-## 2026-03-07 — v2.0 Complete Backend Rewrite
+## Mar 7, 2026 — Provider-Adapter Pattern for Moderation (P0)
 
-### Architecture
-- Modular handler pattern: monolithic route.js → 9 handler files
-- Clean router with dispatch in `/app/app/api/[[...path]]/route.js`
-- Infrastructure in `/app/lib/` (db, constants, auth-utils)
+### What changed
+- **Replaced** old tightly-coupled moderation module (`/app/lib/moderation.js` → deleted)
+- **Implemented** clean Provider-Adapter Pattern in `/app/lib/moderation/` with 10 files
+- **Wired** OpenAI Moderations API as primary production provider (`omni-moderation-latest`)
+- **Built** keyword fallback provider as automatic backup when OpenAI is unavailable
+- **Created** composite provider that chains OpenAI → keyword fallback seamlessly
+- **Refactored** content handler and social handler to use `ModerationService.moderateOrThrow()`
+- **Added** provider-agnostic audit logs and review queue in MongoDB
+- **Made** provider swappable via `MODERATION_PROVIDER` env var — zero handler refactor
 
-### New Features
-- **12 House System**: Aryabhatta, Chanakya, Veer Shivaji, Saraswati, Dhoni, Kalpana, Raman, Rani Lakshmibai, Tagore, APJ Kalam, Shakuntala, Vikram
-- **Deterministic house assignment**: SHA256(userId) mod 12, permanent
-- **House feed**: GET /api/feed/house/:houseId
-- **House leaderboard**: GET /api/houses/leaderboard
-- **Stories**: 24h TTL with MongoDB TTL index, story rail grouped by author
-- **Reels**: Dedicated feed endpoint
-- **Notifications**: Real-time activity (follow, like, comment) with actor enrichment
-- **Moderation backbone**: Queue, strikes, auto-suspend at 3 strikes
-- **Appeals system**: PENDING → APPROVED/DENIED workflow
-- **Grievance tickets**: SLA-driven (3h for legal notices, 72h general)
-- **Rate limiting**: In-memory, 120 req/min per IP
-- **Comprehensive indexes**: 50+ MongoDB indexes for all query patterns
+### Files created/modified
+- `/app/lib/moderation/config.js` — ENV-driven config
+- `/app/lib/moderation/rules.js` — Risk score engine with category weights
+- `/app/lib/moderation/provider.js` — Factory with singleton pattern
+- `/app/lib/moderation/providers/openai.provider.js` — OpenAI Moderations API
+- `/app/lib/moderation/providers/fallback-keyword.provider.js` — Keyword safety net
+- `/app/lib/moderation/providers/composite.provider.js` — OpenAI + fallback chain
+- `/app/lib/moderation/repositories/moderation.repository.js` — Audit + review queue
+- `/app/lib/moderation/services/moderation.service.js` — Orchestrator
+- `/app/lib/moderation/middleware/moderate-create-content.js` — Handler utility
+- `/app/lib/moderation/routes/moderation.routes.js` — API endpoints
+- `/app/lib/handlers/content.js` — Refactored to use ModerationService
+- `/app/lib/handlers/social.js` — Refactored to use ModerationService
+- `/app/app/api/[[...path]]/route.js` — Updated routing + health check
 
-### Security Improvements
-- PBKDF2 iterations: 10,000 → 100,000
-- Timing-safe PIN comparison (crypto.timingSafeEqual)
-- Suspension/ban checks on login and auth middleware
-- Duplicate report prevention
-- Auto-hold content at 3+ reports
+### Files deleted
+- `/app/lib/moderation.js` — Old tightly-coupled module
+- `/app/lib/moderation/providers/gpt-classify.js` — Replaced by OpenAI provider
+- `/app/lib/moderation/types.js` — Removed (using JSDoc instead)
+- `/app/lib/moderation/provider-factory.js` — Renamed to provider.js
+- `/app/lib/moderation/service.js` — Moved to services/moderation.service.js
 
-### API Improvements
-- Consistent error format: `{ error, code }` with proper HTTP status codes
-- Error codes enum (VALIDATION_ERROR, UNAUTHORIZED, FORBIDDEN, etc.)
-- All responses exclude MongoDB _id
-- View count tracking on content access
-
-## 2026-03-07 — v1.0 (Rejected)
-- Initial web app built (Next.js website)
-- Rejected by user — wanted mobile app
-- Backend logic preserved and enhanced in v2.0
+### Test results
+- Moderation config endpoint: ✅ shows composite with ["openai", "fallback"] chain
+- Clean text moderation: ✅ ALLOW with near-zero scores
+- Harmful text moderation: ✅ ESCALATE with review ticket creation
+- Content creation with moderation: ✅ clean→PUBLIC, harmful→HELD
+- Comment moderation: ✅ harmful comments rejected
+- Audit logs: ✅ written to moderation_audit_logs collection
+- Review queue: ✅ tickets created for ESCALATE actions
+- Health check: ✅ shows moderation provider status
