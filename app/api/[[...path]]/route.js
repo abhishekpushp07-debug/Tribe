@@ -128,7 +128,7 @@ async function handleRoute(request, { params }) {
     }
 
     if (route === '/moderation/config' && method === 'GET') {
-      return jsonOk(getModerationConfig())
+      return jsonOk(await getModerationConfig())
     }
 
     if (route === '/moderation/check' && method === 'POST') {
@@ -139,6 +139,87 @@ async function handleRoute(request, { params }) {
         return jsonOk(result)
       } catch (err) {
         return jsonErr(err.message, 'INTERNAL', 500)
+      }
+    }
+
+    // ========================
+    // OPS: Deep health check (all dependencies)
+    // ========================
+    if (route === '/ops/health' && method === 'GET') {
+      const checks = {}
+
+      // MongoDB
+      try {
+        await db.command({ ping: 1 })
+        const stats = await db.stats()
+        checks.mongodb = { status: 'ok', collections: stats.collections, dataSize: stats.dataSize, indexes: stats.indexes }
+      } catch (e) { checks.mongodb = { status: 'error', error: e.message } }
+
+      // Redis
+      const cacheStats = await cache.getStats()
+      checks.redis = { status: cacheStats.redis.status, keys: cacheStats.redis.keys, hitRate: cacheStats.hitRate }
+
+      // Moderation service
+      try {
+        const modRes = await fetch('http://localhost:8002/health', { signal: AbortSignal.timeout(2000) })
+        checks.moderation = modRes.ok ? { status: 'ok' } : { status: 'error' }
+      } catch { checks.moderation = { status: 'unreachable' } }
+
+      // Object storage
+      try {
+        const { isStorageAvailable } = await import('@/lib/storage')
+        checks.objectStorage = { status: isStorageAvailable() ? 'ok' : 'degraded' }
+      } catch { checks.objectStorage = { status: 'unknown' } }
+
+      const allOk = Object.values(checks).every(c => c.status === 'ok')
+      return jsonOk({ status: allOk ? 'healthy' : 'degraded', checks, timestamp: new Date().toISOString() })
+    }
+
+    // ========================
+    // OPS: Metrics endpoint
+    // ========================
+    if (route === '/ops/metrics' && method === 'GET') {
+      const [userCount, postCount, activeSessionCount, reportCount, grievanceCount] = await Promise.all([
+        db.collection('users').countDocuments(),
+        db.collection('content_items').countDocuments(),
+        db.collection('sessions').countDocuments({ expiresAt: { $gt: new Date() } }),
+        db.collection('reports').countDocuments({ status: 'OPEN' }),
+        db.collection('grievance_tickets').countDocuments({ status: 'OPEN' }),
+      ])
+      const cacheStats = await cache.getStats()
+      return jsonOk({
+        users: userCount,
+        posts: postCount,
+        activeSessions: activeSessionCount,
+        openReports: reportCount,
+        openGrievances: grievanceCount,
+        cache: { hitRate: cacheStats.hitRate, redisStatus: cacheStats.redis.status },
+        timestamp: new Date().toISOString(),
+      })
+    }
+
+    // ========================
+    // OPS: Database backup proof (dry-run)
+    // ========================
+    if (route === '/ops/backup-check' && method === 'GET') {
+      try {
+        const collections = await db.listCollections().toArray()
+        const sizes = await Promise.all(collections.map(async (c) => {
+          const count = await db.collection(c.name).countDocuments()
+          return { name: c.name, docs: count }
+        }))
+        const totalDocs = sizes.reduce((s, c) => s + c.docs, 0)
+        return jsonOk({
+          backupReady: true,
+          collections: sizes.length,
+          totalDocuments: totalDocs,
+          collectionDetails: sizes,
+          backupCommand: 'mongodump --db=your_database_name --out=/backup/$(date +%Y%m%d_%H%M%S)',
+          restoreCommand: 'mongorestore --db=your_database_name /backup/<timestamp>/',
+          timestamp: new Date().toISOString(),
+        })
+      } catch (e) {
+        return jsonErr(`Backup check failed: ${e.message}`, 'INTERNAL', 500)
       }
     }
 
