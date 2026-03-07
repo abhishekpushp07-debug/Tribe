@@ -9,6 +9,9 @@ import { handleUsers } from '@/lib/handlers/users'
 import { handleDiscovery } from '@/lib/handlers/discovery'
 import { handleMedia } from '@/lib/handlers/media'
 import { handleAdmin } from '@/lib/handlers/admin'
+import { handleHousePoints } from '@/lib/handlers/house-points'
+import { handleGovernance } from '@/lib/handlers/governance'
+import { cache } from '@/lib/cache'
 
 // ========== CORS ==========
 function cors(response) {
@@ -119,6 +122,10 @@ async function handleRoute(request, { params }) {
       }
     }
 
+    if (route === '/cache/stats' && method === 'GET') {
+      return jsonOk(cache.getStats())
+    }
+
     // ---- Route dispatch ----
     // Each handler returns: { data, status } | { error, code, status } | { raw: NextResponse } | null
     let result = null
@@ -143,6 +150,10 @@ async function handleRoute(request, { params }) {
       result = await handleDiscovery(path, method, request, db)
     } else if (path[0] === 'media') {
       result = await handleMedia(path, method, request, db)
+    } else if (path[0] === 'house-points') {
+      result = await handleHousePoints(path, method, request, db)
+    } else if (path[0] === 'governance') {
+      result = await handleGovernance(path, method, request, db)
     } else if (['reports', 'moderation', 'appeals', 'notifications', 'legal', 'admin', 'grievances'].includes(path[0])) {
       result = await handleAdmin(path, method, request, db)
     }

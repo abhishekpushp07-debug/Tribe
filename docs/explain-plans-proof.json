@@ -1,0 +1,80 @@
+{
+  "public_feed": {
+    "query": "{\"visibility\":\"PUBLIC\",\"kind\":\"POST\"} sort:{createdAt:-1} limit:20",
+    "stage": "LIMIT",
+    "index": "N/A",
+    "is_collscan": false
+  },
+  "following_feed": {
+    "query": "{\"authorId\":{$in:[...]}, \"visibility\":\"PUBLIC\",\"kind\":\"POST\"} sort:{createdAt:-1}",
+    "stage": "LIMIT",
+    "index": "N/A",
+    "is_collscan": false
+  },
+  "college_feed": {
+    "query": "{\"collegeId\":\"X\",\"visibility\":\"PUBLIC\",\"kind\":\"POST\"} sort:{createdAt:-1}",
+    "stage": "LIMIT",
+    "index": "N/A",
+    "is_collscan": false
+  },
+  "house_feed": {
+    "query": "{\"houseId\":\"X\",\"visibility\":\"PUBLIC\",\"kind\":\"POST\"} sort:{createdAt:-1}",
+    "stage": "LIMIT",
+    "index": "N/A",
+    "is_collscan": false
+  },
+  "reels_feed": {
+    "query": "{\"kind\":\"REEL\",\"visibility\":\"PUBLIC\"} sort:{createdAt:-1}",
+    "stage": "LIMIT",
+    "index": "N/A",
+    "is_collscan": false
+  },
+  "stories_rail": {
+    "query": "{\"authorId\":{$in},\"kind\":\"STORY\",\"visibility\":\"PUBLIC\",\"expiresAt\":{$gt}} sort:{createdAt:-1}",
+    "stage": "LIMIT",
+    "index": "N/A",
+    "is_collscan": false
+  },
+  "comments": {
+    "query": "{\"contentId\":\"X\",\"parentId\":null} sort:{createdAt:-1}",
+    "stage": "LIMIT",
+    "index": "N/A",
+    "is_collscan": false
+  },
+  "notifications": {
+    "query": "{\"userId\":\"X\"} sort:{createdAt:-1}",
+    "stage": "LIMIT",
+    "index": "N/A",
+    "is_collscan": false
+  },
+  "follow_graph_follower": {
+    "query": "{\"followerId\":\"X\"}",
+    "stage": "FETCH",
+    "index": "followerId_1",
+    "is_collscan": false
+  },
+  "reports_open": {
+    "query": "{\"status\":\"OPEN\"} sort:{createdAt:-1}",
+    "stage": "FETCH",
+    "index": "status_1_createdAt_-1",
+    "is_collscan": false
+  },
+  "grievances_priority": {
+    "query": "{\"status\":\"OPEN\",\"priority\":\"CRITICAL\"} sort:{dueAt:1}",
+    "stage": "FETCH",
+    "index": "status_priority_dueAt",
+    "is_collscan": false
+  },
+  "session_lookup": {
+    "query": "{\"token\":\"X\"}",
+    "stage": "FETCH",
+    "index": "token_1",
+    "is_collscan": false
+  },
+  "college_search": {
+    "query": "{\"normalizedName\":{$regex:\"^iit\"}} limit:20",
+    "stage": "LIMIT",
+    "index": "N/A",
+    "is_collscan": false
+  }
+}
