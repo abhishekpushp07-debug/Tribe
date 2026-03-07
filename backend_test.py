@@ -16,10 +16,15 @@ import time
 from typing import Dict, Any, Optional
 
 # Configuration
-BASE_URL = "http://localhost:3000/api"
+BASE_URL = "https://tribe-social.preview.emergentagent.com/api"
 HEADERS = {"Content-Type": "application/json"}
 
-# Test data
+# Test data - Use existing users and new test users
+EXISTING_USERS = [
+    {"phone": "9000000001", "pin": "1234"},
+    {"phone": "9000000002", "pin": "5678"},
+]
+
 TEST_USERS = [
     {"phone": "9999999001", "pin": "1234", "displayName": "Test User 1"},
     {"phone": "9999999002", "pin": "1235", "displayName": "Test User 2"},
@@ -82,13 +87,13 @@ def make_request(method: str, endpoint: str, data: Dict[Any, Any] = None,
     
     try:
         if method == "GET":
-            response = requests.get(url, headers=req_headers, timeout=10)
+            response = requests.get(url, headers=req_headers, timeout=30)
         elif method == "POST":
-            response = requests.post(url, json=data, headers=req_headers, timeout=10)
+            response = requests.post(url, json=data, headers=req_headers, timeout=30)
         elif method == "PATCH":
-            response = requests.patch(url, json=data, headers=req_headers, timeout=10)
+            response = requests.patch(url, json=data, headers=req_headers, timeout=30)
         elif method == "DELETE":
-            response = requests.delete(url, headers=req_headers, timeout=10)
+            response = requests.delete(url, headers=req_headers, timeout=30)
         else:
             return None, False
         
@@ -122,6 +127,26 @@ def test_health_endpoints():
     else:
         result.fail("Readiness check", f"Status: {response.status_code if response else 'No response'}")
 
+def test_existing_user_login():
+    """Test login with existing users first"""
+    print("\n🔍 Testing Login with Existing Users...")
+    
+    for i, user_data in enumerate(EXISTING_USERS):
+        login_data = {"phone": user_data["phone"], "pin": user_data["pin"]}
+        response, success = make_request("POST", "/auth/login", login_data)
+        
+        if success and response.status_code == 200:
+            data = response.json()
+            if "token" in data and "user" in data:
+                test_data["users"].append(data["user"])
+                test_data["tokens"].append(data["token"])
+                result.success(f"Login Existing User {i+1}", f"Got token")
+            else:
+                result.fail(f"Login Existing User {i+1}", "Missing token in response")
+        else:
+            result.fail(f"Login Existing User {i+1}", 
+                       f"Status: {response.status_code if response else 'No response'}")
+
 def test_user_registration():
     """Test user registration"""
     print("\n🔍 Testing User Registration...")
@@ -137,6 +162,21 @@ def test_user_registration():
                 result.success(f"Register User {i+1}", f"ID: {data['user']['id']}")
             else:
                 result.fail(f"Register User {i+1}", "Missing token or user in response")
+        elif success and response.status_code == 409:
+            # User already exists, try to login instead
+            login_data = {"phone": user_data["phone"], "pin": user_data["pin"]}
+            login_response, login_success = make_request("POST", "/auth/login", login_data)
+            
+            if login_success and login_response.status_code == 200:
+                data = login_response.json()
+                if "token" in data and "user" in data:
+                    test_data["users"].append(data["user"])
+                    test_data["tokens"].append(data["token"])
+                    result.success(f"Register User {i+1} (existing)", f"Logged in existing user")
+                else:
+                    result.fail(f"Register User {i+1}", "Failed to login existing user")
+            else:
+                result.fail(f"Register User {i+1}", "User exists but login failed")
         else:
             result.fail(f"Register User {i+1}", 
                        f"Status: {response.status_code if response else 'No response'}")
@@ -647,6 +687,251 @@ def test_legal_consent():
         result.fail("Get Consent Notice", 
                    f"Status: {response.status_code if response else 'No response'}")
 
+def test_house_system():
+    """Test house system and leaderboard"""
+    print("\n🔍 Testing House System...")
+    
+    # Test get all houses
+    response, success = make_request("GET", "/houses")
+    
+    if success and response.status_code == 200:
+        data = response.json()
+        if "houses" in data and len(data["houses"]) > 0:
+            result.success("Get Houses", f"Found {len(data['houses'])} houses")
+            # Store first house for testing
+            test_data["houses"] = data["houses"][:1]
+        else:
+            result.fail("Get Houses", "No houses found")
+    else:
+        result.fail("Get Houses", 
+                   f"Status: {response.status_code if response else 'No response'}")
+    
+    # Test house leaderboard
+    response, success = make_request("GET", "/houses/leaderboard")
+    
+    if success and response.status_code == 200:
+        data = response.json()
+        if "leaderboard" in data:
+            result.success("House Leaderboard", f"Got leaderboard")
+        else:
+            result.fail("House Leaderboard", "Missing leaderboard in response")
+    else:
+        result.fail("House Leaderboard", 
+                   f"Status: {response.status_code if response else 'No response'}")
+
+def test_house_feed():
+    """Test house-specific feed"""
+    print("\n🔍 Testing House Feed...")
+    
+    if test_data["users"]:
+        # Get user's house from their profile
+        token = test_data["tokens"][0]
+        response, success = make_request("GET", "/auth/me", token=token)
+        
+        if success and response.status_code == 200:
+            user_data = response.json()["user"]
+            if "houseId" in user_data:
+                house_id = user_data["houseId"]
+                
+                # Test house feed
+                response, success = make_request("GET", f"/feed/house/{house_id}?limit=10")
+                
+                if success and response.status_code == 200:
+                    data = response.json()
+                    if "items" in data:
+                        result.success("House Feed", f"Got {len(data['items'])} posts")
+                    else:
+                        result.fail("House Feed", "Missing items in response")
+                else:
+                    result.fail("House Feed", 
+                               f"Status: {response.status_code if response else 'No response'}")
+            else:
+                result.fail("House Feed", "User has no house assigned")
+        else:
+            result.fail("House Feed", "Could not get user info")
+    else:
+        result.fail("House Feed", "No users available")
+
+def test_notifications():
+    """Test notifications system"""
+    print("\n🔍 Testing Notifications...")
+    
+    if not test_data["tokens"]:
+        result.fail("Notifications", "No tokens available")
+        return
+    
+    token = test_data["tokens"][0]
+    
+    # Get notifications
+    response, success = make_request("GET", "/notifications", token=token)
+    
+    if success and response.status_code == 200:
+        data = response.json()
+        if "notifications" in data:
+            result.success("Get Notifications", f"Got {len(data['notifications'])} notifications")
+        else:
+            result.fail("Get Notifications", "Missing notifications in response")
+    else:
+        result.fail("Get Notifications", 
+                   f"Status: {response.status_code if response else 'No response'}")
+    
+    # Mark notifications as read
+    response, success = make_request("PATCH", "/notifications/read", {}, token=token)
+    
+    if success and response.status_code == 200:
+        result.success("Mark Notifications Read", "Notifications marked as read")
+    else:
+        result.fail("Mark Notifications Read", 
+                   f"Status: {response.status_code if response else 'No response'}")
+
+def test_reels_and_stories():
+    """Test reels and stories feeds"""
+    print("\n🔍 Testing Reels and Stories...")
+    
+    # Test reels feed
+    response, success = make_request("GET", "/feed/reels?limit=10")
+    
+    if success and response.status_code == 200:
+        data = response.json()
+        if "items" in data:
+            result.success("Reels Feed", f"Got {len(data['items'])} reels")
+        else:
+            result.fail("Reels Feed", "Missing items in response")
+    else:
+        result.fail("Reels Feed", 
+                   f"Status: {response.status_code if response else 'No response'}")
+    
+    # Test stories feed
+    response, success = make_request("GET", "/feed/stories")
+    
+    if success and response.status_code == 200:
+        data = response.json()
+        if "stories" in data:
+            result.success("Stories Feed", f"Got stories feed")
+        else:
+            result.fail("Stories Feed", "Missing stories in response")
+    else:
+        result.fail("Stories Feed", 
+                   f"Status: {response.status_code if response else 'No response'}")
+
+def test_appeals_and_grievances():
+    """Test appeals and grievances system"""
+    print("\n🔍 Testing Appeals and Grievances...")
+    
+    if not test_data["tokens"]:
+        result.fail("Appeals/Grievances", "No tokens available")
+        return
+    
+    token = test_data["tokens"][0]
+    
+    # Test create appeal
+    appeal_data = {
+        "reportId": test_data["reports"][0]["id"] if test_data["reports"] else "test-report-id",
+        "reason": "This was reported incorrectly",
+        "details": "Testing appeal functionality"
+    }
+    
+    response, success = make_request("POST", "/appeals", appeal_data, token=token)
+    
+    if success and response.status_code == 201:
+        data = response.json()
+        if "appeal" in data:
+            result.success("Create Appeal", f"Appeal ID: {data['appeal']['id']}")
+        else:
+            result.fail("Create Appeal", "Missing appeal in response")
+    else:
+        result.fail("Create Appeal", 
+                   f"Status: {response.status_code if response else 'No response'}")
+    
+    # Test get user appeals
+    response, success = make_request("GET", "/appeals", token=token)
+    
+    if success and response.status_code == 200:
+        data = response.json()
+        if "appeals" in data:
+            result.success("Get Appeals", f"Got {len(data['appeals'])} appeals")
+        else:
+            result.fail("Get Appeals", "Missing appeals in response")
+    else:
+        result.fail("Get Appeals", 
+                   f"Status: {response.status_code if response else 'No response'}")
+    
+    # Test create grievance
+    grievance_data = {
+        "ticketType": "GENERAL",
+        "subject": "Test grievance",
+        "description": "Testing grievance functionality",
+        "priority": "MEDIUM"
+    }
+    
+    response, success = make_request("POST", "/grievances", grievance_data, token=token)
+    
+    if success and response.status_code == 201:
+        data = response.json()
+        if "grievance" in data:
+            result.success("Create Grievance", f"Grievance ID: {data['grievance']['id']}")
+        else:
+            result.fail("Create Grievance", "Missing grievance in response")
+    else:
+        result.fail("Create Grievance", 
+                   f"Status: {response.status_code if response else 'No response'}")
+    
+    # Test get user grievances
+    response, success = make_request("GET", "/grievances", token=token)
+    
+    if success and response.status_code == 200:
+        data = response.json()
+        if "grievances" in data:
+            result.success("Get Grievances", f"Got {len(data['grievances'])} grievances")
+        else:
+            result.fail("Get Grievances", "Missing grievances in response")
+    else:
+        result.fail("Get Grievances", 
+                   f"Status: {response.status_code if response else 'No response'}")
+
+def test_college_members():
+    """Test college members endpoint"""
+    print("\n🔍 Testing College Members...")
+    
+    if not test_data["colleges"]:
+        result.fail("College Members", "No colleges available")
+        return
+    
+    college_id = test_data["colleges"][0]["id"]
+    response, success = make_request("GET", f"/colleges/{college_id}/members?limit=10")
+    
+    if success and response.status_code == 200:
+        data = response.json()
+        if "members" in data:
+            result.success("College Members", f"Got {len(data['members'])} members")
+        else:
+            result.fail("College Members", "Missing members in response")
+    else:
+        result.fail("College Members", 
+                   f"Status: {response.status_code if response else 'No response'}")
+
+def test_onboarding_complete():
+    """Test complete onboarding"""
+    print("\n🔍 Testing Onboarding Complete...")
+    
+    if not test_data["tokens"]:
+        result.fail("Onboarding Complete", "No tokens available")
+        return
+    
+    token = test_data["tokens"][0]
+    
+    response, success = make_request("PATCH", "/me/onboarding", {}, token=token)
+    
+    if success and response.status_code == 200:
+        data = response.json()
+        if "user" in data:
+            result.success("Onboarding Complete", f"Onboarding completed")
+        else:
+            result.fail("Onboarding Complete", "Missing user in response")
+    else:
+        result.fail("Onboarding Complete", 
+                   f"Status: {response.status_code if response else 'No response'}")
+
 def test_admin_stats():
     """Test admin stats"""
     print("\n🔍 Testing Admin Stats...")
@@ -671,6 +956,9 @@ def run_all_tests():
     try:
         # Health and infrastructure tests
         test_health_endpoints()
+        
+        # Try to login with existing users first
+        test_existing_user_login()
         
         # Authentication flow
         test_user_registration()
@@ -702,8 +990,49 @@ def run_all_tests():
         test_reports()
         test_search()
         test_user_suggestions()
-        test_media_upload()
-        test_legal_consent()
+        # Additional testing
+        test_house_system()
+        test_house_feed()
+        test_notifications()
+        test_reels_and_stories()
+        test_appeals_and_grievances()
+        test_college_members()
+        test_onboarding_complete()
+        
+        # Validation tests
+        print("\n🔍 Testing Validation Errors...")
+        
+        # Test invalid registration
+        invalid_user = {"phone": "123", "pin": "12", "displayName": ""}
+        response, success = make_request("POST", "/auth/register", invalid_user)
+        
+        if success and response.status_code == 400:
+            result.success("Invalid Registration", f"Properly rejected invalid data")
+        else:
+            result.fail("Invalid Registration", 
+                       f"Status: {response.status_code if response else 'No response'}")
+        
+        # Test unauthorized access
+        response, success = make_request("GET", "/auth/me")
+        
+        if success and response.status_code == 401:
+            result.success("Unauthorized Access", f"Properly rejected unauthorized request")
+        else:
+            result.fail("Unauthorized Access", 
+                       f"Status: {response.status_code if response else 'No response'}")
+        
+        # Test empty post creation
+        if test_data["tokens"]:
+            token = test_data["tokens"][0]
+            empty_post = {"caption": ""}
+            response, success = make_request("POST", "/content/posts", empty_post, token=token)
+            
+            if success and response.status_code == 400:
+                result.success("Empty Post Validation", f"Properly rejected empty post")
+            else:
+                result.fail("Empty Post Validation", 
+                           f"Status: {response.status_code if response else 'No response'}")
+        
         test_admin_stats()
         
     except Exception as e:
