@@ -1,6 +1,34 @@
 # Tribe — Changelog
 
-## Mar 8, 2026 — Stage 2 College Claim Workflow (WORLD-CLASS REWRITE)
+## Mar 8, 2026 — Stage 3 Story Expiry TTL (WORLD-CLASS)
+
+### What Changed
+- **Fixed direct fetch leak**: `GET /content/:id` now returns **410 Gone** for expired stories (was showing them)
+- **Fixed profile stories**: `GET /users/:id/posts?kind=STORY` now filters expired stories via `expiresAt: {$gt: new Date()}`
+- **Fixed admin stats**: Story count excludes expired stories
+- **Fixed social action leak**: Like/dislike/comment on expired stories now returns **410 Gone** (added `isExpiredStory()` guard)
+- **TTL index was already correct**: `expiresAt_1` with `partialFilterExpression: {kind: "STORY"}`, `expireAfterSeconds: 0`
+
+### Files Modified
+- `/app/lib/handlers/content.js` — Added expired-story guard to `GET /content/:id`
+- `/app/lib/handlers/users.js` — Added expired-story filter to `GET /users/:id/posts?kind=STORY`
+- `/app/lib/handlers/admin.js` — Admin stats counts only active stories
+- `/app/lib/handlers/social.js` — Added `isExpiredStory()` guard to like/dislike/comment
+
+### Read Path Audit (all 7 surfaces)
+| Surface | Expired Story Behavior |
+|---------|----------------------|
+| Story rail (`/feed/stories`) | Hidden (query filter) |
+| Direct fetch (`/content/:id`) | 410 Gone |
+| Profile (`/users/:id/posts?kind=STORY`) | Hidden (query filter) |
+| Public feed (`/feed/public`) | Never shown (kind=POST) |
+| Following feed (`/feed/following`) | Never shown (kind=POST) |
+| Social actions (like/dislike/comment) | 410 Gone |
+| Admin stats | Excludes expired |
+
+### Test Results: 100% pass (testing agent) + 18 manual proof tests
+
+---
 
 ### What Changed
 - **Complete rewrite** of Stage 2 College Claim handler in `/app/lib/handlers/stages.js`
