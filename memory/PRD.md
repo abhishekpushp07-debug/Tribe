@@ -65,11 +65,12 @@ Auth(7) + Onboarding(6) + Content(4) + Feeds(6) + Social(8) + Discovery(6) + Adm
 - cooldownUntil (Date, set on rejection, 7 days)
 - submittedAt, updatedAt
 
-### Indexes (4)
+### Indexes (5)
 - idx_user_status: {userId:1, status:1}
 - idx_user_college_cooldown: {userId:1, collegeId:1, status:1, cooldownUntil:1}
 - idx_admin_queue: {status:1, fraudFlag:-1, submittedAt:1}
 - idx_claim_id_unique: {id:1} (UNIQUE)
+- idx_one_active_claim_per_user: {userId:1} (UNIQUE, PARTIAL: status IN [PENDING, FRAUD_REVIEW]) — race-condition guard
 
 ### State Machine
 ```
