@@ -5,63 +5,54 @@ World-class social media backend for Indian college students, built stage-by-sta
 
 ## Core Architecture
 - **Backend**: Monolithic Next.js API
-- **Database**: MongoDB (25+ collections, 140+ indexes)
+- **Database**: MongoDB (35+ collections, 100+ indexes)
 - **Cache**: Redis (with in-memory fallback)
 - **Real-time**: SSE via Redis Pub/Sub + EventEmitter fallback
-- **Moderation**: OpenAI GPT-4o-mini (provider-adapter pattern)
+- **Moderation**: OpenAI GPT-4o-mini
 - **Storage**: Emergent Object Storage
 
 ## Stage Status
 
-| Stage | Feature | Status |
-|-------|---------|--------|
-| 1 | Appeal Decision Workflow | PASSED |
-| 2 | College Claim Workflow | PASSED |
-| 3 | Story Expiry Cleanup | PASSED |
-| 4 | Distribution Ladder | PASSED (2 test failures from prev session) |
-| 5 | Notes/PYQs Library | BUILT + HARDENED (pending formal PASS) |
-| 9 | World's Best Stories | BUILT + HARDENED (pending user PASS) |
-| **10** | **World's Best Reels** | **FULL PROOF PACK DELIVERED — 53/53 manual + 46/46 automated = 100%** |
-| 6 | Events + RSVP | UPCOMING |
-| 7 | Board Notices + Authenticity | UPCOMING |
-| 8 | OTP Challenge Flow | UPCOMING |
-| 11 | Scale/Reliability Excellence | FUTURE |
-| 12 | Final Launch Readiness Gate | FUTURE |
+| Stage | Feature | Status | Test Results |
+|-------|---------|--------|-------------|
+| 1 | Appeal Decision Workflow | PASSED | — |
+| 2 | College Claim Workflow | PASSED | — |
+| 3 | Story Expiry Cleanup | PASSED | — |
+| 4 | Distribution Ladder | PASSED (2 old test failures) | — |
+| 5 | Notes/PYQs Library | **PASSED** | — |
+| 9 | World's Best Stories | **PASSED** | Proof pack delivered |
+| 10 | World's Best Reels | **PASSED** | 53/53 manual + 46/46 auto + 39/39 IXSCAN |
+| **6** | **World's Best Events + RSVP** | **PROOF PACK DELIVERED** | **43/43 auto (Stage 6+7) + 32/32 IXSCAN** |
+| **7** | **World's Best Board Notices + Authenticity** | **PROOF PACK DELIVERED** | **43/43 auto (Stage 6+7) + 32/32 IXSCAN** |
+| 8 | OTP Challenge Flow | REMOVED (user request) | — |
+| 11 | Scale/Reliability Excellence | UPCOMING | — |
+| 12 | Final Launch Readiness Gate | UPCOMING | — |
 
-## Stage 10: World's Best Reels — Proof Summary
+## Stage 6: Events + RSVP — Summary
+- **22 endpoints**, 4 collections (events, event_rsvps, event_reports, event_reminders)
+- **16 indexes**, all IXSCAN, zero COLLSCAN
+- Features: full lifecycle (create/edit/publish/cancel/archive), 7 categories, capacity+waitlist, RSVP with auto-promote, block integration, reports+auto-hold@3, reminders, admin moderation, counter integrity
+- Full proof: `/app/memory/stage_6_7_deep_proof_pack.md`
 
-### Test Results
-- **Manual 53-point test matrix**: 53/53 PASSED (100%)
-- **Automated testing agent**: 46/46 PASSED (100%)
-- **Explain plans**: 39/39 queries IXSCAN — ZERO COLLSCANs
-- **Counter integrity**: ZERO DRIFT on recompute verification
-
-### Full Proof Pack
-See `/app/memory/stage_10_deep_proof_pack.md` for complete 14-section deep proof pack covering:
-1. Exact 36 route contracts
-2. Exact 12 collections with full field schemas
-3. Exact 38 indexes with explain plans
-4. Caching/invalidation rules
-5. Concurrency/counter integrity (insert-then-count model)
-6. Feed/ranking/discovery model (score formula + eligibility rules)
-7. Privacy/visibility/leakage safety (zero leakage proof)
-8. Moderation/reporting model (auto-hold at 3 reports)
-9. Media pipeline/processing state machine
-10. Test report (100% pass rate)
-11. Live/DB proof
-12. Backend discipline grading (93.5/100)
-13. World-scale risk assessment (honest)
-14. Honest limitations (6 items)
+## Stage 7: Board Notices + Authenticity — Summary
+- **17 endpoints**, 4 collections (board_notices, board_seats, authenticity_tags, notice_acknowledgments)
+- **16 indexes**, all IXSCAN, zero COLLSCAN
+- Features: notice lifecycle (create→review→publish→pin→archive), 6 categories, 4 priority levels, max 3 pins, acknowledgments (read receipts), authenticity tag system (VERIFIED/USEFUL/OUTDATED/MISLEADING), moderation workflow, admin analytics
+- Full proof: `/app/memory/stage_6_7_deep_proof_pack.md`
 
 ## Key Files
-- `/app/lib/handlers/reels.js` — Reel handler (1569 lines)
-- `/app/lib/handlers/stories.js` — Story handler (Stage 9)
-- `/app/lib/realtime.js` — SSE + Redis/memory event system
-- `/app/lib/db.js` — DB init + all 38 reels indexes
+- `/app/lib/handlers/events.js` — Stage 6 handler
+- `/app/lib/handlers/board-notices.js` — Stage 7 handler
+- `/app/lib/handlers/reels.js` — Stage 10 handler
+- `/app/lib/handlers/stories.js` — Stage 9 handler
+- `/app/lib/db.js` — All indexes (38 reels + 16 events + 16 notices = 70 new)
 - `/app/app/api/[[...path]]/route.js` — Route dispatcher
-- `/app/lib/cache.js` — Redis/memory cache
 
-## Next Tasks (pending user approval)
-1. Stage 10 final verdict from user
+## Proof Packs
+- `/app/memory/stage_10_deep_proof_pack.md` — Reels
+- `/app/memory/stage_6_7_deep_proof_pack.md` — Events + Notices
+
+## Next Tasks
+1. User verdict on Stage 6 + 7
 2. Stage 11: Scale / Reliability / Disaster Excellence
 3. Stage 12: Final Launch Readiness Gate
