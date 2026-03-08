@@ -13,6 +13,7 @@ import { handleHousePoints } from '@/lib/handlers/house-points'
 import { handleGovernance } from '@/lib/handlers/governance'
 import { handleModerationRoutes } from '@/lib/moderation/routes/moderation.routes'
 import { handleAppealDecision, handleCollegeClaims, handleDistribution, handleResources, handleEvents, handleBoardNotices, handleAuthenticityTags } from '@/lib/handlers/stages'
+import { handleStories } from '@/lib/handlers/stories'
 import { cache } from '@/lib/cache'
 
 // ========== CORS ==========
@@ -89,7 +90,7 @@ async function handleRoute(request, { params }) {
         version: '3.0.0',
         status: 'running',
         timestamp: new Date().toISOString(),
-        stages: 'A-G complete (Appeal, Claims, Distribution, Resources, Events, Notices, Authenticity)',
+        stages: 'Stages 1-9 complete (Appeal, Claims, Distribution, Resources, Events, Notices, Authenticity, Stories)',
         endpoints: {
           auth: '/api/auth/*',
           profile: '/api/me/*',
@@ -240,8 +241,24 @@ async function handleRoute(request, { params }) {
     if (path[0] === 'auth') {
       result = await handleAuth(path, method, request, db)
     } else if (path[0] === 'me') {
+      // Stage 9: Story archive (GET /me/stories/archive)
+      if (path[1] === 'stories' && path[2] === 'archive') {
+        result = await handleStories(path, method, request, db)
+      }
+      // Stage 9: Close friends
+      else if (path[1] === 'close-friends') {
+        result = await handleStories(path, method, request, db)
+      }
+      // Stage 9: Highlights
+      else if (path[1] === 'highlights') {
+        result = await handleStories(path, method, request, db)
+      }
+      // Stage 9: Story settings
+      else if (path[1] === 'story-settings') {
+        result = await handleStories(path, method, request, db)
+      }
       // Stage 2: College claims (GET /me/college-claims)
-      if (path[1] === 'college-claims') {
+      else if (path[1] === 'college-claims') {
         result = await handleCollegeClaims(path, method, request, db)
       }
       // Stage 5: My resources (GET /me/resources)
@@ -261,8 +278,20 @@ async function handleRoute(request, { params }) {
     } else if (path[0] === 'content' && path.length === 3) {
       // Social actions on content (like, dislike, reaction, save, comments)
       result = await handleSocial(path, method, request, db)
+    } else if (path[0] === 'stories') {
+      result = await handleStories(path, method, request, db)
     } else if (path[0] === 'users') {
-      result = await handleUsers(path, method, request, db)
+      // Stage 9: User stories (GET /users/:id/stories)
+      if (path.length === 3 && path[2] === 'stories') {
+        result = await handleStories(path, method, request, db)
+      }
+      // Stage 9: User highlights (GET /users/:id/highlights)
+      else if (path.length === 3 && path[2] === 'highlights') {
+        result = await handleStories(path, method, request, db)
+      }
+      if (!result) {
+        result = await handleUsers(path, method, request, db)
+      }
     } else if (path[0] === 'colleges' || path[0] === 'houses' || path[0] === 'search' || path[0] === 'suggestions') {
       // Stage 2: College claims (POST /colleges/:id/claim)
       if (path[0] === 'colleges' && path.length === 3 && path[2] === 'claim') {
@@ -297,6 +326,10 @@ async function handleRoute(request, { params }) {
       // Stage 5: Admin resources (GET /admin/resources, PATCH /admin/resources/:id/moderate)
       else if (path[0] === 'admin' && path[1] === 'resources') {
         result = await handleResources(path, method, request, db)
+      }
+      // Stage 9: Admin stories (GET /admin/stories, PATCH /admin/stories/:id/moderate, GET /admin/stories/analytics)
+      else if (path[0] === 'admin' && path[1] === 'stories') {
+        result = await handleStories(path, method, request, db)
       }
       // Stage 7: Board notices moderation
       else if (path[0] === 'moderation' && path[1] === 'board-notices') {
