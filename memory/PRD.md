@@ -26,6 +26,7 @@ World-class social media backend for Indian college students, built stage-by-sta
 | 7 | Board Notices + Authenticity | PROOF DELIVERED | 43/43 auto + 32/32 IXSCAN |
 | **12** | **21-Tribe System (Safe Cutover)** | **STRONG PASS (89/100)** | **19/21 auto + 28/28 IXSCAN** |
 | **12X** | **Tribe Contest Engine** | **IMPLEMENTED + TESTED** | **12/15 auto + 15/15 IXSCAN + Ledger 100%** |
+| **12X-RT** | **Real-Time Contest Scoreboard** | **IMPLEMENTED + TESTED** | **13/13 auto (100%)** |
 | 8 | OTP Challenge Flow | REMOVED | User request |
 | 11 | Scale/Reliability Excellence | UPCOMING | — |
 
@@ -135,6 +136,46 @@ DRAFT → PUBLISHED → ENTRY_OPEN → ENTRY_CLOSED → EVALUATING → LOCKED �
 - `/app/lib/handlers/auth.js` — Registration (now with auto tribe assignment)
 - `/app/lib/db.js` — All indexes (200+)
 - `/app/app/api/[[...path]]/route.js` — Route dispatcher
+
+## Stage 12X-RT: Real-Time Contest Scoreboard — Summary
+
+### Architecture
+- Dual-mode: Redis Pub/Sub (multi-instance) OR in-memory EventEmitter (single-instance)
+- Auto-detects Redis, graceful fallback
+- Snapshot-on-connect + streaming deltas
+- Heartbeat every 10s, auto-reconnect hint 3s
+- Auto-refresh snapshots (30s contest, 60s standings) for stale-client protection
+
+### Channel Topology
+- `tribe:contest:{contestId}` — Per-contest live scoreboard
+- `tribe:contest:global` — Cross-contest activity feed
+- `tribe:standings:{seasonId}` — Live season standings
+
+### SSE Endpoints (3)
+- `GET /tribe-contests/:id/live` — Contest leaderboard + tribe ranking + entry/vote counts
+- `GET /tribe-contests/seasons/:id/live-standings` — All 21 tribes ranked + active contests
+- `GET /tribe-contests/live-feed` — Live contests + recent entries + recent results
+
+### Event Types (7)
+- `entry.submitted` — New entry with tribeId, entryType, contestName
+- `vote.cast` — Vote with entryId, voterTribeId
+- `score.updated` — Scores recomputed
+- `rank.changed` — Rank shifts with direction (up/down) + delta
+- `contest.transition` — Status change (PUBLISHED, ENTRY_OPEN, ENTRY_CLOSED, LOCKED)
+- `contest.resolved` — Winner + top positions + salute count
+- `standings.updated` — Affected tribes + salute deltas
+
+### Write Path Integration
+All contest mutations automatically publish to SSE channels:
+- Entry submit → entry.submitted (contest + global)
+- Vote cast → vote.cast (contest + global)
+- Score compute → score.updated + rank.changed (contest + global)
+- Status transition → contest.transition (contest + global)
+- Resolution → contest.resolved (contest + global) + standings.updated (season + global)
+
+### New Files
+- `/app/lib/contest-realtime.js` — SSE stream builders + publish functions
+- Updated: `/app/lib/handlers/tribe-contests.js` — RT publish hooks on all write paths
 
 ## Next Tasks
 1. Stage 12 Gold Freeze closure items (remaining: legacy House cleanup, post-cleanup health proof)

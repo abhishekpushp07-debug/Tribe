@@ -26,7 +26,26 @@
 - Salute ledger integrity: 100% (standings match ledger for all tribes)
 - Idempotent resolution: verified (double resolve returns same result)
 
-## Previous Stages (Pre-Fork)
+## 2026-03-08: Stage 12X-RT — Real-Time Contest Scoreboard
+
+### Built
+- 3 SSE endpoints: per-contest live scoreboard, season standings, global activity feed
+- Dual-mode transport: Redis Pub/Sub or in-memory EventEmitter (auto-detect)
+- Snapshot-on-connect pattern: full state on connect, then streaming deltas
+- 7 event types: entry.submitted, vote.cast, score.updated, rank.changed, contest.transition, contest.resolved, standings.updated
+- All contest write paths (entry, vote, lifecycle, resolution) broadcast to SSE channels
+- Auto-refresh snapshots (30s contests, 60s standings) for stale-client protection
+- Heartbeat every 10s with 3s retry hint
+- Rank change detection: old vs new ranks compared, direction + delta broadcasted
+
+### Files Created/Modified
+- NEW: `/app/lib/contest-realtime.js` (~310 lines)
+- MODIFIED: `/app/lib/handlers/tribe-contests.js` (RT publish hooks + recompute-broadcast endpoint)
+
+### Test Results
+- 13/13 automated tests passed (100%)
+- All 3 SSE endpoints verified with snapshot + delta events
+- Real-time broadcasting verified: entry → vote → score → transition → resolution → standings
 - Stage 12: 21-Tribe System — STRONG PASS (89/100)
 - Stage 10: World's Best Reels — PASS
 - Stage 9: World's Best Stories — PASS
