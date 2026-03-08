@@ -109,7 +109,7 @@ async function handleRoute(request, { params }) {
           grievances: '/api/grievances',
           legal: '/api/legal/*',
           admin: '/api/admin/*',
-          resources: '/api/resources, /api/resources/search',
+          resources: '/api/resources, /api/resources/search, /api/resources/:id, /api/resources/:id/vote, /api/resources/:id/download, /api/resources/:id/report, /api/me/resources, /api/admin/resources',
           events: '/api/events, /api/events/search, /api/events/:id/rsvp',
           boardNotices: '/api/board/notices, /api/colleges/:id/notices',
           authenticity: '/api/authenticity/tag, /api/authenticity/tags/:type/:id',
@@ -244,6 +244,10 @@ async function handleRoute(request, { params }) {
       if (path[1] === 'college-claims') {
         result = await handleCollegeClaims(path, method, request, db)
       }
+      // Stage 5: My resources (GET /me/resources)
+      else if (path[1] === 'resources') {
+        result = await handleResources(path, method, request, db)
+      }
       if (!result) {
         result = await handleOnboarding(path, method, request, db)
       }
@@ -289,6 +293,10 @@ async function handleRoute(request, { params }) {
       // Stage 4: Distribution admin
       else if (path[0] === 'admin' && path[1] === 'distribution') {
         result = await handleDistribution(path, method, request, db)
+      }
+      // Stage 5: Admin resources (GET /admin/resources, PATCH /admin/resources/:id/moderate)
+      else if (path[0] === 'admin' && path[1] === 'resources') {
+        result = await handleResources(path, method, request, db)
       }
       // Stage 7: Board notices moderation
       else if (path[0] === 'moderation' && path[1] === 'board-notices') {

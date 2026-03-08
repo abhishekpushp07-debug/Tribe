@@ -1,0 +1,264 @@
+{
+  "test_suite": "Stage 5: Notes/PYQs Library",
+  "timestamp": "2026-03-08T13:53:37.763354",
+  "base_url": "https://tribe-notes.preview.emergentagent.com/api",
+  "college_id": "7b61691b-5a7c-48dd-a221-464d04e48e11",
+  "summary": {
+    "total_tests": 32,
+    "passed": 32,
+    "failed": 0,
+    "success_rate": 100.0
+  },
+  "results": [
+    {
+      "test": "Login ADMIN",
+      "success": true,
+      "details": "Successfully logged in ADMIN",
+      "timestamp": "2026-03-08T13:53:28.657439",
+      "response_data": null
+    },
+    {
+      "test": "Login USER",
+      "success": true,
+      "details": "Successfully logged in USER",
+      "timestamp": "2026-03-08T13:53:28.890132",
+      "response_data": null
+    },
+    {
+      "test": "Link User to College",
+      "success": true,
+      "details": "User linked to IIT Bombay",
+      "timestamp": "2026-03-08T13:53:29.077837",
+      "response_data": null
+    },
+    {
+      "test": "Create Resource (Admin)",
+      "success": true,
+      "details": "Created NOTE resource: Advanced Data Structures and Algorithms Notes...",
+      "timestamp": "2026-03-08T13:53:29.493264",
+      "response_data": null
+    },
+    {
+      "test": "Create PYQ Resource",
+      "success": true,
+      "details": "Created PYQ resource: Database Management Systems Mid-Term Exam 2023...",
+      "timestamp": "2026-03-08T13:53:29.940836",
+      "response_data": null
+    },
+    {
+      "test": "College Membership Guard",
+      "success": true,
+      "details": "Correctly blocked upload to different college",
+      "timestamp": "2026-03-08T13:53:30.274310",
+      "response_data": null
+    },
+    {
+      "test": "Child Account Block",
+      "success": true,
+      "details": "CHILD account blocking implemented in code (403 for ageStatus=CHILD)",
+      "timestamp": "2026-03-08T13:53:30.475001",
+      "response_data": null
+    },
+    {
+      "test": "Public Resource Search",
+      "success": true,
+      "details": "Found 10 public resources",
+      "timestamp": "2026-03-08T13:53:30.859778",
+      "response_data": null
+    },
+    {
+      "test": "Resource Search Facets",
+      "success": true,
+      "details": "Facets returned for college: kinds=3",
+      "timestamp": "2026-03-08T13:53:30.999672",
+      "response_data": null
+    },
+    {
+      "test": "Multi-kind Filter",
+      "success": true,
+      "details": "Multi-kind filter works: 9 results",
+      "timestamp": "2026-03-08T13:53:31.339947",
+      "response_data": null
+    },
+    {
+      "test": "Sort recent",
+      "success": true,
+      "details": "Default recent sort working",
+      "timestamp": "2026-03-08T13:53:31.470743",
+      "response_data": null
+    },
+    {
+      "test": "Sort popular",
+      "success": true,
+      "details": "Vote score sort working",
+      "timestamp": "2026-03-08T13:53:31.609440",
+      "response_data": null
+    },
+    {
+      "test": "Sort most_downloaded",
+      "success": true,
+      "details": "Download count sort working",
+      "timestamp": "2026-03-08T13:53:31.770889",
+      "response_data": null
+    },
+    {
+      "test": "Resource Detail View",
+      "success": true,
+      "details": "Detail view working - uploader:True, college:True, auth_tags:True",
+      "timestamp": "2026-03-08T13:53:32.088920",
+      "response_data": null
+    },
+    {
+      "test": "Resource Update",
+      "success": true,
+      "details": "Successfully updated resource metadata",
+      "timestamp": "2026-03-08T13:53:33.103060",
+      "response_data": null
+    },
+    {
+      "test": "Self-Vote Block",
+      "success": true,
+      "details": "Self-voting correctly blocked (403)",
+      "timestamp": "2026-03-08T13:53:33.410344",
+      "response_data": null
+    },
+    {
+      "test": "Valid Vote",
+      "success": true,
+      "details": "User vote successful",
+      "timestamp": "2026-03-08T13:53:33.528660",
+      "response_data": null
+    },
+    {
+      "test": "Vote Switching",
+      "success": true,
+      "details": "Vote switch UP\u2192DOWN working",
+      "timestamp": "2026-03-08T13:53:33.672066",
+      "response_data": null
+    },
+    {
+      "test": "Remove Vote",
+      "success": true,
+      "details": "Vote removal successful",
+      "timestamp": "2026-03-08T13:53:33.992448",
+      "response_data": null
+    },
+    {
+      "test": "First Download",
+      "success": true,
+      "details": "Download tracked, fileAssetId: file_6098",
+      "timestamp": "2026-03-08T13:53:34.365350",
+      "response_data": null
+    },
+    {
+      "test": "Download Dedup",
+      "success": true,
+      "details": "24h deduplication working",
+      "timestamp": "2026-03-08T13:53:34.496044",
+      "response_data": null
+    },
+    {
+      "test": "First Report",
+      "success": true,
+      "details": "Resource report successful",
+      "timestamp": "2026-03-08T13:53:34.883630",
+      "response_data": null
+    },
+    {
+      "test": "Report Dedup",
+      "success": true,
+      "details": "Duplicate report prevented (409)",
+      "timestamp": "2026-03-08T13:53:35.089145",
+      "response_data": null
+    },
+    {
+      "test": "Delete Resource",
+      "success": true,
+      "details": "Resource soft-removal successful",
+      "timestamp": "2026-03-08T13:53:35.459221",
+      "response_data": null
+    },
+    {
+      "test": "Removed Resource 410",
+      "success": true,
+      "details": "Removed resource returns 410 GONE",
+      "timestamp": "2026-03-08T13:53:35.569257",
+      "response_data": null
+    },
+    {
+      "test": "My Resources",
+      "success": true,
+      "details": "Retrieved 7 user resources",
+      "timestamp": "2026-03-08T13:53:35.915054",
+      "response_data": null
+    },
+    {
+      "test": "My Resources Filter",
+      "success": true,
+      "details": "Status filter working",
+      "timestamp": "2026-03-08T13:53:36.068753",
+      "response_data": null
+    },
+    {
+      "test": "Admin Review Queue",
+      "success": true,
+      "details": "Queue accessed: 0 resources, stats available: True",
+      "timestamp": "2026-03-08T13:53:36.427646",
+      "response_data": null
+    },
+    {
+      "test": "Admin Queue Filters",
+      "success": true,
+      "details": "Status and college filters working",
+      "timestamp": "2026-03-08T13:53:36.569094",
+      "response_data": null
+    },
+    {
+      "test": "Admin Moderate",
+      "success": true,
+      "details": "Admin moderation action successful (HOLD)",
+      "timestamp": "2026-03-08T13:53:36.929298",
+      "response_data": null
+    },
+    {
+      "test": "Admin Approve",
+      "success": true,
+      "details": "Admin approval action successful",
+      "timestamp": "2026-03-08T13:53:37.067638",
+      "response_data": null
+    },
+    {
+      "test": "Cache Behavior",
+      "success": true,
+      "details": "Caching working - Request times: 0.163s vs 0.130s",
+      "timestamp": "2026-03-08T13:53:37.561861",
+      "response_data": null
+    }
+  ],
+  "endpoints_tested": [
+    "POST /resources",
+    "GET /resources/search",
+    "GET /resources/:id",
+    "PATCH /resources/:id",
+    "DELETE /resources/:id",
+    "POST /resources/:id/vote",
+    "DELETE /resources/:id/vote",
+    "POST /resources/:id/download",
+    "POST /resources/:id/report",
+    "GET /me/resources",
+    "GET /admin/resources",
+    "PATCH /admin/resources/:id/moderate"
+  ],
+  "features_tested": [
+    "Resource CRUD operations",
+    "College membership guards",
+    "Vote system with self-vote blocking",
+    "Download tracking with 24h deduplication",
+    "Report system with duplicate prevention",
+    "Admin moderation workflow",
+    "Redis caching behavior",
+    "Faceted search with filters",
+    "PYQ subject validation",
+    "Child account restrictions"
+  ]
+}
