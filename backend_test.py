@@ -10,7 +10,7 @@ D. Contract/Edge Case Tests (6 tests)
 E. Admin Tests (4 tests)
 F. Settings Tests (4 tests)
 
-Base URL: https://tribe-stories-stage9.preview.emergentagent.com/api
+Base URL: https://tribe-stage9.preview.emergentagent.com/api
 """
 
 import asyncio
@@ -23,7 +23,7 @@ from typing import Dict, List, Optional, Tuple
 import base64
 import os
 
-BASE_URL = "https://tribe-stories-stage9.preview.emergentagent.com/api"
+BASE_URL = "https://tribe-stage9.preview.emergentagent.com/api"
 
 class StoryTestSuite:
     def __init__(self):
