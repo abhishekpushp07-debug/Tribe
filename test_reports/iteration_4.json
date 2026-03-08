@@ -1,0 +1,273 @@
+{
+  "test_suite": "Stage 5 Hardening: Notes/PYQs Library Fixes",
+  "timestamp": "2026-03-08T14:33:19.701856",
+  "base_url": "https://tribe-notes.preview.emergentagent.com/api",
+  "college_id": "7b61691b-5a7c-48dd-a221-464d04e48e11",
+  "summary": {
+    "total_tests": 37,
+    "passed": 36,
+    "failed": 1,
+    "success_rate": 97.2972972972973
+  },
+  "results": [
+    {
+      "test": "Login ADMIN",
+      "success": true,
+      "details": "Successfully logged in ADMIN",
+      "timestamp": "2026-03-08T14:33:15.164705",
+      "response_data": null
+    },
+    {
+      "test": "Login USER",
+      "success": true,
+      "details": "Successfully logged in USER",
+      "timestamp": "2026-03-08T14:33:15.367070",
+      "response_data": null
+    },
+    {
+      "test": "Create Fresh User",
+      "success": true,
+      "details": "Created fresh user: 9000080395",
+      "timestamp": "2026-03-08T14:33:15.660898",
+      "response_data": null
+    },
+    {
+      "test": "Create Resource for Trust Test",
+      "success": true,
+      "details": "Created test resource for voting",
+      "timestamp": "2026-03-08T14:33:16.057473",
+      "response_data": null
+    },
+    {
+      "test": "Fresh User Trust Weight",
+      "success": true,
+      "details": "Fresh user vote has correct trustWeight: 0.5",
+      "timestamp": "2026-03-08T14:33:16.133000",
+      "response_data": null
+    },
+    {
+      "test": "Vote Response Fields",
+      "success": true,
+      "details": "Both scores present: raw=1, trusted=0.5",
+      "timestamp": "2026-03-08T14:33:16.133031",
+      "response_data": null
+    },
+    {
+      "test": "Older User Trust Weight",
+      "success": false,
+      "details": "Expected trustWeight 1.0, got 0.5",
+      "timestamp": "2026-03-08T14:33:16.190782",
+      "response_data": null
+    },
+    {
+      "test": "Vote Switching",
+      "success": true,
+      "details": "Vote switch UP\u2192DOWN successful",
+      "timestamp": "2026-03-08T14:33:16.273849",
+      "response_data": null
+    },
+    {
+      "test": "Vote Switch Recomputation",
+      "success": true,
+      "details": "Scores recomputed: raw=0, trusted=0",
+      "timestamp": "2026-03-08T14:33:16.273875",
+      "response_data": null
+    },
+    {
+      "test": "Vote Removal",
+      "success": true,
+      "details": "Vote removal successful with score recomputation",
+      "timestamp": "2026-03-08T14:33:16.369659",
+      "response_data": null
+    },
+    {
+      "test": "Self-Vote Prevention",
+      "success": true,
+      "details": "Self-vote correctly blocked with 403",
+      "timestamp": "2026-03-08T14:33:16.464521",
+      "response_data": null
+    },
+    {
+      "test": "Duplicate Vote Prevention",
+      "success": true,
+      "details": "Duplicate vote correctly blocked with 409",
+      "timestamp": "2026-03-08T14:33:16.657064",
+      "response_data": null
+    },
+    {
+      "test": "Non-Admin Recompute Blocked",
+      "success": true,
+      "details": "Non-admin correctly blocked from recompute (403)",
+      "timestamp": "2026-03-08T14:33:16.713057",
+      "response_data": null
+    },
+    {
+      "test": "Single Resource Recompute",
+      "success": true,
+      "details": "Recompute returned before/after values",
+      "timestamp": "2026-03-08T14:33:16.774432",
+      "response_data": null
+    },
+    {
+      "test": "Recompute Non-Existent Resource",
+      "success": true,
+      "details": "Non-existent resource correctly returns 404",
+      "timestamp": "2026-03-08T14:33:16.827065",
+      "response_data": null
+    },
+    {
+      "test": "Bulk Reconcile",
+      "success": true,
+      "details": "Reconciled 14 resources, fixed 0 drifts",
+      "timestamp": "2026-03-08T14:33:16.890689",
+      "response_data": null
+    },
+    {
+      "test": "Hold Resource",
+      "success": true,
+      "details": "Resource successfully held",
+      "timestamp": "2026-03-08T14:33:17.481817",
+      "response_data": null
+    },
+    {
+      "test": "Anonymous HELD Access",
+      "success": true,
+      "details": "Anonymous user correctly blocked with 403 'under review'",
+      "timestamp": "2026-03-08T14:33:17.567295",
+      "response_data": null
+    },
+    {
+      "test": "Non-Owner HELD Access",
+      "success": true,
+      "details": "Non-owner correctly blocked with 403",
+      "timestamp": "2026-03-08T14:33:17.626059",
+      "response_data": null
+    },
+    {
+      "test": "Owner HELD Access",
+      "success": true,
+      "details": "Owner can view HELD resource with correct status",
+      "timestamp": "2026-03-08T14:33:17.684854",
+      "response_data": null
+    },
+    {
+      "test": "Admin HELD Access",
+      "success": true,
+      "details": "Admin can view HELD resource with correct status",
+      "timestamp": "2026-03-08T14:33:17.766753",
+      "response_data": null
+    },
+    {
+      "test": "Approve Resource",
+      "success": true,
+      "details": "Resource approved",
+      "timestamp": "2026-03-08T14:33:17.864619",
+      "response_data": null
+    },
+    {
+      "test": "Anonymous Access After Approval",
+      "success": true,
+      "details": "Anonymous can access approved resource",
+      "timestamp": "2026-03-08T14:33:17.970210",
+      "response_data": null
+    },
+    {
+      "test": "Normal Download",
+      "success": true,
+      "details": "Download successful under rate limit",
+      "timestamp": "2026-03-08T14:33:18.065138",
+      "response_data": null
+    },
+    {
+      "test": "Download Deduplication",
+      "success": true,
+      "details": "Download deduplication working - count unchanged",
+      "timestamp": "2026-03-08T14:33:18.125497",
+      "response_data": null
+    },
+    {
+      "test": "Rate Limit Logic",
+      "success": true,
+      "details": "Rate limit of 50 downloads per 24h is implemented in code",
+      "timestamp": "2026-03-08T14:33:18.125524",
+      "response_data": null
+    },
+    {
+      "test": "View PUBLIC Resource (Cache Miss)",
+      "success": true,
+      "details": "PUBLIC resource accessible",
+      "timestamp": "2026-03-08T14:33:18.747432",
+      "response_data": null
+    },
+    {
+      "test": "View PUBLIC Resource (Cache Hit)",
+      "success": true,
+      "details": "PUBLIC resource still accessible (cached)",
+      "timestamp": "2026-03-08T14:33:18.804463",
+      "response_data": null
+    },
+    {
+      "test": "Post-Cache HELD Check",
+      "success": true,
+      "details": "HELD resource correctly blocked despite potential caching",
+      "timestamp": "2026-03-08T14:33:18.967499",
+      "response_data": null
+    },
+    {
+      "test": "Post-Cache Approval Check",
+      "success": true,
+      "details": "Approved resource accessible again",
+      "timestamp": "2026-03-08T14:33:19.080356",
+      "response_data": null
+    },
+    {
+      "test": "Create Resource (Verification)",
+      "success": true,
+      "details": "Resource creation still working",
+      "timestamp": "2026-03-08T14:33:19.293734",
+      "response_data": null
+    },
+    {
+      "test": "Search Resources",
+      "success": true,
+      "details": "Search returned 5 resources",
+      "timestamp": "2026-03-08T14:33:19.363504",
+      "response_data": null
+    },
+    {
+      "test": "My Resources",
+      "success": true,
+      "details": "My resources returned 4 items",
+      "timestamp": "2026-03-08T14:33:19.420396",
+      "response_data": null
+    },
+    {
+      "test": "Admin Queue",
+      "success": true,
+      "details": "Admin resources queue accessible",
+      "timestamp": "2026-03-08T14:33:19.477435",
+      "response_data": null
+    },
+    {
+      "test": "Report Resource",
+      "success": true,
+      "details": "Resource reporting working",
+      "timestamp": "2026-03-08T14:33:19.573786",
+      "response_data": null
+    },
+    {
+      "test": "Delete Resource",
+      "success": true,
+      "details": "Resource deletion working",
+      "timestamp": "2026-03-08T14:33:19.640143",
+      "response_data": null
+    },
+    {
+      "test": "Multi-Kind Filter",
+      "success": true,
+      "details": "Multi-kind filtering working",
+      "timestamp": "2026-03-08T14:33:19.701396",
+      "response_data": null
+    }
+  ]
+}
