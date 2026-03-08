@@ -1,5 +1,24 @@
 # Tribe — Changelog
 
+## Mar 8, 2026 — Stage 5 Hardening (91 → 96+ push)
+
+### 5 World-Class Fixes
+1. **Trust-weighted votes**: Low-trust accounts (<7 days, active strikes) get 0.5x vote weight. `trustedVoteScore` stored alongside raw `voteScore`. Popular sort uses trusted score.
+2. **Counter recomputation**: Admin endpoint `POST /admin/resources/:id/recompute-counters` + bulk `POST /admin/resources/reconcile`. Every vote now recomputes from source-of-truth (no incremental drift).
+3. **HELD visibility tightening**: HELD resources return 403 for anonymous/non-owner/non-admin. Only owner and admin/mod can view.
+4. **Download rate limiting**: 50 unique resource downloads per user per 24h. Returns 429 when exceeded.
+5. **Cache safety**: Post-cache HELD check runs `authenticate()` after cache read to prevent stale-read leaks.
+
+### New Endpoints (2)
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | /admin/resources/:id/recompute-counters | Recompute from source of truth |
+| POST | /admin/resources/reconcile | Bulk drift detection + repair |
+
+### Test Results: 68/69 automated tests total (iteration 3: 32/32, iteration 4: 36/37)
+
+---
+
 ## Mar 8, 2026 — Stage 5 Notes/PYQs Library (WORLD-CLASS REWRITE)
 
 ### What Changed
