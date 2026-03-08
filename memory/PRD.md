@@ -5,9 +5,9 @@ Build a world-class social media backend for Indian college students called **Tr
 
 ## Tech Stack
 - **Backend**: Next.js 14 API Routes (modular handler architecture)
-- **Database**: MongoDB (25+ collections, 103+ indexes, zero COLLSCANs)
+- **Database**: MongoDB (33 collections, 130+ indexes, zero COLLSCANs)
 - **Cache**: Redis 7.x via ioredis (TTL jitter, stampede protection, event invalidation, auto-failover)
-- **Storage**: Object Storage via Emergent Integrations (S3-compatible, live upload/download/serve)
+- **Storage**: Object Storage via Emergent Integrations (S3-compatible)
 - **AI Moderation**: OpenAI Moderations API (omni-moderation-latest) via Provider-Adapter Pattern
 - **Auth**: Phone + 4-digit PIN → Bearer token sessions (PBKDF2 100K, 30-day TTL)
 
@@ -21,59 +21,50 @@ Client → K8s Ingress → Next.js API Router → Handlers → MongoDB
                                           └─→ Keyword Fallback (secondary)
 ```
 
-## Moderation Provider-Adapter Architecture (Implemented Mar 7, 2026)
-```
-/app/lib/moderation/
-  config.js                          - ENV-driven config (MODERATION_PROVIDER)
-  rules.js                           - Provider-agnostic decision engine
-  provider.js                        - Factory (singleton, env-driven selection)
-  providers/
-    fallback-keyword.provider.js     - Keyword backup provider
-    openai.provider.js               - OpenAI Moderations API (production primary)
-    composite.provider.js            - OpenAI primary + fallback secondary chain
-  repositories/
-    moderation.repository.js         - MongoDB audit log + review queue
-  services/
-    moderation.service.js            - Orchestrator (moderateOrThrow)
-  middleware/
-    moderate-create-content.js       - Reusable moderation function for handlers
-  routes/
-    moderation.routes.js             - Moderation API endpoints
-```
+## 90+ API Endpoints (v3.0.0)
+Auth(7) + Onboarding(6) + Content(4) + Feeds(6) + Social(8) + Discovery(6) + Admin(12) + Media(2) + House Points(5) + Governance(8) + Moderation(5) + Ops(4) + Resources(5) + Events(5) + Board Notices(4) + Authenticity(2) + Distribution(3) + College Claims(4) + Appeals(2)
 
-### Non-Negotiables:
-- Handlers/routes NEVER call OpenAI directly → only ModerationService
-- Provider chosen via env: `fallback | openai | composite`
-- `composite = OpenAI primary + keyword fallback secondary`
-- Audit logs and review queue are provider-agnostic
-- Adding/changing provider requires ZERO handler refactor
+## Stage Completion Status (Mar 8, 2026)
 
-## Acceptance Gate Status (Mar 7, 2026)
+| Stage | Name | Status | Pass Rate |
+|-------|------|--------|-----------|
+| A | Foundation Bootstrap | ✅ FROZEN | 100% |
+| B | Auth + Profile + Age + Consent | ✅ 90% | ✅ |
+| C | College Registry + Claims | ✅ DONE | 100% |
+| D | Social Core | ✅ FROZEN | 100% |
+| E | Stories + Reels + Expiry | ✅ DONE | ✅ |
+| F.1 | Moderation Adapter | ✅ DONE | 100% |
+| F.2 | Appeals Decision | ✅ DONE | 100% |
+| F.3 | Distribution Ladder | ✅ DONE | 100% |
+| G.1 | Board Notices | ✅ DONE | ✅ |
+| G.2 | Notes/PYQs Library | ✅ DONE | 100% |
+| G.3 | Events + RSVP | ✅ DONE | 100% |
+| G.4 | Authenticity Tags | ✅ DONE | ✅ |
 
-| Gate | Status | Evidence |
-|------|--------|----------|
-| A — Test Excellence | PASS | 84%+ pass rate, all core APIs working |
-| B — Media Go-Live | PASS | Object Storage live, upload/download verified |
-| C — AI Moderation | **PASS (Upgraded)** | Provider-Adapter Pattern, OpenAI primary, keyword fallback, audit trail |
-| D — Scale Cache | PASS | Redis connected, failover tested, auto-reconnect |
-| E — Feature Integrity | PASS | Atomic votes, idempotency keys, race protection |
-| F — Ops Excellence | PASS | Deep health, metrics, backup drill, runbook |
-
-## 65+ API Endpoints
-Auth(7) + Onboarding(6) + Content(4) + Feeds(6) + Social(8) + Discovery(6) + Admin(8) + Media(2) + House Points(5) + Governance(8) + Moderation(3) + Ops(4) + Infra(3)
+## 33 MongoDB Collections
+users, sessions, audit_logs, content_items, follows, reactions, comments, saves, reports, appeals, moderation_events, moderation_audit_logs, moderation_review_queue, strikes, suspensions, grievance_tickets, colleges, houses, house_ledger, board_seats, board_applications, board_proposals, board_notices, media_assets, consent_notices, consent_acceptances, notifications, feature_flags, college_claims, resources, events, event_rsvps, authenticity_tags
 
 ## Remaining Backlog
 
-### P1
-- [ ] Notes/PYQs Library
-- [ ] Events section
-- [ ] SSE for real-time leaderboard
-- [ ] Video transcoding pipeline
+### P1 — Upcoming
+- [ ] OTP Challenge Flow (Stage 8)
+- [ ] Post-Publish Signal Processing (Stage 9)
+- [ ] Synthetic Content Provenance enforcement
 
-### P2
-- [ ] Admin Moderation Panel (UI for review queue)
-- [ ] College claim/verification
-- [ ] Distribution ladder
-- [ ] Push notifications, WebSockets
+### P2 — Future
+- [ ] Video Transcoding Pipeline (Stage 10)
+- [ ] Ops/Scale Excellence (Stage 11)
+- [ ] Final Launch Gate (Stage 12)
+- [ ] Admin Moderation Panel (UI)
+- [ ] SSE real-time leaderboard
+- [ ] Presigned URL uploads
+- [ ] Signed CDN URLs
+- [ ] Board seat types (FOUNDING/MEMBER)
+- [ ] College aliases + de-dup
+- [ ] Request logging middleware
+
+### P3 — Backlog
+- [ ] Live rooms, chat (WebSockets)
+- [ ] Push notifications
 - [ ] User blocking/muting
 - [ ] Native Android app shell

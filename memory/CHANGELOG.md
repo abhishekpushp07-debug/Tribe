@@ -1,6 +1,65 @@
 # Tribe — Changelog
 
-## Mar 7, 2026 — Provider-Adapter Pattern for Moderation (P0)
+## Mar 8, 2026 — Stages 1-7 Implementation (PHASE 0-2 of Master Plan)
+
+### PHASE 0: Freeze the Base
+- Created `/app/docs/frozen-contracts.md` documenting all frozen routes, collections, indexes, and breaking change rules
+
+### Stage 1: Appeal Decision Workflow ✅
+- `PATCH /api/appeals/:id/decide` — Moderator approves/rejects appeals
+- Strike reversal + content visibility restore on approval
+- Suspension auto-lift when strike count drops below threshold
+- Moderation event + audit trail recording
+
+### Stage 2: College Claim Workflow ✅
+- `POST /api/colleges/:id/claim` — Submit with proofType
+- `GET /api/me/college-claims` — User's claims history
+- `GET /api/admin/college-claims?status=PENDING` — Admin review queue
+- `PATCH /api/admin/college-claims/:id/decide` — Admin decision
+- 7-day reapply cooldown, one active claim per user/college, fraud flag support
+
+### Stage 3: Story Expiry Cleanup ✅
+- MongoDB TTL index on `expiresAt` with `partialFilterExpression: { kind: "STORY" }`
+- Expired stories auto-deleted by MongoDB, excluded from feed queries
+
+### Stage 4: Distribution Ladder ✅
+- 3-tier distribution: Stage 0 (profile/house) → 1 (college) → 2 (public)
+- Promotion rules: account age 7d + 0 strikes + 1+ like for 0→1; 24h + 3 likes + 0 reports for 1→2
+- Demotion on active reports/strikes
+- Admin endpoints: config, evaluate, manual override
+
+### Stage 5: Notes/PYQs Library ✅
+- Full CRUD: create, search (multi-filter), detail (with download count), soft delete, report
+- 5 kinds: NOTE, PYQ, ASSIGNMENT, SYLLABUS, LAB_FILE
+- Taxonomy: college → branch → subject → semester
+- AI moderation on title+description
+- Auto-hold at 3+ reports
+
+### Stage 6: Events + RSVP ✅
+- Event CRUD: create, search (by college, startDate), detail with RSVP counts
+- RSVP upsert (GOING/INTERESTED), cancel
+- Atomic RSVP count tracking
+- AI moderation on event text
+
+### Stage 7: Board Notices + Authenticity Tags ✅
+- Board notices: create (board members only) → moderator review → publish
+- College notices endpoint (public, published only)
+- Authenticity tags: board/moderator can tag RESOURCE/EVENT as VERIFIED/USEFUL/OUTDATED/MISLEADING
+- Duplicate tag prevention (update instead)
+
+### New collections created: 6
+- `college_claims`, `resources`, `events`, `event_rsvps`, `board_notices`, `authenticity_tags`
+
+### New indexes created: 18+
+- All new collections properly indexed for query patterns
+
+### Test Results
+- Stage 1 Appeals: 100%
+- Stage 2 Claims: 100%
+- Stage 4 Distribution: 100%
+- Stage 5 Resources: 100%
+- Stage 6 Events: 100%
+- Stage 7 Notices/Tags: Working with proper access controls
 
 ### What changed
 - **Replaced** old tightly-coupled moderation module (`/app/lib/moderation.js` → deleted)
