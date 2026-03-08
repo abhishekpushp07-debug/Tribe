@@ -1,0 +1,258 @@
+{
+  "test_suite": "Stage 9 Stories Backend Final Closure Audit",
+  "timestamp": "2026-03-08T16:14:27.398721",
+  "base_url": "https://tribe-stories-stage9.preview.emergentagent.com/api",
+  "total_tests": 48,
+  "passed_tests": 41,
+  "success_rate": 85.41666666666666,
+  "test_categories": {
+    "A_core_features": "20 tests",
+    "B_block_integration": "10 tests (P0 PRIORITY)",
+    "C_toctou_concurrency": "4 tests",
+    "D_contract_edge_cases": "6 tests",
+    "E_admin_features": "4 tests",
+    "F_settings_features": "4 tests"
+  },
+  "detailed_results": [
+    {
+      "test": "1. Create TEXT story with background + stickers",
+      "status": "PASS",
+      "details": "Story ID: 84d06516-9056-433a-a7d3-733c6217e37e"
+    },
+    {
+      "test": "2. Create IMAGE story type (validation error expected)",
+      "status": "PASS",
+      "details": "Got expected validation error: {'error': 'IMAGE story requires at least one media attachment', 'code': 'VALIDATION_ERROR'}"
+    },
+    {
+      "test": "3. View own story",
+      "status": "PASS",
+      "details": "Status: 200, Has story data: True"
+    },
+    {
+      "test": "4. Story rail shows own stories",
+      "status": "PASS",
+      "details": "Status: 200, Rail entries: 1"
+    },
+    {
+      "test": "5. EVERYONE story visible to follower",
+      "status": "PASS",
+      "details": "Bob can view Alice's EVERYONE story: 200"
+    },
+    {
+      "test": "6. FOLLOWERS story: follower can see, non-follower blocked",
+      "status": "PASS",
+      "details": "Bob: 200, Charlie: 403"
+    },
+    {
+      "test": "7. CLOSE_FRIENDS story: close friend can see, non-close-friend blocked",
+      "status": "PASS",
+      "details": "Bob (CF): 200, Charlie (not CF): 403"
+    },
+    {
+      "test": "8. Mark seen: first view increments viewCount",
+      "status": "PASS",
+      "details": "ViewCount: 1"
+    },
+    {
+      "test": "9. Repeated view: viewCount stays same (idempotent)",
+      "status": "PASS",
+      "details": "First: 1, Second: 1"
+    },
+    {
+      "test": "10. Emoji reaction: POST /stories/:id/react with valid emoji",
+      "status": "PASS",
+      "details": "Status: 200, Response: {'message': 'Reaction recorded', 'emoji': '\u2764\ufe0f', 'storyId': '84d06516-9056-433a-a7d3-733c6217e37e'}"
+    },
+    {
+      "test": "11. Change reaction: POST /stories/:id/react with different emoji (upsert)",
+      "status": "PASS",
+      "details": "Status: 200, New emoji: \ud83d\udd25"
+    },
+    {
+      "test": "12. Remove reaction: DELETE /stories/:id/react",
+      "status": "PASS",
+      "details": "Status: 200, Response: {'message': 'Reaction removed'}"
+    },
+    {
+      "test": "13. Reply to story: POST /stories/:id/reply",
+      "status": "PASS",
+      "details": "Status: 201, Has reply: True"
+    },
+    {
+      "test": "14. Get replies (owner): GET /stories/:id/replies",
+      "status": "PASS",
+      "details": "Status: 200, Reply count: 1"
+    },
+    {
+      "test": "15. POLL sticker: respond with optionIndex, get results",
+      "status": "PASS",
+      "details": "Status: 200, Has results: True"
+    },
+    {
+      "test": "16. Duplicate POLL vote: should return 409",
+      "status": "PASS",
+      "details": "Status: 409 (expected 409)"
+    },
+    {
+      "test": "17. QUIZ sticker: respond, check correctness in results",
+      "status": "PASS",
+      "details": "Status: 200, Has results: True"
+    },
+    {
+      "test": "18. EMOJI_SLIDER: respond with value 0.85",
+      "status": "FAIL",
+      "details": "Failed to create slider story"
+    },
+    {
+      "test": "19. Create highlight with stories",
+      "status": "PASS",
+      "details": "Highlight ID: 674c8b27-1d35-4b00-876a-2d9b6c33de92"
+    },
+    {
+      "test": "20. Edit highlight: add stories, rename",
+      "status": "PASS",
+      "details": "Status: 200, Updated: True"
+    },
+    {
+      "test": "21. Block user: POST /me/blocks/:userId (should succeed)",
+      "status": "PASS",
+      "details": "Charlie blocks Bob - Status: 200"
+    },
+    {
+      "test": "22. Blocked user CANNOT view story detail (GET /stories/:id \u2192 403)",
+      "status": "PASS",
+      "details": "Charlie viewing Bob's story: 403 (expected 403)"
+    },
+    {
+      "test": "23. Blocked user CANNOT react to story (POST /stories/:id/react \u2192 403)",
+      "status": "PASS",
+      "details": "Charlie reacting to Bob's story: 403 (expected 403)"
+    },
+    {
+      "test": "24. Blocked user CANNOT reply to story (POST /stories/:id/reply \u2192 403)",
+      "status": "PASS",
+      "details": "Charlie replying to Bob's story: 403 (expected 403)"
+    },
+    {
+      "test": "25. Blocked user CANNOT respond to sticker (POST /stories/:id/sticker/:stickerId/respond \u2192 403)",
+      "status": "PASS",
+      "details": "Charlie responding to Bob's sticker: 403 (expected 403)"
+    },
+    {
+      "test": "26. Blocked user's story rail does NOT show blocker's stories",
+      "status": "PASS",
+      "details": "Charlie sees Bob's stories: False (should be False)"
+    },
+    {
+      "test": "27. Reverse block: if C blocks A, C cannot see A's stories (bidirectional block)",
+      "status": "PASS",
+      "details": "Charlie viewing Alice's story after blocking Alice: 403 (expected 403)"
+    },
+    {
+      "test": "28. Unblock: DELETE /me/blocks/:userId, then blocked user CAN view story again",
+      "status": "PASS",
+      "details": "Charlie viewing Bob's story after unblock: 200 (expected 200)"
+    },
+    {
+      "test": "29. Block self: POST /me/blocks/<self-id> \u2192 400",
+      "status": "PASS",
+      "details": "Charlie blocking self: 400 (expected 400)"
+    },
+    {
+      "test": "30. Block + close friends: blocking removes from close friends, blocked user cannot be added as close friend",
+      "status": "PASS",
+      "details": "Bob in CF after block: False, Re-add status: 403"
+    },
+    {
+      "test": "31. Close friends max-500: verify limit exists (add friend succeeded)",
+      "status": "FAIL",
+      "details": "Current count: 0, Add status: 403"
+    },
+    {
+      "test": "32. Highlights max-50: verify limit exists (create highlight succeeded)",
+      "status": "PASS",
+      "details": "Current count: 1, Create status: 201"
+    },
+    {
+      "test": "33. Counter recompute: POST /admin/stories/:id/recompute-counters",
+      "status": "FAIL",
+      "details": "Status: 403, Has before/after: False"
+    },
+    {
+      "test": "34. Report flow: POST /stories/:id/report + duplicate report \u2192 409",
+      "status": "PASS",
+      "details": "First report: 201, Duplicate: 409 (expected 409)"
+    },
+    {
+      "test": "35. Create story response has required fields: id, authorId, type, status, expiresAt, createdAt, stickers",
+      "status": "PASS",
+      "details": "Missing fields: []"
+    },
+    {
+      "test": "36. Invalid emoji \u2192 400",
+      "status": "PASS",
+      "details": "Status: 400 (expected 400)"
+    },
+    {
+      "test": "37. Self-react \u2192 400",
+      "status": "PASS",
+      "details": "Status: 400 (expected 400)"
+    },
+    {
+      "test": "38. Self-reply \u2192 400",
+      "status": "PASS",
+      "details": "Status: 400 (expected 400)"
+    },
+    {
+      "test": "39. Expired story \u2192 410 (or 404 for non-existent)",
+      "status": "PASS",
+      "details": "Status: 404 (expected 410 or 404)"
+    },
+    {
+      "test": "40. REMOVED story \u2192 404 (delete a story, then try to view it)",
+      "status": "PASS",
+      "details": "View deleted story status: 404 (expected 404)"
+    },
+    {
+      "test": "41. Admin stories queue: GET /admin/stories?status=ALL (needs ADMIN role user)",
+      "status": "FAIL",
+      "details": "Status: 403, Has items/stats: False"
+    },
+    {
+      "test": "42. Admin analytics: GET /admin/stories/analytics",
+      "status": "FAIL",
+      "details": "Status: 403, Has analytics data: False"
+    },
+    {
+      "test": "43. Admin moderate HOLD: story becomes 403 for non-owner",
+      "status": "FAIL",
+      "details": "Failed to hold story: 403"
+    },
+    {
+      "test": "44. Admin moderate APPROVE: story becomes visible again",
+      "status": "FAIL",
+      "details": "Failed to approve story: 403"
+    },
+    {
+      "test": "45. Get default settings: GET /me/story-settings",
+      "status": "PASS",
+      "details": "Status: 200, Has default fields: True"
+    },
+    {
+      "test": "46. Update settings: PATCH /me/story-settings",
+      "status": "PASS",
+      "details": "Status: 200, Updated: True"
+    },
+    {
+      "test": "47. hideStoryFrom: add userId to hideStoryFrom \u2192 that user can't see stories",
+      "status": "PASS",
+      "details": "Bob viewing hidden story: 403 (expected 403)"
+    },
+    {
+      "test": "48. Reply privacy OFF: set replyPrivacy to OFF \u2192 reply attempts get rejected",
+      "status": "PASS",
+      "details": "Reply attempt status: 403 (expected 403)"
+    }
+  ]
+}

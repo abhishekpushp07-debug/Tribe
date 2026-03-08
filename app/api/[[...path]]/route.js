@@ -257,6 +257,10 @@ async function handleRoute(request, { params }) {
       else if (path[1] === 'story-settings') {
         result = await handleStories(path, method, request, db)
       }
+      // Stage 9: User blocks
+      else if (path[1] === 'blocks') {
+        result = await handleStories(path, method, request, db)
+      }
       // Stage 2: College claims (GET /me/college-claims)
       else if (path[1] === 'college-claims') {
         result = await handleCollegeClaims(path, method, request, db)
