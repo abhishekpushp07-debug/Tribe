@@ -8,7 +8,7 @@ This test validates Stage 1B semantic contracts:
 3. Error codes: Still zero raw strings
 4. All previous structural contracts: Still intact
 
-Base URL: https://api-consistency-hub.preview.emergentagent.com/api
+Base URL: https://token-session-vault.preview.emergentagent.com/api
 Auth: Bearer TOKEN
 """
 
@@ -20,7 +20,7 @@ from datetime import datetime
 from typing import Dict, Any, Optional
 
 # Configuration
-BASE_URL = "https://api-consistency-hub.preview.emergentagent.com/api"
+BASE_URL = "https://token-session-vault.preview.emergentagent.com/api"
 HEADERS = {"Content-Type": "application/json"}
 
 class TestRunner:

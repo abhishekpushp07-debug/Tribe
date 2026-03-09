@@ -1,185 +1,148 @@
 <analysis>
-<original_problem_statement>
-The user is building a world-class social media backend for Indian college students, named **Tribe**. The development follows a strict, user-defined master plan where each stage requires a comprehensive deep proof pack for acceptance.
 
-In this session, the user's focus shifted from completing the original Stage 12 closure items to a massive new feature: **Stage 12X - Tribe Contest Engine**. This involved designing and building a full-fledged, in-app contest system from the ground up, where the 21 Tribes can compete. The user provided extremely detailed prompts defining the world-best standard for this engine, including schemas, APIs, scoring models, anti-cheat mechanisms, and even the UI/UX flow.
+**original_problem_statement**: The user wants to elevate the Tribe social media backend to a world-best standard, targeting a quality score of over 900/1000. This is being done through a detailed, multi-stage plan.
 
-After the initial implementation, the user requested a **real-time SSE (Server-Sent Events) layer** for live scoreboards.
+The last session involved completing **Stage 1 (Canonical Contract Freeze v2)**, which was split into two parts after the user rejected the initial implementation as incomplete:
+- **Stage 1A (Structural):** Standardizing response envelopes, pagination, and error codes.
+- **Stage 1B (Semantic):** Standardizing naming conventions and entity snippets.
 
-Finally, the user mandated a **Stage 12X Gold Freeze Gate**, a rigorous 12-point testing and cleanup protocol to formally freeze the contest engine as a production-grade, world-best subsystem before moving on. The session concluded with the user requesting detailed documentation of all completed stages for a hypothetical frontend agent.
-</original_problem_statement>
-**User's preferred language**: The user communicates in **English**, frequently using Hindi for emphasis and to convey specific nuances (e.g., Bilkul, Sahi pakda tumne, super-sharp, implementation-grade). The next agent MUST respond in professional English.
+The user has now provided an extremely strict, anti-fake prompt to begin the next phase: **Stage 2 - Security & Session Hardening**.
+
+**User's preferred language**: The user communicates in English, with frequent use of Hindi for emphasis and to convey specific instructions. The next agent MUST respond in professional English.
 
 **what currently exists?**
-The application is a feature-rich, monolithic Next.js backend API connected to MongoDB. All previously completed stages (Auth, Content, Feeds, Stories, Reels, Events, etc.) are functional.
-
-The main addition in this session is the **Stage 12X Tribe Contest Engine**, which has been fully implemented, tested, and Gold Frozen. This engine allows admins to create various types of contests (reel-based, judge-based, hybrid, etc.) where users can submit entries and tribes compete for Salutes. It includes a sophisticated, pluggable scoring model, an append-only salute ledger for reward tracking, and a derived standings table for rankings.
-
-A real-time layer using **Server-Sent Events (SSE)** has been built on top of the contest engine, providing live scoreboards, live season standings, and a global contest activity feed.
-
-The legacy House system has been formally deprecated and its core code paths removed or marked as obsolete.
+The application is a large, monolithic Next.js backend API. A significant refactoring effort, **Stage 1 (A & B) - Canonical Contract Freeze v2**, has been completed. This has resulted in:
+- **Consistent Structural Contracts:** All major list endpoints now return a canonical  structure, often with a  object. Backward compatibility is maintained by including the old flat keys (, etc.) alongside the new structure.
+- **Centralized Error Codes:** String-based error messages have been replaced with a central  enum located in .
+- **Standardized Response Builders:** Helper functions in  like , , and  are used to enforce consistency.
+- **Semantic Standardization (Initial):**
+    - A  helper was created to standardize user object shapes in responses and has been adopted in key handlers.
+    - Inconsistent naming like  vs  and  have been aliased for backward compatibility while introducing canonical names.
+- **Versioned Contracts:** A custom  HTTP header is now added to all API responses.
 
 **Last working item**:
-    - Last item agent was working: Fulfilling the user's request for comprehensive documentation. The agent provided a detailed, stage-by-stage API reference for a hypothetical Android frontend agent, followed by a high-level 10-point summary for each stage.
-    - Status: COMPLETED
-    - Agent Testing Done: Y
-    - Which testing method agent to use? NA
-    - User Testing Done: Y
+- **Last item agent was working:** The agent completed **Stage 1B: Semantic Contract Completion**. This was a corrective action to fix the semantic gaps left after the initial structural refactoring. The work involved:
+    1.  Creating and adopting a canonical  function to standardize user data in responses.
+    2.  Auditing and resolving naming inconsistencies (e.g.,  vs. ) by adding backward-compatible aliases.
+    3.  Producing a detailed audit and implementation document ().
+- **Status:** USER VERIFICATION PENDING
+- **Agent Testing Done:** Y (8/8 tests passed via  for Stage 1B changes).
+- **Which testing method agent to use?** backend testing agent. Given the critical nature of security changes, a new, comprehensive test suite must be created and run via the testing agent to validate all aspects of the Stage 2 implementation.
+- **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
-  - Issue 1: (P2) Address the 2 remaining automated test failures for Stage 4 (Distribution Ladder).
-  - Issue 2: (P2) Get final, conclusive PASS for Stage 5 (Notes/PYQs) by creating and submitting a deep proof pack.
+  - Issue 1:  (P2) Address the 2 remaining automated test failures for Stage 4 (Distribution Ladder).
+  - Issue 2:  (P2) Get final, conclusive PASS for Stage 5 (Notes/PYQs) by creating and submitting a deep proof pack.
   
-  Issues Detail:
-  - **Issue 1: Stage 4 Test Failures**
-     - Attempted fixes: None in this session. This is a low-priority backlog item.
-     - Next debug checklist: Review the original test report for Stage 4 and fix the 2 failing tests.
-     - Why fix this issue and what will be achieved with the fix? To meet the user's high standard for 100% automated proof across all features.
-     - Status:  NOT STARTED
-     - Is recurring issue? N
-     - Should Test frontend/backend/both after fix? backend
-     - Blocked on other issue: None.
-  - **Issue 2: Stage 5 Formal Acceptance**
-     - Attempted fixes: None in this session. This is a low-priority backlog item.
-     - Next debug checklist: Create and present a full deep proof pack for Stage 5, similar to what was done for other stages.
-     - Why fix this issue and what will be achieved with the fix? To formally close out the stage per the user's process and standards.
-     - Status:  NOT STARTED
-     - Is recurring issue? N
-     - Should Test frontend/backend/both after fix? backend
-     - Blocked on other issue: None.
+  **Issues Detail:**
+  - **Issue 1 & 2:** These are long-standing backlog items from a previous session. The user's focus is entirely on the new 12-stage plan. These should not be worked on unless explicitly requested.
+     - **Status:** NOT STARTED
+     - **Is recurring issue?** Y (for Issue 1)
 
 **In progress Task List**:
-  - None.
+- None.
 
 **Upcoming and Future Tasks**
 - **Upcoming Tasks**:
-    - **P0: Stage 11 - Scale / Reliability / Disaster Excellence**: Per the user's original master plan, this is the next logical stage now that Stage 12/12X is frozen. The user has mentioned this multiple times.
-    - **P1: Stage 12Y - Tribe Contest Product Surfaces**: The user has already provided the full UI/UX design prompt. The next step could be to build the frontend components based on this design, although the current agent is a backend specialist. The next agent should clarify with the user if they should proceed with this or if a dedicated frontend agent will handle it.
+    - **P0: Stage 2 — Security & Session Hardening**: This is the immediate, non-negotiable next task. The user has provided a new, extremely strict anti-fake builder prompt (see ). The agent MUST follow this prompt meticulously, which mandates a Pre-Flight Audit before any implementation, followed by the implementation itself, and finally a Proof Pack with machine-checkable evidence. The goal is to harden security around tokens, sessions, rate-limiting, and privileged access.
+
 - **Future Tasks**:
-    - Address the pending issues for Stage 4 and Stage 5.
-    - Implement other stages from the original master plan as directed by the user (e.g., Stage 13, 14, etc.).
+    - **Stage 3: Observability Baseline + Health Intelligence**: Implement structured logging, deep health checks, and basic metrics dashboards.
+    - **Stage 4: Test Pyramid + CI Gate v1**: Add unit and integration tests to create a comprehensive test pyramid.
+    - **Stage 5: Scalability Foundation Refactor**: Break down large handlers and introduce service/repository layers.
+    - **Stage 6: Async Backbone + Job System + CQRS-lite**: Move heavy operations to background jobs.
+    - **Stage 7: Real-Time Reliability Layer**: Improve the reliability of the SSE-based real-time features.
+    - **Stage 8: Moderation v2**: Strengthen content moderation capabilities.
+    - **Stage 9: Feature Depth Pack**: Implement Pages, Push Notifications, and DMs.
+    - **Stages 10-12**: Production Hardening, Load/Chaos testing, and the final 900+ score gate.
 
 **Completed work in this session**
-- **Stage 12X — Tribe Contest Engine (DONE & Gold Frozen)**
-  - Implemented a massive, world-class contest engine with 10+ new DB collections and 25+ new API endpoints.
-  - Supports multiple contest types, a full contest lifecycle, entry submission, voting, judge scoring, and a pluggable scoring model.
-  - Built with an append-only salute ledger and derived standings for data integrity.
-- **Stage 12X-RT — Real-Time SSE Layer (DONE & Gold Frozen)**
-  - Added three real-time SSE streams for live contest scoreboards, live season standings, and a global activity feed.
-  - Implemented a robust Redis Pub/Sub transport with a graceful in-memory fallback.
-- **Stage 12X Gold Freeze Gate (DONE & PASSED)**
-  - Created and executed a comprehensive 12-gate test suite () with 69 tests.
-  - Proved idempotency, concurrency safety, ledger integrity, RBAC, anti-cheat resilience, load stability, and failure recovery.
-  - Resolved the 3 failing tests from a previous testing agent run, identifying them as rate-limit-related issues under load.
-- **G11 Legacy House Cleanup (DONE)**
-  - Safely deprecated and removed the old  system, including handlers, routes, and cache logic, as part of the Gold Freeze.
-- **G12 Post-Cleanup Health Check (DONE)**
-  - Verified that all critical app flows (signup, tribe assignment, contests) work correctly after the cleanup.
-  - Re-ran  plan proof, confirming zero s on 18 hot paths post-cleanup.
-- **Auto Tribe Assignment on Signup (DONE)**
-  - Updated the  flow to automatically assign a tribe to new users, fulfilling a requirement from the original Stage 12 plan.
-- **Full API Documentation (DONE)**
-  - Generated an extensive, stage-by-stage API reference and a high-level 10-point summary for each stage as requested by the user.
+- **Stage 1A - Structural Contract Freeze**:
+  - Standardized all list responses to use a canonical  and  wrapper across all 18 API handlers.
+  - Centralized all error strings into an  enum in .
+  - Implemented standard response builder helpers in .
+  - Added an  header to all API responses.
+- **Stage 1B - Semantic Contract Completion**:
+  - Created and adopted a  helper in  to standardize user object representations.
+  - Audited and added backward-compatible aliases for inconsistent field names (e.g., , ).
+- **Comprehensive Testing**: Used  multiple times to validate all changes, with final test runs showing 35/35 and 8/8 passes respectively.
+- **Documentation**: Created detailed audit and completion documents:  and .
 
 **Earlier issues found/mentioned but not fixed**
-   - **Issue 1: Stage 4 Test Failures**
-     - Two automated tests for the Stage 4 (Distribution Ladder) feature are still failing. This was noted in the initial handoff and has not been prioritized.
-     - Debug checklist: Review the original test report and the Stage 4 implementation to identify the cause of the failures.
-     - Why to solve this issue and what will be achieved with this? To achieve 100% test pass rate across all historical features, meeting the user's high quality bar.
-     - Should Test frontend/backend/both after fix: backend
-     - Is recurring issue? Y
-   - **Issue 2: Stage 5 Formal Acceptance**
-     - Stage 5 (Notes/PYQs) is functionally complete but was never formally accepted with a deep proof pack.
-     - Debug checklist: Generate a full proof pack for Stage 5, including API contracts, schema, index proof (), and test results, then present it to the user for a final PASS.
-     - Why to solve this issue and what will be achieved with this? To formally close out the stage per the user's mandatory development process.
-     - Should Test frontend/backend/both after fix: backend
-     - Is recurring issue? N
-
-**Known issue recurrence from previous fork**
-  - None.
+- The same two long-standing issues remain on the backlog:
+   - **Issue 1:** Two failing tests for the Stage 4 (Distribution Ladder) feature.
+   - **Issue 2:** Stage 5 (Notes/PYQs) was never formally accepted with a deep proof pack.
+   These are low priority and should not be addressed without explicit user instruction.
 
 **Code Architecture**
-- **Backend**: Monolithic Next.js API in .
-- **Core Logic Files**: Logic is modularized into handler files within .
-    -  (New, massive file for the contest engine and SSE)
-    - Other handlers for , , , , , , etc.
-- **Router**:  acts as a central dispatcher, routing requests to the appropriate handler based on the path. The order of route matching is critical.
-- **Database Initialization**:  defines all MongoDB collections and indexes. It was significantly updated.
-- **Constants**:  contains static definitions like the 21 Tribes.
+- **Framework**: Monolithic Next.js backend API.
+- **Entrypoint**:  which acts as a master router.
+- **Handlers**: Logic is contained in 18 separate handler files within .
+- **Helpers & Constants**:
+    - : Contains new canonical response builders () and entity snippet formatters ().
+    - : Contains the new  enum.
 - **Database**: MongoDB.
-- **Cache/PubSub**: Redis is used for Pub/Sub in the real-time SSE layer, with a graceful fallback to an in-memory .
+- **Cache/PubSub**: Redis.
 
 **Key Technical Concepts**
-- **Safe Destructive Cutover**: The methodology used to replace the House system with the Tribe system and later to deprecate House-related code.
-- **Append-Only Ledgers**: The  is the immutable source of truth for all tribe rewards.
-- **Idempotent Engines**: The contest resolution endpoint () is idempotent, ensuring that retries do not cause duplicate salute distribution.
-- **Real-Time SSE with Pub/Sub Fallback**: A robust real-time system was built using Server-Sent Events. It uses Redis for multi-server broadcasting and gracefully falls back to an in-memory EventEmitter for single-server environments.
-- **Comprehensive Scripted Test Suites**: The  script was created to perform rigorous, automated testing across 12 different quality gates (concurrency, idempotency, load, recovery, etc.), demonstrating a higher level of testing maturity.
-
-**key DB schema**
-- **tribe_contests (10 new collections)**: , , , , , , , , , . The schemas are extremely detailed as defined by the user.
-
-**changes in tech stack**
-- Redis is now actively used for its Pub/Sub capabilities to support the real-time SSE layer, in addition to its previous use for caching.
+- **API Contract Freezing (Structural & Semantic)**: A formal, two-part process to enforce consistency. First structurally (envelopes, pagination), then semantically (naming, snippets).
+- **Additive, Backward-Compatible Refactoring**: A core principle of the work done. New contract structures were added while keeping old fields as aliases to prevent breaking existing clients.
+- **Proof-Backed Development**: A user-mandated workflow where claims of completion must be backed by machine-checkable evidence (grep, tests, curl outputs) rather than just summaries.
 
 **All files of reference**
-- **Created/Updated in this session**:
-    - : New handler containing all logic for the contest engine and real-time SSE.
-    - : Heavily updated with schemas and 27 new indexes for the contest engine.
-    - : Updated to dispatch all new contest and admin contest routes, with careful ordering. Also updated to handle rate limiting and raw SSE responses.
-    - : Updated to auto-assign tribes on user registration.
-    - : Updated to comment out the call to the deprecated  function.
-    - : Updated to remove cache clearing related to the deprecated house system.
-    - : Document created to hold the results of the Gold Freeze test suite.
-    - : Detailed, stage-by-stage API documentation.
-    - : High-level 10-point summaries for each stage.
-    - : Updated with the completion of Stage 12X.
-- **Testing Scripts**:
-    - : A comprehensive bash script created to run 69 automated tests covering the 12 Gold Freeze gates.
+- **Created/Updated Files:**
+    - : **NEW/MODIFIED**. Created to house the  enum.
+    - : **NEW/MODIFIED**. Created to house response builders and snippet formatters.
+    - : Modified to add the  header.
+    - All 18 handler files in : Extensively modified to adopt the new v2 contract (response shapes, error codes, snippets).
+    - : **NEW**. The audit document for Stage 1A.
+    - : **NEW**. The audit document for Stage 1B.
+- **Key Test/Doc Files:**
+    - : Updated to reflect completion of Stages 1A and 1B.
+    - : Test report for Stage 1B validation (8/8 pass).
+    - : Test report for Stage 1A validation (35/35 pass).
 
 **Critical Info for New Agent**
-- **USER'S STANDARD IS LAW**: The user's world-best requirement is absolute and non-negotiable. Every stage must be completed with a deep proof pack. The user provides extremely detailed prompts which must be followed precisely.
-- **Stage 12X is GOLD FROZEN**: The Tribe Contest Engine is considered complete, production-grade, and fully verified. Do not modify it unless explicitly requested. It passed a rigorous 12-gate test suite.
-- **NEXT MAJOR TASK**: The highest priority is likely **Stage 11 (Scale / Reliability / Disaster Excellence)**. The user has mentioned this multiple times as the next step in the master plan.
-- **REAL-TIME IS LIVE**: The SSE infrastructure is a core part of the contest engine. Be aware of the  calls in write paths and the three live SSE endpoints.
+- **User's Standard is LAW**: The user has an extremely high standard for quality and will reject any work that is not meticulously executed and thoroughly proven. Summary-based claims of completion are unacceptable.
+- **Follow the Anti-Fake Prompt**: Your immediate task is **Stage 2: Security & Session Hardening**. You MUST follow the new, hyper-strict anti-fake builder prompt provided by the user in . This is not a suggestion; it is a requirement.
+- **Mandatory Workflow**: Your process for Stage 2 must be:
+    1.  **Pre-Flight Audit:** First, conduct a deep audit of the current security state *before* writing any implementation code.
+    2.  **Implement:** Build the target security architecture.
+    3.  **Proof Pack:** Generate a comprehensive set of machine-checkable proofs (grep, tests, curl, matrices) to validate your work.
+    4.  **Honest Verdict:** Present your findings with a clear Exception Register listing anything that is incomplete.
+- **Do Not Deviate**: Do not start Stage 3 or any other task until Stage 2 is fully completed, judged, and passed based on the hard evidence you provide.
 
 **documents created in this job**
 - 
 - 
-- 
 -  (updated)
-- 
 
-**Last 10 User Messages and any pending HUMAN messages** 
-1. **User (LATEST)**: Requested all missing documents. (RESOLVED)
-2. **Agent**: Provided the high-level 10-point summary for each stage. (RESOLVED)
-3. **User**: Asked for a 10-point summary of each stage instead of the full documentation. (RESOLVED)
-4. **Agent**: Provided a complete, stage-by-stage API reference for a hypothetical Android agent. (RESOLVED)
-5. **User**: Requested a detailed handoff document for a frontend agent, detailing what has been built. (IN PROGRESS, led to the final documentation)
-6. **Agent**: Finished with the Gold Freeze Pass and updated PRD. (RESOLVED)
-7. **User**: Provided the detailed master prompt for the Stage 12X Gold Freeze Gate. (RESOLVED)
-8. **Agent**: Finished the real-time SSE implementation and testing, then asked for the next step. (RESOLVED)
-9. **User**: Suggested adding a real-time contest scoreboard using SSE/WebSocket. (RESOLVED)
-10. **Agent**: Finished the base implementation of the Tribe Contest Engine (Stage 12X) and updated the PRD. (RESOLVED)
+**Last 10 User Messages and any pending HUMAN messages**
+1.  **User (LATEST)**: Provided a refreshed, anti-fake **judge prompt** for Stage 2 to verify the builder's work.
+2.  **User**: Provided the refreshed, anti-fake **builder prompt** for Stage 2, demanding a rigorous audit-implement-prove workflow. (PENDING EXECUTION)
+3.  **User**: Acknowledged the agent's honest assessment of Stage 1 being incomplete and defined the next task as Stage 1B: Semantic Contract Completion, providing a detailed prompt. (Resolved)
+4.  **User**: Asked the agent to give an honest marking for Stage 1 across all parameters. (Resolved, agent provided a PASS WITH CRITICAL GAPS verdict).
+5.  **User**: Challenged the agent's initial PASS verdict for Stage 1, calling it summary-based and demanding proof that no inconsistencies remain. (Resolved, led to deeper audit).
+6.  **User**: Yes. Confirmed the agent should proceed with fixing the inconsistencies found during the second, deeper audit of Stage 1. (Resolved)
+7.  **User**: Yes Yes. ... Final call Stage 1 verdict = PASS WITH CRITICAL GAPS... Ab next kaam: Stage 1B. Confirmed the agent's honest audit, agreed with the verdict, and provided the prompt for Stage 1B. (Resolved)
+8.  **User**: Provided the highly detailed, 12-stage plan and the original, comprehensive prompt for Stage 1: Canonical Contract Freeze v2. (Resolved)
 
 **Project Health Check:**
-- **Broken**: No. The application is stable and more robust than before.
+- **Broken**: No. The application is stable.
 - **Mocked**: No.
 
 **3rd Party Integrations**
 - **OpenAI GPT-4o-mini**: Used for content moderation.
 - **Emergent Object Storage**: Used for media storage.
-- **Redis**: Used for distributed caching and now actively used for Pub/Sub to power the real-time SSE layer.
+- **Redis**: Used for distributed caching and Pub/Sub.
 
 **Testing status**
-  - Testing agent used after significant changes: YES.
-  - Troubleshoot agent used after agent stuck in loop: NO.
-  - Test files created:
-    -  (A comprehensive, 69-test script for the Gold Freeze gates).
-  - Known regressions: None. The post-cleanup health check confirmed no regressions were introduced.
+- **Testing agent used after significant changes:** YES. The agent used  multiple times to validate the large-scale refactoring of Stage 1A and Stage 1B.
+- **Troubleshoot agent used after agent stuck in loop:** NO.
+- **Test files created:** None, but the testing agent was used to generate and run tests dynamically. The reports are in .
+- **Known regressions:** None.
 
 **What agent forgot to execute**
-The agent meticulously followed the user's high-priority requests. The only forgotten items are long-standing, low-priority backlog tasks that were not prioritized by the user in this session:
-- The 2 failing automated tests from Stage 4.
-- Obtaining a final, conclusive PASS for the completed Stage 5 (Notes/PYQs).
+The agent initially failed to grasp the full scope of Stage 1, focusing only on structural contract changes and ignoring the required semantic changes (naming, snippets, versioning). This led to a user rejection. The agent also prematurely declared the stage PASS based on a summary, a mistake the user corrected. The agent has since adapted its process to be more thorough and proof-based, as demanded by the user.
+
 </analysis>

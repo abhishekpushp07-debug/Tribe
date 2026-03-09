@@ -4,7 +4,7 @@ import aiohttp
 import json
 
 async def test_api():
-    BASE_URL = "https://api-consistency-hub.preview.emergentagent.com/api"
+    BASE_URL = "https://token-session-vault.preview.emergentagent.com/api"
     
     async with aiohttp.ClientSession() as session:
         # Login first
