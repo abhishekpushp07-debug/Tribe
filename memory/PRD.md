@@ -1,79 +1,65 @@
 # Tribe — Product Requirements Document
 
 ## Original Problem Statement
-Build a world-best social media backend API targeting 900+/1000 quality score.
-Multi-stage plan: 12 stages from Security to Production Hardening.
+Build the "Tribe" social media backend to world-best standard, targeting quality score >900/1000.
+Executed through staged plan: Security → Observability → Testing → Scalability → Production.
 
 ## Architecture
-- **Framework**: Monolithic Next.js backend API
-- **Database**: MongoDB (86 collections, 391+ indexes)
-- **Cache/PubSub**: Redis (optional, graceful degradation when unavailable)
-- **Central Gateway**: `/app/api/[[...path]]/route.js`
-- **Handlers**: `/app/lib/handlers/` (18 handler files)
-- **Security**: `/app/lib/security.js` (Redis-backed rate limiting, sanitization, canonical audit)
-- **Observability**: `/app/lib/logger.js`, `/app/lib/metrics.js`, `/app/lib/health.js`
-- **Correlation**: `/app/lib/request-context.js` (AsyncLocalStorage for end-to-end request lineage)
+- **Framework**: Monolithic Next.js API (backend-only)
+- **Database**: MongoDB
+- **Cache/Pub-Sub**: Redis (with in-memory fallback)
+- **AI**: OpenAI GPT-4o-mini (moderation)
+- **Storage**: Emergent Object Storage
+- **Context**: AsyncLocalStorage for request lineage
 
-## Completed Stages
+## Stage Completion Status
 
-### Stage 2: Security & Session Hardening — PASS (88/100)
-- Access/refresh token model with rotation and replay detection
-- Full session management (list, revoke-one, revoke-all)
-- 7 security headers on all responses
-- Tiered rate limiting (per-IP + per-user)
-- Centralized input sanitization (deep XSS stripping)
-- Structured security audit logging with PII masking
-- 7 admin/ops endpoints secured with ADMIN role
+### Stage 2: Security Hardening — PASS (88/100)
+- Access/refresh token system with replay detection
+- Session management (list, revoke-one, revoke-all)
+- Layered rate limiting (7 tiers, Redis-backed with Lua)
+- Centralized input sanitization (XSS, payload size)
 
-### Stage 3 + 3B: Observability Baseline + Gold Remediation — PASS (93/100)
-**Initial audit**: 14/100 → **Stage 3**: 81.7 → **Stage 3B**: 91.6 → **Final independent audit**: 93/100
+### Stage 3 + 3B: Observability — PASS (90/100)
+- Structured JSON logging (NDJSON, PII redaction, 12+ categories)
+- End-to-end request lineage via AsyncLocalStorage
+- 3-tier health checks (liveness/readiness/deep)
+- Metrics: histogram, percentiles, error codes, SLIs
+- Redis resilience: degraded mode + recovery strategy
+- Full observability coverage including OPTIONS
 
-#### Stage 3B fixes (Gold Remediation):
-- **AsyncLocalStorage request lineage**: requestId, ip, route, method auto-propagated to all audit writes (DB-verified: 10+ entries with non-null requestId)
-- **Error code metrics**: metrics.recordError() wired to real traffic (UNAUTHORIZED, NOT_FOUND, RATE_LIMITED tracked)
-- **OPTIONS observability**: CORS preflight now gets requestId + access log + metrics
-- **Redis reconnect**: Bounded backoff (1s→30s, max 10 retries) replaces permanent degradation
-- **Zero bare catches**: All empty catch blocks replaced with structured logging
-- **Honest proof pack**: DB count proofs, negative proofs, complete exception register
+### Stage 4A: Test Foundation + CI Gate — COMPLETE
+- **115 pytest-collected tests** (64 unit + 47 integration + 4 smoke)
+- JS eval bridge for testing actual JS functions from pytest
+- Rate limit isolation via X-Forwarded-For unique IPs
+- Phone namespace isolation (prefix 99999) + session cleanup
+- CI gate script (scripts/ci-gate.sh) — exits non-zero on failure
+- 5x idempotent consecutive runs — 0 failures
+- 39 old ad-hoc scripts archived
+- Full documentation (tests/README.md)
 
-#### Core features (Stage 3):
-- Structured JSON logger (NDJSON, 5 levels, 12+ categories, PII redaction)
-- Request ID on every response (x-request-id header)
-- Access logging (method, route, status, latency, requestId, userId, IP, errorCode)
-- Three-tier health: /healthz (liveness), /readyz (readiness), /ops/health (deep)
-- Redis-backed rate limiting with Lua script + per-tier fallback policies
-- In-memory metrics: request counts, latency histogram, p50/p95/p99, error rates
-- SLI dashboard (/ops/slis)
-- Unified canonical audit pipeline (PII masking, auto-context)
+## Upcoming Tasks
 
-## Key Files
-- `/app/lib/request-context.js` — AsyncLocalStorage correlation
-- `/app/lib/logger.js` — Structured JSON logger
-- `/app/lib/metrics.js` — In-memory metrics collector
-- `/app/lib/health.js` — Three-tier health checks
-- `/app/lib/security.js` — Rate limiting, sanitization, canonical audit
-- `/app/app/api/[[...path]]/route.js` — Central gateway with observability wrapper
-- `/app/lib/auth-utils.js` — Token/session logic, writeAudit wrapper
+### Stage 4B: Product/Handler Test Coverage (P1)
+- Posts, feed, social actions, events, resources, notices, reels
+- Moderation-linked flows, house/contest domain logic
+
+### Stage 5: Scalability Foundation Refactor (P1)
+- Service/Repository layer separation
+- handler.js → service.js → repository.js pattern
+
+### Future Stages (P2-P3)
+- Stage 6: Async Backbone + Job System + CQRS-lite
+- Stage 7: Real-Time Reliability Layer (SSE improvements)
+- Stage 8: Moderation v2
+- Stage 9: Feature Depth (Pages, Push Notifications, DMs)
+- Stages 10-12: Production Hardening, Load/Chaos Testing, Final 900+ Gate
 
 ## Known Limitations
-1. Metrics are in-memory only (per-instance). Redis-backed deferred to Stage 10.
-2. 1995 legacy audit entries lack requestId/category (forward-only migration).
-3. Redis reconnect not live-tested (no Redis in test env).
-4. ioredis unhandled error spam from cache.js/realtime.js (pre-existing).
-5. 2 console.log [Bootstrap] in realtime.js (documented exception).
-6. No startup probe, no event loop lag metric (deferred to Stage 10).
-
-## Prioritized Backlog
-
-### P0: Next Up
-- **Stage 4**: Test Pyramid + CI Gate v1
-
-### P1: Planned
-- **Stage 5**: Scalability Foundation Refactor
-- **Stage 6**: Async Backbone + Job System + CQRS-lite
-- **Stage 7**: Real-Time Reliability Layer
-
-### P2: Future
-- **Stage 8**: Moderation v2
-- **Stage 9**: Feature Depth (Pages, Push Notifications, DMs)
-- **Stages 10-12**: Production Hardening, Load/Chaos Testing, Final 900+ Gate
+1. No TTL on audit_logs collection (P2)
+2. Legacy audit entries (2124) lack requestId (forward-only migration)
+3. Redis recovery not live-tested (code verified)
+4. In-memory metrics (per-instance, not distributed)
+5. 2 console.log in realtime.js (Bootstrap only)
+6. Duplicate headers from next.config.js vs security.js
+7. Login throttle persists in memory (affects test re-runs with same phone)
