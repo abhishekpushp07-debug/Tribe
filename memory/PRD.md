@@ -33,45 +33,39 @@ Target: Backend quality score 900+/1000 across 10 parameters.
 | B0-E | Backend Freeze Code Enforcement | COMPLETE (85/85 tests) | 2026-03 |
 | **S1** | **Canonical Contract Freeze v2** | **COMPLETE (51/51 tests, 100%)** | **2026-03** |
 | **S1B** | **Semantic Contract Completion** | **COMPLETE (8/8 tests, 100%)** | **2026-03** |
-| **S2** | **Security & Session Hardening** | **COMPLETE (87/100, 8 exceptions documented)** | **2026-03** |
+| **S2** | **Security & Session Hardening** | **COMPLETE (Recovery PASS, 92/100)** | **2026-03** |
 
 
-## Stage S2 — Security & Session Hardening (COMPLETED)
+## Stage S2 — Security & Session Hardening (COMPLETED + RECOVERY)
 
-Goal: Harden identity/session/security foundation. Score 75 → 87.
+Goal: Harden identity/session/security foundation. Score 75 → 87-92.
 
-### What was done:
-1. **Access + Refresh Token Split**: 15-min access tokens (`at_` prefix), 30-day refresh tokens (`rt_` prefix)
-2. **Refresh Token Rotation**: `POST /auth/refresh` with family tracking and replay/reuse detection (entire family revoked on reuse)
-3. **Session Inventory**: List/revoke-one/revoke-all with IP, device, lastAccessed metadata. Max 10 concurrent sessions.
-4. **PIN Change Hardening**: Revokes ALL sessions, issues fresh token pair
-5. **Security Headers**: 7 headers on ALL responses (HSTS, X-Frame-Options, CSP, etc.)
-6. **Tiered Rate Limiting**: 7 tiers (AUTH 10/min, WRITE 30/min, READ 120/min, ADMIN 60/min, etc.)
-7. **Privileged Route Hardening**: 7 previously unprotected routes fixed (/ops/health, /ops/metrics, /ops/backup-check, /cache/stats, /admin/colleges/seed, /moderation/config, /moderation/check)
-8. **Security Audit Logging**: Structured events with severity, PII masking, actor/target attribution
-9. **Input Sanitization**: Script blocks, event handlers, js: protocol stripped
-10. **Migration-safe**: Legacy tokens still work, backward-compat `token` field preserved
+### Original implementation:
+1. Access + Refresh Token Split (at_/rt_ prefixes, 15-min/30-day TTLs)
+2. Refresh Token Rotation with replay/reuse detection + family revocation
+3. Session Inventory (list/revoke-one/revoke-all, IP/device/lastAccessed metadata, max 10 sessions)
+4. PIN Change Hardening (revokes ALL sessions, fresh token pair)
+5. Security Headers (7 headers on ALL responses)
+6. Tiered Rate Limiting (7 tiers)
+7. 7 Previously Unprotected Routes Fixed
+8. Security Audit Logging (structured, severity, PII masking)
 
-### Files created/modified:
-- **NEW**: `/app/lib/security.js` — Rate limiting, security headers, sanitization, audit logging, PII masking
-- **NEW**: `/app/memory/freeze/S2-security-session-hardening.md` — Full audit + proof pack
-- **MODIFIED**: `/app/lib/auth-utils.js` — createSession, rotateRefreshToken, dual-mode authenticate
-- **MODIFIED**: `/app/lib/constants.js` — 6 new ErrorCodes, 3 new Config values
-- **MODIFIED**: `/app/lib/handlers/auth.js` — Refresh endpoint, revoke-one, enhanced PIN change, audit logging
-- **MODIFIED**: `/app/lib/handlers/admin.js` — Protected /admin/colleges/seed
-- **MODIFIED**: `/app/app/api/[[...path]]/route.js` — Security headers, tiered rate limiting, protected ops/mod routes
+### Recovery (Fixed FAILED stage):
+- **Per-user rate limiting**: Was dead code (userId=null). Now REAL: two-phase (per-IP pre-auth + per-user post-auth with session DB lookup)
+- **Input sanitization**: Was 1/15+ fields. Now CENTRALIZED: deepSanitizeStrings at router level covers ALL 21 text fields
+- **Sanitization regex**: Was incomplete (missed unquoted event handlers, non-script HTML tags). Now strips ALL HTML tags
 
-### Exceptions (8 documented):
-1. In-memory rate limiting (Redis in S3)
-2. Per-user post-auth rate limiting partial (IP-only pre-auth)
-3. No auto-invalidation on role downgrade (role checked per-request)
-4. CDN/proxy header conflict (infrastructure issue)
-5. Reuse detection window limited to 5 tokens
-6. No explicit blacklist (session deletion = effective blacklist)
-7. No phone verification at registration (OTP in S9)
-8. Login brute force in-memory (Redis in S3)
+### Files:
+- `/app/lib/security.js` — Rate limiting, security headers, deepSanitizeStrings, audit logging
+- `/app/lib/auth-utils.js` — createSession, rotateRefreshToken, dual-mode authenticate
+- `/app/lib/constants.js` — 6 new ErrorCodes, 3 new Config values
+- `/app/lib/handlers/auth.js` — Refresh endpoint, revoke-one, PIN change, audit logging
+- `/app/lib/handlers/admin.js` — Protected /admin/colleges/seed
+- `/app/app/api/[[...path]]/route.js` — Security headers, tiered+per-user rate limiting, centralized sanitization, protected ops/mod routes
+- `/app/memory/freeze/S2-security-session-hardening.md` — Full audit + proof pack
+- `/app/memory/freeze/S2-recovery-anti-theater-fix.md` — Recovery proof pack
 
-### Scorecard: 87/100
+### Exception register: 12 documented items (see recovery doc)
 
 
 ## Stage S1B — Semantic Contract Completion (COMPLETED)
