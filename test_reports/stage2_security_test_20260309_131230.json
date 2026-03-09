@@ -1,0 +1,161 @@
+{
+  "timestamp": "2026-03-09T13:12:30.485869",
+  "stage": "Stage 2: Security & Session Hardening",
+  "base_url": "https://token-session-vault.preview.emergentagent.com/api",
+  "total_tests": 30,
+  "passed": 8,
+  "failed": 22,
+  "success_rate": 26.666666666666668,
+  "results": [
+    {
+      "test": "1. Register new token model",
+      "status": "FAIL",
+      "details": "Test returned False"
+    },
+    {
+      "test": "2. Login token model",
+      "status": "FAIL",
+      "details": "Test returned False"
+    },
+    {
+      "test": "3. Auth me with access token",
+      "status": "FAIL",
+      "details": "Test returned False"
+    },
+    {
+      "test": "4. Invalid token rejected",
+      "status": "PASS",
+      "details": true
+    },
+    {
+      "test": "5. Refresh token rotation",
+      "status": "FAIL",
+      "details": "Test returned False"
+    },
+    {
+      "test": "6. Old access token invalid after refresh",
+      "status": "FAIL",
+      "details": "Test returned False"
+    },
+    {
+      "test": "7. Refresh token replay detection",
+      "status": "FAIL",
+      "details": "Test returned False"
+    },
+    {
+      "test": "8. Expired refresh token",
+      "status": "PASS",
+      "details": true
+    },
+    {
+      "test": "9. New tokens work after refresh",
+      "status": "FAIL",
+      "details": "Test returned False"
+    },
+    {
+      "test": "10. List sessions",
+      "status": "FAIL",
+      "details": "Test returned False"
+    },
+    {
+      "test": "11. Revoke one session",
+      "status": "FAIL",
+      "details": "Test returned False"
+    },
+    {
+      "test": "12. Cannot revoke current session",
+      "status": "FAIL",
+      "details": "Test returned False"
+    },
+    {
+      "test": "13. Revoke all sessions",
+      "status": "FAIL",
+      "details": "Test returned False"
+    },
+    {
+      "test": "14. After revoke all, token fails",
+      "status": "FAIL",
+      "details": "Test returned False"
+    },
+    {
+      "test": "15. PIN change success",
+      "status": "FAIL",
+      "details": "Test returned False"
+    },
+    {
+      "test": "16. Old tokens invalid after PIN change",
+      "status": "FAIL",
+      "details": "Test returned False"
+    },
+    {
+      "test": "17. New tokens work after PIN change",
+      "status": "FAIL",
+      "details": "Test returned False"
+    },
+    {
+      "test": "18. Wrong current PIN",
+      "status": "FAIL",
+      "details": "Test returned False"
+    },
+    {
+      "test": "19. Security headers present",
+      "status": "PASS",
+      "details": true
+    },
+    {
+      "test": "20. Unauthenticated ops/health",
+      "status": "PASS",
+      "details": true
+    },
+    {
+      "test": "21. Unauthenticated ops/metrics",
+      "status": "PASS",
+      "details": true
+    },
+    {
+      "test": "22. Unauthenticated cache/stats",
+      "status": "PASS",
+      "details": true
+    },
+    {
+      "test": "23. Unauthenticated moderation/config",
+      "status": "PASS",
+      "details": true
+    },
+    {
+      "test": "24. Regular user ops/health",
+      "status": "FAIL",
+      "details": "Test returned False"
+    },
+    {
+      "test": "25. Regular user cache/stats",
+      "status": "FAIL",
+      "details": "Test returned False"
+    },
+    {
+      "test": "26. Brute force protection",
+      "status": "PASS",
+      "details": true
+    },
+    {
+      "test": "27. Token field = accessToken (register)",
+      "status": "FAIL",
+      "details": "Test returned False"
+    },
+    {
+      "test": "28. Token field = accessToken (login)",
+      "status": "FAIL",
+      "details": "Test returned False"
+    },
+    {
+      "test": "29. Standard endpoints still work",
+      "status": "FAIL",
+      "details": "Test returned False"
+    },
+    {
+      "test": "30. Script tags in displayName",
+      "status": "FAIL",
+      "details": "Test returned False"
+    }
+  ]
+}

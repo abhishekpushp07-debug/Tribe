@@ -1,0 +1,51 @@
+{
+  "timestamp": "2026-03-09T13:15:09.721743",
+  "stage": "Stage 2: Security & Session Hardening - Focused Test",
+  "base_url": "https://token-session-vault.preview.emergentagent.com/api",
+  "total_tests": 10,
+  "passed": 8,
+  "failed": 2,
+  "success_rate": 80.0,
+  "results": [
+    {
+      "test": "1. Auth Login New Token Model",
+      "status": "PASS"
+    },
+    {
+      "test": "2. Auth Me with Access Token",
+      "status": "PASS"
+    },
+    {
+      "test": "3. Refresh Token Rotation",
+      "status": "PASS"
+    },
+    {
+      "test": "4. Old Access Token Invalid After Refresh",
+      "status": "PASS"
+    },
+    {
+      "test": "5. Invalid Refresh Token",
+      "status": "PASS"
+    },
+    {
+      "test": "6. Session Management List",
+      "status": "PASS"
+    },
+    {
+      "test": "7. Security Headers",
+      "status": "FAIL"
+    },
+    {
+      "test": "8. Privileged Route Protection",
+      "status": "PASS"
+    },
+    {
+      "test": "9. Rate Limiting",
+      "status": "PASS"
+    },
+    {
+      "test": "10. Input Sanitization",
+      "status": "FAIL"
+    }
+  ]
+}

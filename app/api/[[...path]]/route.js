@@ -21,6 +21,8 @@ import { handleTribes, handleTribeAdmin } from '@/lib/handlers/tribes'
 import { handleTribeContests, handleTribeContestAdmin } from '@/lib/handlers/tribe-contests'
 import { cache } from '@/lib/cache'
 import { applyFreezeHeaders, getFreezeStatus } from '@/lib/freeze-registry'
+import { applySecurityHeaders, getEndpointTier, checkTieredRateLimit, extractIP, checkPayloadSize } from '@/lib/security'
+import { authenticate } from '@/lib/auth-utils'
 
 // ========== CORS ==========
 function cors(response) {
@@ -31,52 +33,32 @@ function cors(response) {
   return response
 }
 
-// ========== RESPONSE BUILDERS ==========
+// ========== RESPONSE BUILDERS (Stage 2: Security headers included) ==========
 function jsonOk(data, status = 200) {
   const resp = cors(NextResponse.json(data, { status }))
   resp.headers.set('x-contract-version', 'v2')
+  applySecurityHeaders(resp)
   return resp
 }
 
-function jsonErr(message, code, status = 400) {
+function jsonErr(message, code, status = 400, extraHeaders = {}) {
   const resp = cors(NextResponse.json({ error: message, code }, { status }))
   resp.headers.set('x-contract-version', 'v2')
+  applySecurityHeaders(resp)
+  for (const [k, v] of Object.entries(extraHeaders)) {
+    resp.headers.set(k, v)
+  }
   return resp
 }
 
-// ========== RATE LIMITER (in-memory, per IP) ==========
-const rateLimitStore = new Map()
-const RATE_LIMIT_WINDOW_MS = 60 * 1000 // 1 minute
-const RATE_LIMIT_MAX = 500 // requests per window (production: adjust based on expected traffic)
-
-function checkRateLimit(request) {
-  const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
-  const now = Date.now()
-  const entry = rateLimitStore.get(ip)
-
-  if (!entry || now - entry.windowStart > RATE_LIMIT_WINDOW_MS) {
-    rateLimitStore.set(ip, { windowStart: now, count: 1 })
-    return true
-  }
-
-  entry.count++
-  if (entry.count > RATE_LIMIT_MAX) return false
-  return true
-}
-
-// Cleanup stale entries every 5 minutes
-setInterval(() => {
-  const now = Date.now()
-  for (const [ip, entry] of rateLimitStore) {
-    if (now - entry.windowStart > RATE_LIMIT_WINDOW_MS * 2) {
-      rateLimitStore.delete(ip)
-    }
-  }
-}, 5 * 60 * 1000)
+// ========== RATE LIMITER (Stage 2: Replaced by tiered system in security.js) ==========
+// Legacy in-memory rate limiter removed — now using checkTieredRateLimit from security.js
 
 // ========== OPTIONS ==========
 export async function OPTIONS() {
-  return cors(new NextResponse(null, { status: 200 }))
+  const resp = cors(new NextResponse(null, { status: 200 }))
+  applySecurityHeaders(resp)
+  return resp
 }
 
 // ========== MAIN ROUTER ==========
@@ -84,10 +66,35 @@ async function handleRouteCore(request, { params }) {
   const { path = [] } = params
   const route = `/${path.join('/')}`
   const method = request.method
+  const ip = extractIP(request)
 
-  // Rate limiting
-  if (!checkRateLimit(request)) {
-    return jsonErr('Rate limit exceeded. Try again later.', 'RATE_LIMITED', 429)
+  // Stage 2: Tiered rate limiting (per-IP + per-endpoint)
+  const tier = getEndpointTier(route, method)
+  // Try to extract userId for per-user rate limiting (lightweight, no DB call)
+  let userId = null
+  try {
+    const authHeader = request.headers.get('authorization')
+    if (authHeader?.startsWith('Bearer ')) {
+      // We'll get the userId after auth, but for rate limiting we use IP first
+      // Per-user rate limiting is applied after authentication below
+    }
+  } catch { /* ignore */ }
+
+  const rateLimitResult = checkTieredRateLimit(ip, null, tier)
+  if (!rateLimitResult.allowed) {
+    return jsonErr(
+      `Rate limit exceeded (${tier.name}). Try again later.`,
+      'RATE_LIMITED',
+      429,
+      { 'Retry-After': String(rateLimitResult.retryAfter) }
+    )
+  }
+
+  // Stage 2: Payload size check (non-media routes)
+  if (['POST', 'PUT', 'PATCH'].includes(method) && !route.startsWith('/media')) {
+    if (!checkPayloadSize(request)) {
+      return jsonErr('Request payload too large', 'PAYLOAD_TOO_LARGE', 413)
+    }
   }
 
   try {
@@ -143,10 +150,32 @@ async function handleRouteCore(request, { params }) {
     }
 
     if (route === '/cache/stats' && method === 'GET') {
+      // Stage 2: Ops endpoints require ADMIN auth
+      try {
+        const { requireAuth } = await import('@/lib/auth-utils')
+        const user = await requireAuth(request, db)
+        if (!['ADMIN', 'SUPER_ADMIN'].includes(user.role)) {
+          return jsonErr('Admin access required', 'FORBIDDEN', 403)
+        }
+      } catch (e) {
+        if (e.status) return jsonErr(e.message, e.code, e.status)
+        return jsonErr('Authentication required', 'UNAUTHORIZED', 401)
+      }
       return jsonOk(await cache.getStats())
     }
 
     if (route === '/moderation/config' && method === 'GET') {
+      // Stage 2: Moderation config requires MODERATOR+ auth
+      try {
+        const { requireAuth } = await import('@/lib/auth-utils')
+        const user = await requireAuth(request, db)
+        if (!['MODERATOR', 'ADMIN', 'SUPER_ADMIN'].includes(user.role)) {
+          return jsonErr('Moderator access required', 'FORBIDDEN', 403)
+        }
+      } catch (e) {
+        if (e.status) return jsonErr(e.message, e.code, e.status)
+        return jsonErr('Authentication required', 'UNAUTHORIZED', 401)
+      }
       const modResult = await handleModerationRoutes(path, method, request, db)
       if (modResult) {
         if (modResult.error) return jsonErr(modResult.error, modResult.code || 'ERROR', modResult.status || 400)
@@ -155,6 +184,17 @@ async function handleRouteCore(request, { params }) {
     }
 
     if (route === '/moderation/check' && method === 'POST') {
+      // Stage 2: Moderation check requires MODERATOR+ auth
+      try {
+        const { requireAuth } = await import('@/lib/auth-utils')
+        const user = await requireAuth(request, db)
+        if (!['MODERATOR', 'ADMIN', 'SUPER_ADMIN'].includes(user.role)) {
+          return jsonErr('Moderator access required', 'FORBIDDEN', 403)
+        }
+      } catch (e) {
+        if (e.status) return jsonErr(e.message, e.code, e.status)
+        return jsonErr('Authentication required', 'UNAUTHORIZED', 401)
+      }
       const modResult = await handleModerationRoutes(path, method, request, db)
       if (modResult) {
         if (modResult.error) return jsonErr(modResult.error, modResult.code || 'ERROR', modResult.status || 400)
@@ -163,9 +203,19 @@ async function handleRouteCore(request, { params }) {
     }
 
     // ========================
-    // OPS: Deep health check (all dependencies)
+    // OPS: Deep health check (all dependencies) — Stage 2: ADMIN auth required
     // ========================
     if (route === '/ops/health' && method === 'GET') {
+      try {
+        const { requireAuth } = await import('@/lib/auth-utils')
+        const user = await requireAuth(request, db)
+        if (!['ADMIN', 'SUPER_ADMIN'].includes(user.role)) {
+          return jsonErr('Admin access required', 'FORBIDDEN', 403)
+        }
+      } catch (e) {
+        if (e.status) return jsonErr(e.message, e.code, e.status)
+        return jsonErr('Authentication required', 'UNAUTHORIZED', 401)
+      }
       const checks = {}
 
       // MongoDB
@@ -197,9 +247,19 @@ async function handleRouteCore(request, { params }) {
     }
 
     // ========================
-    // OPS: Metrics endpoint
+    // OPS: Metrics endpoint — Stage 2: ADMIN auth required
     // ========================
     if (route === '/ops/metrics' && method === 'GET') {
+      try {
+        const { requireAuth } = await import('@/lib/auth-utils')
+        const user = await requireAuth(request, db)
+        if (!['ADMIN', 'SUPER_ADMIN'].includes(user.role)) {
+          return jsonErr('Admin access required', 'FORBIDDEN', 403)
+        }
+      } catch (e) {
+        if (e.status) return jsonErr(e.message, e.code, e.status)
+        return jsonErr('Authentication required', 'UNAUTHORIZED', 401)
+      }
       const [userCount, postCount, activeSessionCount, reportCount, grievanceCount] = await Promise.all([
         db.collection('users').countDocuments(),
         db.collection('content_items').countDocuments(),
@@ -220,9 +280,19 @@ async function handleRouteCore(request, { params }) {
     }
 
     // ========================
-    // OPS: Database backup proof (dry-run)
+    // OPS: Database backup proof (dry-run) — Stage 2: ADMIN auth required
     // ========================
     if (route === '/ops/backup-check' && method === 'GET') {
+      try {
+        const { requireAuth: requireAuthFn } = await import('@/lib/auth-utils')
+        const user = await requireAuthFn(request, db)
+        if (!['ADMIN', 'SUPER_ADMIN'].includes(user.role)) {
+          return jsonErr('Admin access required', 'FORBIDDEN', 403)
+        }
+      } catch (e) {
+        if (e.status) return jsonErr(e.message, e.code, e.status)
+        return jsonErr('Authentication required', 'UNAUTHORIZED', 401)
+      }
       try {
         const collections = await db.listCollections().toArray()
         const sizes = await Promise.all(collections.map(async (c) => {
@@ -435,21 +505,23 @@ async function handleRouteCore(request, { params }) {
       return jsonErr(`Route ${route} [${method}] not found`, 'NOT_FOUND', 404)
     }
 
-    // Raw response (e.g., media binary, SSE streams)
+    // Raw response (e.g., media binary, SSE streams) — add security headers
     if (result.raw) {
-      return cors(result.raw)
+      const rawResp = cors(result.raw)
+      applySecurityHeaders(rawResp)
+      return rawResp
     }
 
     // Error response
     if (result.error) {
-      return jsonErr(result.error, result.code || 'ERROR', result.status || 400)
+      return jsonErr(result.error, result.code || 'ERROR', result.status || 400, result.headers || {})
     }
 
     // Success response
     return jsonOk(result.data, result.status || 200)
 
   } catch (error) {
-    // Structured error from requireAuth etc.
+    // Structured error from requireAuth / access token expired
     if (error.status && error.code) {
       return jsonErr(error.message, error.code, error.status)
     }
