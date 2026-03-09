@@ -15,7 +15,7 @@ TEST_COLLEGE_ID_RES = 'test-college-resources-4b'
 
 
 @pytest.fixture(scope='module', autouse=True)
-def setup_college_for_resources(db, resource_user, product_user_b):
+def setup_college_for_resources(db, resource_user, product_user_b, resource_lifecycle_user):
     """Ensure college exists in DB and users have collegeId set."""
     db.colleges.update_one(
         {'id': TEST_COLLEGE_ID_RES},
@@ -24,6 +24,7 @@ def setup_college_for_resources(db, resource_user, product_user_b):
     )
     db.users.update_one({'id': resource_user['userId']}, {'$set': {'collegeId': TEST_COLLEGE_ID_RES}})
     db.users.update_one({'id': product_user_b['userId']}, {'$set': {'collegeId': TEST_COLLEGE_ID_RES}})
+    db.users.update_one({'id': resource_lifecycle_user['userId']}, {'$set': {'collegeId': TEST_COLLEGE_ID_RES}})
     yield
     db.colleges.delete_one({'id': TEST_COLLEGE_ID_RES})
 
@@ -168,3 +169,135 @@ class TestResourceVoting:
     def test_vote_nonexistent_resource_404(self, api_url, product_user_b):
         resp, data = vote_resource(api_url, 'fake-resource-id', product_user_b['token'])
         assert resp.status_code == 404
+
+
+class TestUpdateResource:
+    """PATCH /resources/:id — update resource metadata (owner only)."""
+
+    def test_update_resource_success(self, api_url, resource_lifecycle_user):
+        _, created = create_resource(api_url, resource_lifecycle_user['token'], title='Before edit')
+        assert 'resource' in created, f'Create failed: {created}'
+        resource_id = created['resource']['id']
+        h = auth_header(resource_lifecycle_user['token'], ip=_next_test_ip())
+        resp = requests.patch(f'{api_url}/resources/{resource_id}',
+                              json={'title': 'After edit'}, headers=h)
+        assert resp.status_code == 200
+        assert resp.json()['resource']['title'] == 'After edit'
+
+    def test_update_resource_nonexistent_404(self, api_url, resource_lifecycle_user):
+        h = auth_header(resource_lifecycle_user['token'], ip=_next_test_ip())
+        resp = requests.patch(f'{api_url}/resources/fake-resource-id',
+                              json={'title': 'Nope'}, headers=h)
+        assert resp.status_code == 404
+
+    def test_update_resource_other_user_forbidden(self, api_url, resource_lifecycle_user, product_user_b):
+        _, created = create_resource(api_url, resource_lifecycle_user['token'], title='Protected res')
+        assert 'resource' in created, f'Create failed: {created}'
+        resource_id = created['resource']['id']
+        h = auth_header(product_user_b['token'], ip=_next_test_ip())
+        resp = requests.patch(f'{api_url}/resources/{resource_id}',
+                              json={'title': 'Hijack'}, headers=h)
+        assert resp.status_code == 403
+
+    def test_update_removed_resource_rejected(self, api_url, resource_lifecycle_user, db):
+        """Cannot edit a REMOVED resource."""
+        _, created = create_resource(api_url, resource_lifecycle_user['token'], title='Will remove')
+        assert 'resource' in created, f'Create failed: {created}'
+        resource_id = created['resource']['id']
+        db.resources.update_one({'id': resource_id}, {'$set': {'status': 'REMOVED'}})
+        h = auth_header(resource_lifecycle_user['token'], ip=_next_test_ip())
+        resp = requests.patch(f'{api_url}/resources/{resource_id}',
+                              json={'title': 'Edit removed'}, headers=h)
+        assert resp.status_code == 403
+
+
+class TestDeleteResource:
+    """DELETE /resources/:id — soft remove (sets status=REMOVED)."""
+
+    def test_delete_resource_success(self, api_url, resource_lifecycle_user):
+        _, created = create_resource(api_url, resource_lifecycle_user['token'], title='To delete')
+        assert 'resource' in created, f'Create failed: {created}'
+        resource_id = created['resource']['id']
+        h = auth_header(resource_lifecycle_user['token'], ip=_next_test_ip())
+        resp = requests.delete(f'{api_url}/resources/{resource_id}', headers=h)
+        assert resp.status_code == 200
+        assert resp.json()['message'] == 'Resource removed'
+        # Verify it's now 410
+        resp2 = requests.get(f'{api_url}/resources/{resource_id}',
+                             headers=auth_header(resource_lifecycle_user['token'], ip=_next_test_ip()))
+        assert resp2.status_code == 410
+
+    def test_delete_resource_nonexistent_404(self, api_url, resource_lifecycle_user):
+        h = auth_header(resource_lifecycle_user['token'], ip=_next_test_ip())
+        resp = requests.delete(f'{api_url}/resources/fake-resource-id', headers=h)
+        assert resp.status_code == 404
+
+    def test_delete_resource_other_user_forbidden(self, api_url, resource_lifecycle_user, product_user_b):
+        _, created = create_resource(api_url, resource_lifecycle_user['token'], title='No delete')
+        assert 'resource' in created, f'Create failed: {created}'
+        resource_id = created['resource']['id']
+        h = auth_header(product_user_b['token'], ip=_next_test_ip())
+        resp = requests.delete(f'{api_url}/resources/{resource_id}', headers=h)
+        assert resp.status_code == 403
+
+
+class TestResourceSearch:
+    """GET /resources/search — faceted search with filters."""
+
+    def test_search_returns_structure(self, api_url):
+        h = _make_headers()
+        resp = requests.get(f'{api_url}/resources/search', headers=h)
+        assert resp.status_code == 200
+        data = resp.json()
+        assert 'items' in data
+        assert 'pagination' in data
+
+    def test_search_by_query(self, api_url, resource_user):
+        """Search with q= param returns results."""
+        h = _make_headers()
+        resp = requests.get(f'{api_url}/resources/search?q=Mathematics', headers=h)
+        assert resp.status_code == 200
+        assert 'items' in resp.json()
+
+    def test_search_by_college(self, api_url):
+        """Filter by collegeId returns facets."""
+        h = _make_headers()
+        resp = requests.get(f'{api_url}/resources/search?collegeId={TEST_COLLEGE_ID_RES}', headers=h)
+        assert resp.status_code == 200
+        data = resp.json()
+        assert 'items' in data
+        assert 'facets' in data
+        if data['facets']:
+            assert 'kinds' in data['facets']
+
+    def test_search_by_kind_filter(self, api_url):
+        h = _make_headers()
+        resp = requests.get(f'{api_url}/resources/search?kind=PYQ', headers=h)
+        assert resp.status_code == 200
+        assert 'items' in resp.json()
+
+
+class TestResourceDownload:
+    """POST /resources/:id/download — download tracking."""
+
+    def test_download_success(self, api_url, resource_lifecycle_user, product_user_b):
+        _, created = create_resource(api_url, resource_lifecycle_user['token'], title='Download target')
+        assert 'resource' in created, f'Create failed: {created}'
+        resource_id = created['resource']['id']
+        h = auth_header(product_user_b['token'], ip=_next_test_ip())
+        resp = requests.post(f'{api_url}/resources/{resource_id}/download', headers=h)
+        assert resp.status_code == 200
+        data = resp.json()
+        assert 'downloadCount' in data
+
+    def test_download_nonexistent_404(self, api_url, product_user_b):
+        h = auth_header(product_user_b['token'], ip=_next_test_ip())
+        resp = requests.post(f'{api_url}/resources/fake-resource-id/download', headers=h)
+        assert resp.status_code == 404
+
+    def test_download_no_auth_blocked(self, api_url, resource_lifecycle_user):
+        _, created = create_resource(api_url, resource_lifecycle_user['token'], title='Auth download')
+        assert 'resource' in created, f'Create failed: {created}'
+        h = _make_headers()
+        resp = requests.post(f'{api_url}/resources/{created["resource"]["id"]}/download', headers=h)
+        assert resp.status_code == 401

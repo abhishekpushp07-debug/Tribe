@@ -188,6 +188,22 @@ def reel_signal_user(api_url, db):
     return user
 
 
+@pytest.fixture(scope='session')
+def event_lifecycle_user(api_url, db):
+    """Dedicated user for event lifecycle tests (publish/cancel/archive/update/delete) — separate WRITE budget."""
+    user = _register_or_login(api_url, _next_phone(15), display_name='Event Lifecycle User')
+    db.users.update_one({'phone': user['phone']}, {'$set': {'ageStatus': 'ADULT'}})
+    return user
+
+
+@pytest.fixture(scope='session')
+def resource_lifecycle_user(api_url, db):
+    """Dedicated user for resource lifecycle tests (update/delete/download) — separate WRITE budget."""
+    user = _register_or_login(api_url, _next_phone(16), display_name='Resource Lifecycle User')
+    db.users.update_one({'phone': user['phone']}, {'$set': {'ageStatus': 'ADULT'}})
+    return user
+
+
 @pytest.fixture
 def test_ip():
     """A unique IP for the current test (use in X-Forwarded-For)."""
@@ -227,6 +243,9 @@ def pytest_sessionfinish(session, exitstatus):
             # Events/Resources/Notices cleanup
             db.events.delete_many({'creatorId': {'$in': user_ids}})
             db.event_rsvps.delete_many({'userId': {'$in': user_ids}})
+            db.event_reports.delete_many({'reporterId': {'$in': user_ids}})
+            db.event_reminders.delete_many({'userId': {'$in': user_ids}})
+            db.resource_downloads.delete_many({'userId': {'$in': user_ids}})
             db.resources.delete_many({'uploaderId': {'$in': user_ids}})
             db.resource_votes.delete_many({'voterId': {'$in': user_ids}})
             db.board_notices.delete_many({'creatorId': {'$in': user_ids}})

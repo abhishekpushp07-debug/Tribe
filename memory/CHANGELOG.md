@@ -1,5 +1,15 @@
 # Tribe — Changelog
 
+## 2026-03-10: Stage 4B P4+P5 Fix — Events + Resources 8/10 → 10/10
+- **Events (18 new tests)**: PATCH update + validation, DELETE soft-remove → 410, publish DRAFT→PUBLISHED state transition, cancel + archive lifecycle, search (structure + query + category), college event feed
+- **Resources (18 new tests)**: PATCH update + validation, DELETE soft-remove → 410, search (structure + query + college + kind facets), download tracking + auth
+- Created `event_lifecycle_user` and `resource_lifecycle_user` fixtures (10th user) for rate-limit isolation
+- Updated conftest.py cleanup for `event_reports`, `event_reminders`, `resource_downloads`
+- Suite: 328/328 passed, 2x idempotent (32.15s, 29.95s)
+- Scorecard updated: 90/100 → **96/100**
+
+---
+
 ## 2026-03-10: Stage 4B P6 Fix — Notices + Reels 7/10 → 9/10
 - Added 15 new notice tests: update (PATCH), delete (soft-remove→410), pin/unpin, college listing, acknowledgment list
 - Added 11 new reel tests: comment list (GET), hide, not-interested, share + idempotency + auth checks

@@ -161,3 +161,176 @@ class TestEventFeed:
         data = resp.json()
         assert 'items' in data
         assert 'pagination' in data
+
+
+class TestUpdateEvent:
+    """PATCH /events/:id — edit event title/description/category."""
+
+    def test_update_event_success(self, api_url, event_lifecycle_user):
+        _, created = create_event(api_url, event_lifecycle_user['token'], title='Before edit')
+        event_id = created['event']['id']
+        h = auth_header(event_lifecycle_user['token'], ip=_next_test_ip())
+        resp = requests.patch(f'{api_url}/events/{event_id}',
+                              json={'title': 'After edit'}, headers=h)
+        assert resp.status_code == 200
+        assert resp.json()['event']['title'] == 'After edit'
+
+    def test_update_event_nonexistent_404(self, api_url, event_lifecycle_user):
+        h = auth_header(event_lifecycle_user['token'], ip=_next_test_ip())
+        resp = requests.patch(f'{api_url}/events/fake-event-id',
+                              json={'title': 'Nope'}, headers=h)
+        assert resp.status_code == 404
+
+    def test_update_event_other_user_forbidden(self, api_url, event_lifecycle_user, product_user_b):
+        _, created = create_event(api_url, event_lifecycle_user['token'], title='Protected event')
+        event_id = created['event']['id']
+        h = auth_header(product_user_b['token'], ip=_next_test_ip())
+        resp = requests.patch(f'{api_url}/events/{event_id}',
+                              json={'title': 'Hijack'}, headers=h)
+        assert resp.status_code == 403
+
+    def test_update_cancelled_event_rejected(self, api_url, event_lifecycle_user, db):
+        """Cannot edit a CANCELLED event."""
+        _, created = create_event(api_url, event_lifecycle_user['token'], title='Will cancel')
+        event_id = created['event']['id']
+        db.events.update_one({'id': event_id}, {'$set': {'status': 'CANCELLED'}})
+        h = auth_header(event_lifecycle_user['token'], ip=_next_test_ip())
+        resp = requests.patch(f'{api_url}/events/{event_id}',
+                              json={'title': 'Edit cancelled'}, headers=h)
+        assert resp.status_code == 400
+
+
+class TestDeleteEvent:
+    """DELETE /events/:id — soft-delete (sets status=REMOVED)."""
+
+    def test_delete_event_success(self, api_url, event_lifecycle_user):
+        _, created = create_event(api_url, event_lifecycle_user['token'], title='To delete')
+        event_id = created['event']['id']
+        h = auth_header(event_lifecycle_user['token'], ip=_next_test_ip())
+        resp = requests.delete(f'{api_url}/events/{event_id}', headers=h)
+        assert resp.status_code == 200
+        assert resp.json()['message'] == 'Event removed'
+        # Verify it returns 410
+        resp2 = requests.get(f'{api_url}/events/{event_id}',
+                             headers=auth_header(event_lifecycle_user['token'], ip=_next_test_ip()))
+        assert resp2.status_code == 410
+
+    def test_delete_event_nonexistent_404(self, api_url, event_lifecycle_user):
+        h = auth_header(event_lifecycle_user['token'], ip=_next_test_ip())
+        resp = requests.delete(f'{api_url}/events/fake-event-id', headers=h)
+        assert resp.status_code == 404
+
+    def test_delete_event_other_user_forbidden(self, api_url, event_lifecycle_user, product_user_b):
+        _, created = create_event(api_url, event_lifecycle_user['token'], title='No delete')
+        event_id = created['event']['id']
+        h = auth_header(product_user_b['token'], ip=_next_test_ip())
+        resp = requests.delete(f'{api_url}/events/{event_id}', headers=h)
+        assert resp.status_code == 403
+
+
+class TestEventStateTransitions:
+    """POST /events/:id/publish, /cancel, /archive — state machine."""
+
+    def test_publish_draft_event(self, api_url, event_lifecycle_user):
+        """Create as DRAFT, then publish → PUBLISHED."""
+        _, created = create_event(api_url, event_lifecycle_user['token'],
+                                  title='Draft to publish', isDraft=True)
+        event_id = created['event']['id']
+        assert created['event']['status'] == 'DRAFT'
+        h = auth_header(event_lifecycle_user['token'], ip=_next_test_ip())
+        resp = requests.post(f'{api_url}/events/{event_id}/publish', headers=h)
+        assert resp.status_code == 200
+        assert resp.json()['status'] == 'PUBLISHED'
+
+    def test_publish_non_draft_rejected(self, api_url, event_lifecycle_user):
+        """Already PUBLISHED → cannot publish again."""
+        _, created = create_event(api_url, event_lifecycle_user['token'], title='Already pub')
+        event_id = created['event']['id']
+        assert created['event']['status'] == 'PUBLISHED'
+        h = auth_header(event_lifecycle_user['token'], ip=_next_test_ip())
+        resp = requests.post(f'{api_url}/events/{event_id}/publish', headers=h)
+        assert resp.status_code == 400
+
+    def test_cancel_event(self, api_url, event_lifecycle_user):
+        _, created = create_event(api_url, event_lifecycle_user['token'], title='To cancel')
+        event_id = created['event']['id']
+        h = auth_header(event_lifecycle_user['token'], ip=_next_test_ip())
+        resp = requests.post(f'{api_url}/events/{event_id}/cancel',
+                             json={'reason': 'Weather'}, headers=h)
+        assert resp.status_code == 200
+        assert resp.json()['message'] == 'Event cancelled'
+
+    def test_cancel_already_cancelled_rejected(self, api_url, event_lifecycle_user, db):
+        """Cannot cancel an already CANCELLED event."""
+        _, created = create_event(api_url, event_lifecycle_user['token'], title='Double cancel')
+        event_id = created['event']['id']
+        db.events.update_one({'id': event_id}, {'$set': {'status': 'CANCELLED'}})
+        h = auth_header(event_lifecycle_user['token'], ip=_next_test_ip())
+        resp = requests.post(f'{api_url}/events/{event_id}/cancel', json={}, headers=h)
+        assert resp.status_code == 400
+
+    def test_archive_published_event(self, api_url, event_lifecycle_user):
+        _, created = create_event(api_url, event_lifecycle_user['token'], title='To archive')
+        event_id = created['event']['id']
+        h = auth_header(event_lifecycle_user['token'], ip=_next_test_ip())
+        resp = requests.post(f'{api_url}/events/{event_id}/archive', headers=h)
+        assert resp.status_code == 200
+        assert resp.json()['message'] == 'Event archived'
+
+    def test_archive_draft_rejected(self, api_url, event_lifecycle_user, db):
+        """Cannot archive a DRAFT event — use DB to set status instead of creating new event."""
+        # Reuse an existing event by setting its status to DRAFT via DB
+        event = db.events.find_one({'creatorId': event_lifecycle_user['userId'], 'status': {'$nin': ['REMOVED']}})
+        assert event, 'Need an existing event to test archive-draft rejection'
+        event_id = event['id']
+        original_status = event['status']
+        db.events.update_one({'id': event_id}, {'$set': {'status': 'DRAFT'}})
+        h = auth_header(event_lifecycle_user['token'], ip=_next_test_ip())
+        resp = requests.post(f'{api_url}/events/{event_id}/archive', headers=h)
+        assert resp.status_code == 400
+        # Restore original status
+        db.events.update_one({'id': event_id}, {'$set': {'status': original_status}})
+
+
+class TestEventSearch:
+    """GET /events/search — public event search with filters."""
+
+    def test_search_returns_structure(self, api_url):
+        h = _make_headers()
+        resp = requests.get(f'{api_url}/events/search', headers=h)
+        assert resp.status_code == 200
+        data = resp.json()
+        assert 'items' in data
+        assert 'pagination' in data
+
+    def test_search_by_query(self, api_url, event_lifecycle_user):
+        """Search with q= param returns items."""
+        h = _make_headers()
+        resp = requests.get(f'{api_url}/events/search?q=Test', headers=h)
+        assert resp.status_code == 200
+        assert 'items' in resp.json()
+
+    def test_search_by_category_filter(self, api_url):
+        h = _make_headers()
+        resp = requests.get(f'{api_url}/events/search?category=SOCIAL', headers=h)
+        assert resp.status_code == 200
+        data = resp.json()
+        assert 'items' in data
+
+
+class TestCollegeEventFeed:
+    """GET /events/college/:id — college-scoped event feed."""
+
+    def test_college_event_feed_returns_structure(self, api_url):
+        h = _make_headers()
+        resp = requests.get(f'{api_url}/events/college/test-college-4b', headers=h)
+        assert resp.status_code == 200
+        data = resp.json()
+        assert 'items' in data
+        assert 'pagination' in data
+
+    def test_college_event_feed_with_category(self, api_url):
+        h = _make_headers()
+        resp = requests.get(f'{api_url}/events/college/test-college-4b?category=SOCIAL', headers=h)
+        assert resp.status_code == 200
+        assert 'items' in resp.json()
