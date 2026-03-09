@@ -33,11 +33,15 @@ function cors(response) {
 
 // ========== RESPONSE BUILDERS ==========
 function jsonOk(data, status = 200) {
-  return cors(NextResponse.json(data, { status }))
+  const resp = cors(NextResponse.json(data, { status }))
+  resp.headers.set('x-contract-version', 'v2')
+  return resp
 }
 
 function jsonErr(message, code, status = 400) {
-  return cors(NextResponse.json({ error: message, code }, { status }))
+  const resp = cors(NextResponse.json({ error: message, code }, { status }))
+  resp.headers.set('x-contract-version', 'v2')
+  return resp
 }
 
 // ========== RATE LIMITER (in-memory, per IP) ==========
