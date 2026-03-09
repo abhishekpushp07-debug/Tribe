@@ -1,0 +1,101 @@
+{
+  "summary": {
+    "success_rate": 73.33333333333333,
+    "total_tests": 15,
+    "passed": 11,
+    "failed": 4
+  },
+  "results": [
+    {
+      "test": "Register XSS Sanitization",
+      "success": true,
+      "details": "displayName sanitized: 'CleanName'",
+      "timestamp": "2026-03-09T14:15:23.507064"
+    },
+    {
+      "test": "Post Creation XSS Sanitization",
+      "success": false,
+      "details": "Post creation failed: 403",
+      "timestamp": "2026-03-09T14:15:23.661994"
+    },
+    {
+      "test": "Profile Update XSS Sanitization",
+      "success": true,
+      "details": "Bio sanitized: 'Hello'",
+      "timestamp": "2026-03-09T14:15:23.934260"
+    },
+    {
+      "test": "Comment XSS Sanitization",
+      "success": true,
+      "details": "Comment text sanitized: 'Nice!'",
+      "timestamp": "2026-03-09T14:15:24.912040"
+    },
+    {
+      "test": "Event XSS Sanitization",
+      "success": false,
+      "details": "Event creation failed: 403",
+      "timestamp": "2026-03-09T14:15:25.052082"
+    },
+    {
+      "test": "Code Verification Per-User Rate Limiting",
+      "success": true,
+      "details": "Per-user rate limiting implemented in route.js lines 116-144: Two-phase system with IP (line 73) and user (line 135) checks",
+      "timestamp": "2026-03-09T14:15:25.277968"
+    },
+    {
+      "test": "SENSITIVE Tier Rate Limiting",
+      "success": true,
+      "details": "Rate limited on attempt 6 (429), retry-after: 59",
+      "timestamp": "2026-03-09T14:15:26.552145"
+    },
+    {
+      "test": "AUTH Tier Rate Limiting",
+      "success": false,
+      "details": "Expected 429 rate limit after multiple login attempts, but didn't get one",
+      "timestamp": "2026-03-09T14:15:26.674020"
+    },
+    {
+      "test": "Access+Refresh Token Split",
+      "success": true,
+      "details": "Correct token format: at_ prefix, rt_ prefix, expiresIn=900",
+      "timestamp": "2026-03-09T14:15:26.904773"
+    },
+    {
+      "test": "Refresh Token Rotation",
+      "success": true,
+      "details": "New tokens issued successfully",
+      "timestamp": "2026-03-09T14:15:27.078578"
+    },
+    {
+      "test": "Refresh Token Rotation",
+      "success": true,
+      "details": "Old refresh token properly invalidated",
+      "timestamp": "2026-03-09T14:15:27.236421"
+    },
+    {
+      "test": "Session Management",
+      "success": false,
+      "details": "Session list failed: 401",
+      "timestamp": "2026-03-09T14:15:27.387737"
+    },
+    {
+      "test": "Security Headers",
+      "success": true,
+      "details": "All required security headers present",
+      "timestamp": "2026-03-09T14:15:27.935478"
+    },
+    {
+      "test": "Privileged Route Protection",
+      "success": true,
+      "details": "All privileged routes properly protected (401)",
+      "timestamp": "2026-03-09T14:15:28.493502"
+    },
+    {
+      "test": "Core Endpoints Regression",
+      "success": true,
+      "details": "All core endpoints working",
+      "timestamp": "2026-03-09T14:15:28.926359"
+    }
+  ],
+  "timestamp": "2026-03-09T14:15:28.927333"
+}

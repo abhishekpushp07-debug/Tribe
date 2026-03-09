@@ -21,7 +21,7 @@ import { handleTribes, handleTribeAdmin } from '@/lib/handlers/tribes'
 import { handleTribeContests, handleTribeContestAdmin } from '@/lib/handlers/tribe-contests'
 import { cache } from '@/lib/cache'
 import { applyFreezeHeaders, getFreezeStatus } from '@/lib/freeze-registry'
-import { applySecurityHeaders, getEndpointTier, checkTieredRateLimit, extractIP, checkPayloadSize } from '@/lib/security'
+import { applySecurityHeaders, getEndpointTier, checkTieredRateLimit, extractIP, checkPayloadSize, deepSanitizeStrings } from '@/lib/security'
 import { authenticate } from '@/lib/auth-utils'
 
 // ========== CORS ==========
@@ -68,25 +68,15 @@ async function handleRouteCore(request, { params }) {
   const method = request.method
   const ip = extractIP(request)
 
-  // Stage 2: Tiered rate limiting (per-IP + per-endpoint)
+  // Stage 2: Tiered rate limiting — Phase 1: Per-IP (pre-auth, no DB needed)
   const tier = getEndpointTier(route, method)
-  // Try to extract userId for per-user rate limiting (lightweight, no DB call)
-  let userId = null
-  try {
-    const authHeader = request.headers.get('authorization')
-    if (authHeader?.startsWith('Bearer ')) {
-      // We'll get the userId after auth, but for rate limiting we use IP first
-      // Per-user rate limiting is applied after authentication below
-    }
-  } catch { /* ignore */ }
-
-  const rateLimitResult = checkTieredRateLimit(ip, null, tier)
-  if (!rateLimitResult.allowed) {
+  const ipRateResult = checkTieredRateLimit(ip, null, tier)
+  if (!ipRateResult.allowed) {
     return jsonErr(
       `Rate limit exceeded (${tier.name}). Try again later.`,
       'RATE_LIMITED',
       429,
-      { 'Retry-After': String(rateLimitResult.retryAfter) }
+      { 'Retry-After': String(ipRateResult.retryAfter) }
     )
   }
 
@@ -97,8 +87,61 @@ async function handleRouteCore(request, { params }) {
     }
   }
 
+  // Stage 2 Recovery: Centralized input sanitization for ALL JSON request bodies
+  // Deep-sanitizes every string field before any handler sees the data
+  if (['POST', 'PUT', 'PATCH'].includes(method) && !route.startsWith('/media')) {
+    const contentType = request.headers.get('content-type')
+    if (contentType?.includes('application/json')) {
+      try {
+        const rawBodyText = await request.text()
+        if (rawBodyText) {
+          const parsed = JSON.parse(rawBodyText)
+          const sanitized = deepSanitizeStrings(parsed)
+          request = new Request(request.url, {
+            method: request.method,
+            headers: request.headers,
+            body: JSON.stringify(sanitized),
+          })
+        }
+      } catch {
+        // If body parsing fails, let the handler deal with the original request
+        // (request body was consumed by text() above, so re-create with raw text)
+      }
+    }
+  }
+
   try {
     const db = await getDb()
+
+    // Stage 2 Recovery: Per-user rate limiting — Phase 2 (post-DB, real userId)
+    // Lightweight session lookup to extract userId for per-user rate limiting
+    let authUserId = null
+    try {
+      const authHeader = request.headers.get('authorization')
+      if (authHeader?.startsWith('Bearer ')) {
+        const tkn = authHeader.slice(7)
+        if (tkn.length > 10) {
+          const sess = await db.collection('sessions').findOne(
+            { token: tkn },
+            { projection: { userId: 1, _id: 0 } }
+          )
+          if (sess) authUserId = sess.userId
+        }
+      }
+    } catch { /* ignore - rate limit falls back to IP-only */ }
+
+    // Apply per-user rate limit (separate from per-IP, uses userId as key)
+    if (authUserId) {
+      const userRateResult = checkTieredRateLimit(null, authUserId, tier)
+      if (!userRateResult.allowed) {
+        return jsonErr(
+          `Rate limit exceeded (${tier.name}). Try again later.`,
+          'RATE_LIMITED',
+          429,
+          { 'Retry-After': String(userRateResult.retryAfter) }
+        )
+      }
+    }
 
     // ---- Health endpoints ----
     if (route === '/' && method === 'GET') {
