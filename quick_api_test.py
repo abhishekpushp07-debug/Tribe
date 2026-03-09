@@ -4,7 +4,7 @@ import aiohttp
 import json
 
 async def test_api():
-    BASE_URL = "https://tribe-observability.preview.emergentagent.com/api"
+    BASE_URL = "https://tribe-audit-judge.preview.emergentagent.com/api"
     
     async with aiohttp.ClientSession() as session:
         # Login first
