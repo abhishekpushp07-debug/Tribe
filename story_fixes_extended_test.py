@@ -22,7 +22,7 @@ import uuid
 import subprocess
 import sys
 
-BASE_URL = "https://realtime-standings-1.preview.emergentagent.com/api"
+BASE_URL = "https://api-consistency-hub.preview.emergentagent.com/api"
 TIMEOUT = 30
 
 class TestResult:
