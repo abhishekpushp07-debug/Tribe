@@ -1,10 +1,10 @@
 {
   "suite": "Stage 10: Reels Backend Manual Test Matrix",
-  "timestamp": "2026-03-08T17:49:52.455829Z",
+  "timestamp": "2026-03-09T21:20:33.008272Z",
   "total": 53,
-  "passed": 53,
-  "failed": 0,
-  "pass_rate": "100.0%",
+  "passed": 46,
+  "failed": 7,
+  "pass_rate": "86.8%",
   "results": [
     {
       "num": 1,
@@ -296,8 +296,8 @@
     {
       "num": 42,
       "name": "Get user's series",
-      "status": "PASS",
-      "details": "",
+      "status": "FAIL",
+      "details": "Got: {'items': [{'id': '53cbaf4c-4e6b-494f-b41a-ed3df891c144', 'creatorId': '9442d323-2bd0-4f92-9113-90f4c236e0dc', 'name': 'My Tutorial Series', 'description': 'Learn coding', 'reelCount': 0, 'createdAt': '2026-03-09T21:20:27.649Z', 'updatedAt': '2026-03-09T21:20:27.649Z'}], 'count': 1}",
       "http_status": 200
     },
     {
@@ -317,37 +317,37 @@
     {
       "num": 45,
       "name": "Admin moderation queue",
-      "status": "PASS",
-      "details": "",
-      "http_status": 200
+      "status": "FAIL",
+      "details": "Got: {'error': 'Authentication required', 'code': 'UNAUTHORIZED'}",
+      "http_status": 401
     },
     {
       "num": 46,
       "name": "Admin moderate: HOLD",
-      "status": "PASS",
-      "details": "",
-      "http_status": 200
+      "status": "FAIL",
+      "details": "Got: {'error': 'Authentication required', 'code': 'UNAUTHORIZED'}",
+      "http_status": 401
     },
     {
       "num": 47,
       "name": "Admin moderate: APPROVE (restore)",
-      "status": "PASS",
-      "details": "",
-      "http_status": 200
+      "status": "FAIL",
+      "details": "Got: {'error': 'Authentication required', 'code': 'UNAUTHORIZED'}",
+      "http_status": 401
     },
     {
       "num": 48,
       "name": "Admin platform analytics",
-      "status": "PASS",
-      "details": "",
-      "http_status": 200
+      "status": "FAIL",
+      "details": "Got: {'error': 'Authentication required', 'code': 'UNAUTHORIZED'}",
+      "http_status": 401
     },
     {
       "num": 49,
       "name": "Admin recompute counters",
-      "status": "PASS",
-      "details": "",
-      "http_status": 200
+      "status": "FAIL",
+      "details": "Got: {'error': 'Authentication required', 'code': 'UNAUTHORIZED'}",
+      "http_status": 401
     },
     {
       "num": 50,
@@ -373,8 +373,8 @@
     {
       "num": 53,
       "name": "Auto-hold at 3 reports",
-      "status": "PASS",
-      "details": "{'status': 'HELD', 'reportCount': 3}"
+      "status": "FAIL",
+      "details": "{'status': 'PUBLISHED', 'reportCount': 1}"
     }
   ]
 }
