@@ -28,18 +28,20 @@ World-class social media backend for Indian college students, named **Tribe**. F
 | 12X | Tribe Contest Engine | GOLD FROZEN (69/69 tests) | — |
 | 12X-RT | Real-Time SSE Layer | GOLD FROZEN | — |
 | B0 | Backend Source of Truth Freeze | COMPLETE (8/8 sub-stages) | 2026-02 |
+| B0-E | Backend Freeze Code Enforcement | COMPLETE (85/85 tests) | 2026-03 |
 
-## Stage B0 — Backend Freeze (COMPLETED)
+## Stage B0-E — Code-Level Freeze Enforcement (COMPLETED)
 
-All 8 sub-stages frozen:
-- B0-S1: Canonical Domain Freeze (52 concepts)
-- B0-S2: Endpoint Canonicalization Freeze (~186 endpoints)
-- B0-S3: Response Contract Freeze (26 entity shapes)
-- B0-S4: State Machine Freeze (13 lifecycles)
-- B0-S5: Role & Permission Freeze (12 permission matrices)
-- B0-S6: SSE Contract Freeze (4 SSE endpoints, 15 event types)
-- B0-S7: Media & Upload Contract Freeze
-- B0-S8: Deprecation, Legacy & Versioning Seal
+Three layers of enforcement:
+1. **Freeze Registry** (`/app/lib/freeze-registry.js`) — Every endpoint mapped to freeze label
+2. **Freeze Headers Middleware** — Every response gets:
+   - `X-Contract-Version: v1` (always)
+   - `X-Freeze-Status: canonical | android_v1_use | legacy | deprecated | admin_only | board_only | internal_only`
+   - `X-Deprecated: true` + `X-Deprecation-Notice` (on legacy/deprecated)
+3. **Contract Test Suite** (`/app/tests/contract-freeze-test.sh`) — 85 tests across 12 gates
+   - Freeze headers, auth shapes, feed shapes, tribe shapes, error shapes, permissions, legacy boundary, content/social, search, contests, notifications, governance
+
+Bug fixed during enforcement: `/admin/stats` was accessible to regular users (no auth check) — now requires ADMIN role.
 
 Documents at: `/app/memory/freeze/`
 

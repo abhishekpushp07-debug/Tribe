@@ -20,6 +20,7 @@ import { handleReels } from '@/lib/handlers/reels'
 import { handleTribes, handleTribeAdmin } from '@/lib/handlers/tribes'
 import { handleTribeContests, handleTribeContestAdmin } from '@/lib/handlers/tribe-contests'
 import { cache } from '@/lib/cache'
+import { applyFreezeHeaders, getFreezeStatus } from '@/lib/freeze-registry'
 
 // ========== CORS ==========
 function cors(response) {
@@ -75,7 +76,7 @@ export async function OPTIONS() {
 }
 
 // ========== MAIN ROUTER ==========
-async function handleRoute(request, { params }) {
+async function handleRouteCore(request, { params }) {
   const { path = [] } = params
   const route = `/${path.join('/')}`
   const method = request.method
@@ -430,7 +431,7 @@ async function handleRoute(request, { params }) {
       return jsonErr(`Route ${route} [${method}] not found`, 'NOT_FOUND', 404)
     }
 
-    // Raw response (e.g., media binary)
+    // Raw response (e.g., media binary, SSE streams)
     if (result.raw) {
       return cors(result.raw)
     }
@@ -451,6 +452,18 @@ async function handleRoute(request, { params }) {
     console.error('API Error:', error)
     return jsonErr('Internal server error', 'INTERNAL_ERROR', 500)
   }
+}
+
+// ========== FREEZE ENFORCEMENT WRAPPER ==========
+// Every response passes through here — freeze headers are guaranteed
+async function handleRoute(request, context) {
+  const { path = [] } = context.params
+  const route = `/${path.join('/')}`
+  const method = request.method
+
+  const response = await handleRouteCore(request, context)
+  applyFreezeHeaders(response, route, method)
+  return response
 }
 
 export const GET = handleRoute
