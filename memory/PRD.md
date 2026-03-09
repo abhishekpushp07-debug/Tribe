@@ -11,6 +11,7 @@ Executed through staged plan: Security → Observability → Testing → Scalabi
 - **AI**: OpenAI GPT-4o-mini (moderation)
 - **Storage**: Emergent Object Storage
 - **Context**: AsyncLocalStorage for request lineage
+- **Testing**: pytest (canonical runner) with JS bridge for unit tests
 
 ## Stage Completion Status
 
@@ -28,21 +29,31 @@ Executed through staged plan: Security → Observability → Testing → Scalabi
 - Redis resilience: degraded mode + recovery strategy
 - Full observability coverage including OPTIONS
 
-### Stage 4A: Test Foundation + CI Gate — COMPLETE
-- **115 pytest-collected tests** (64 unit + 47 integration + 4 smoke)
+### Stage 4A: Test Foundation + CI Gate — GOLD CLOSURE COMPLETE (87/100)
+- **139 pytest-collected tests** (78 unit + 57 integration + 4 smoke)
 - JS eval bridge for testing actual JS functions from pytest
 - Rate limit isolation via X-Forwarded-For unique IPs
 - Phone namespace isolation (prefix 99999) + session cleanup
 - CI gate script (scripts/ci-gate.sh) — exits non-zero on failure
-- 5x idempotent consecutive runs — 0 failures
-- 39 old ad-hoc scripts archived
+- 3x idempotent consecutive runs — 0 failures
+- 35+ old ad-hoc scripts archived to tests/archive/
 - Full documentation (tests/README.md)
+- **Gold Closure additions**:
+  - Rate-limit STRICT 429 proof (real 429, RATE_LIMITED code)
+  - OPTIONS/preflight observability proof (4 tests)
+  - Redis degraded-mode direct assertion (4 tests, semi-direct)
+  - pytest-cov installed, 96% baseline (no fake threshold)
+  - health.js unit tests (4 tests)
+  - constants.js unit tests (10 tests)
+  - Marker-based selective execution working
+  - package.json + Makefile execution hooks
 
 ## Upcoming Tasks
 
 ### Stage 4B: Product/Handler Test Coverage (P1)
 - Posts, feed, social actions, events, resources, notices, reels
 - Moderation-linked flows, house/contest domain logic
+- Migrate valuable assertions from archived gold_freeze_gate.py
 
 ### Stage 5: Scalability Foundation Refactor (P1)
 - Service/Repository layer separation
@@ -58,8 +69,10 @@ Executed through staged plan: Security → Observability → Testing → Scalabi
 ## Known Limitations
 1. No TTL on audit_logs collection (P2)
 2. Legacy audit entries (2124) lack requestId (forward-only migration)
-3. Redis recovery not live-tested (code verified)
+3. Redis recovery not live-tested (code verified, degraded mode proven)
 4. In-memory metrics (per-instance, not distributed)
 5. 2 console.log in realtime.js (Bootstrap only)
 6. Duplicate headers from next.config.js vs security.js
 7. Login throttle persists in memory (affects test re-runs with same phone)
+8. No separate test DB (tests use namespace isolation)
+9. No JS lib coverage measurement (would need Istanbul/c8)

@@ -1,15 +1,16 @@
-# Tribe — Test Suite (Stage 4A)
+# Tribe — Test Suite (Stage 4A — Gold Closure)
 
 ## Overview
 
 This is the canonical test system for the Tribe backend. It replaces all ad-hoc root-level test scripts.
+**139 tests** | 78 unit + 57 integration + 4 smoke | **96% test code coverage** | 3x idempotent proven
 
 ### Architecture
 
 ```
 tests/
   conftest.py          # Shared fixtures (api_url, db, test_user, admin_user, cleanup)
-  pytest.ini           # pytest configuration
+  pytest.ini           # pytest configuration + custom markers
   helpers/
     js_eval.py         # JS eval bridge (runs Node.js code from pytest)
   unit/                # Pure function tests (no network, no DB)
@@ -18,45 +19,75 @@ tests/
     test_metrics.py    # recordRequest, recordError, getRouteFamily, percentiles, SLIs
     test_logger.py     # PII redaction, NDJSON format, stderr routing
     test_request_context.py # AsyncLocalStorage: isolation, mutation, nesting
+    test_health.py     # checkLiveness shape/content (status, uptime, timestamp)
+    test_constants.py  # assignHouse determinism, HOUSES completeness, ErrorCode, Role
   integration/         # API endpoint tests (requires running server + MongoDB)
     test_auth_flow.py  # register, login, refresh, replay, logout, pin change
     test_sessions.py   # list, revoke-one, revoke-all
     test_observability.py # healthz, readyz, ops/health, ops/metrics, ops/slis
     test_security_guards.py # XSS, payload size, auth boundaries, security headers
     test_correlation.py # requestId header, audit DB proof, error code metrics proof
+    test_ratelimit_options_redis.py # Rate-limit STRICT 429 proof, OPTIONS observability, Redis degraded mode
   smoke/               # End-to-end flow tests (minimal, critical paths)
     test_smoke_auth_ops.py  # register→login→me, admin→ops
     test_smoke_metrics.py   # 404→metrics, rate limit visibility
+  archive/             # 35+ legacy ad-hoc scripts (preserved, not run)
 ```
 
 ## Running Tests
 
-### All layers
+### Full CI Gate
 ```bash
-./scripts/ci-gate.sh
+bash scripts/ci-gate.sh        # All layers (canonical command)
+npm test                       # Same via package.json hook
+make test                      # Same via Makefile hook
 ```
 
-### Individual layers
+### By Directory (layer)
 ```bash
-# Unit tests only
 python -m pytest tests/unit -v --tb=short -c tests/pytest.ini
-
-# Integration tests only
 python -m pytest tests/integration -v --tb=short -c tests/pytest.ini
-
-# Smoke tests only
 python -m pytest tests/smoke -v --tb=short -c tests/pytest.ini
+```
 
-# Specific test file
+### By Marker (selective)
+```bash
+python -m pytest tests/ -m unit -v -c tests/pytest.ini
+python -m pytest tests/ -m integration -v -c tests/pytest.ini
+python -m pytest tests/ -m smoke -v -c tests/pytest.ini
+```
+
+### Specific file/class
+```bash
 python -m pytest tests/unit/test_security.py -v --tb=short -c tests/pytest.ini
-
-# Specific test class
 python -m pytest tests/unit/test_security.py::TestSanitizeTextInput -v -c tests/pytest.ini
+```
+
+### Coverage
+```bash
+# Full coverage report (term)
+python -m pytest tests/ -v -c tests/pytest.ini --cov=tests --cov-report=term-missing
+
+# Coverage with HTML report
+make test-coverage
+
+# Coverage baseline: 96% across test code (no fake threshold set)
+```
+
+### Makefile shortcuts
+```bash
+make test              # Full CI gate
+make test-unit         # Unit layer only
+make test-integration  # Integration layer only
+make test-smoke        # Smoke layer only
+make test-coverage     # Full run with coverage report
+make test-collect      # Dry run (collect only)
 ```
 
 ## Test Isolation Strategy
 
 - **Phone namespace**: All test users use phone numbers starting with `99999`
+- **IP isolation**: Each test gets a unique `X-Forwarded-For` IP to prevent rate-limit collisions
 - **Session cleanup**: `conftest.py::pytest_sessionfinish` removes ALL test-namespaced data
 - **Idempotent**: Tests handle "already exists" gracefully—safe to re-run
 - **No production pollution**: Only `99999*` phones are touched
@@ -87,3 +118,10 @@ Since the Tribe backend is JavaScript (Next.js), unit tests use a **JS eval brid
 ./scripts/ci-gate.sh integration # Just integration
 ./scripts/ci-gate.sh smoke     # Just smoke
 ```
+
+## Known Limitations
+
+1. **No separate test DB**: Tests use the same database as the app, relying on phone prefix namespace (`99999*`) for isolation. A physically separate test database is deferred to Stage 10.
+2. **Redis recovery untestable**: Redis is unavailable in this environment, so the rate limiter runs in memory-fallback mode. Redis up→down→up recovery cannot be tested. The degraded-mode behavior IS directly asserted (4 tests in `test_ratelimit_options_redis.py`).
+3. **Session-scoped cleanup only**: Cleanup runs after the full session, not per-test. A test failure mid-session may leave some data behind until the next run.
+4. **Login throttle persistence**: The in-memory login throttle persists across rapid re-runs with the same phone. Mitigated by using random phone suffixes.
