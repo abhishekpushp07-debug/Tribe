@@ -1,0 +1,14 @@
+{
+  "test_type": "Stage 1 Canonical Contract Freeze v2 - Deep Validation",
+  "timestamp": "2026-03-09T11:21:43.879254",
+  "base_url": "https://api-consistency-hub.preview.emergentagent.com/api",
+  "summary": {
+    "tests_run": 33,
+    "tests_passed": 32,
+    "success_rate": 97.0
+  },
+  "failures": [
+    "COMMENTS Create Post: Failed to create test post: 403"
+  ],
+  "test_data": {}
+}

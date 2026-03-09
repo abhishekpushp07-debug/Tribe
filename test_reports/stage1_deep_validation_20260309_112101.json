@@ -1,0 +1,16 @@
+{
+  "test_type": "Stage 1 Canonical Contract Freeze v2 - Deep Validation",
+  "timestamp": "2026-03-09T11:21:01.984814",
+  "base_url": "https://api-consistency-hub.preview.emergentagent.com/api",
+  "summary": {
+    "tests_run": 33,
+    "tests_passed": 30,
+    "success_rate": 90.9
+  },
+  "failures": [
+    "COMMENTS Create Post: Failed to create test post: 403",
+    "DISCOVERY General Search: Missing canonical 'items' key; Missing expected key: items",
+    "ERROR Invalid Login Contract: Error code 'UNAUTHORIZED' doesn't look like ErrorCode constant"
+  ],
+  "test_data": {}
+}
