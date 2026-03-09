@@ -27,11 +27,13 @@ Executed through staged plan: Security → Observability → Testing → Scalabi
 ### Stage 4A: Test Foundation — GOLD CLOSURE (87/100)
 - 78 unit tests, JS eval bridge, CI gate, coverage baseline (96%), execution hooks
 
-### Stage 4B: Product-Domain Coverage — COMPLETE (88/100)
+### Stage 4B: Product-Domain Coverage — COMPLETE (88/100) — SCORECARD DELIVERED
 - **270 total tests** (78 unit + 184 integration + 8 smoke)
 - 10 product domains covered: Posts, Feed (4 surfaces), Social (like/dislike/save/comment/follow/reaction-remove), Events+RSVP, Resources+Voting, Notices+Ack, Reels, Visibility Safety, Cross-Surface Consistency
 - 7 dedicated test users for WRITE rate-limit isolation
 - 2x idempotent, full cleanup (20+ collections)
+- True Deep Audit Scorecard: `/app/memory/stage_4b_true_scorecard.md`
+- Key pattern: Core user paths at 100% (Posts, Feed, Social), secondary domains at "core-only" (~25-30% endpoint coverage but primary flows protected)
 
 ## Upcoming Tasks
 

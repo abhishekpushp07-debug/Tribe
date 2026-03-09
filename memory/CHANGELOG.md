@@ -1,5 +1,13 @@
 # Tribe — Changelog
 
+## 2026-03-10: Stage 4B True Deep Audit Scorecard — DELIVERED
+- Full endpoint-by-endpoint audit across all 18 handlers
+- Mapped 38 covered endpoints against ~150+ total handler endpoints
+- Scorecard: `/app/memory/stage_4b_true_scorecard.md`
+- Awaiting user judgment
+
+---
+
 ## 2026-03-09: Stage 4B Complete — DONE (88/100)
 
 ### What Was Added (131 new tests: 139→270)
