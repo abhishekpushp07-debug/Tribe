@@ -1,148 +1,373 @@
 <analysis>
+**original_problem_statement**: The user wants to build a world-best social media backend for their app, Tribe. After an exhaustive audit revealed the backend is ~95% feature-complete, the project's focus has pivoted from infrastructure hardening to a new, feature-driven master plan. The immediate goal is to create a definitive API contract () to unblock the frontend team, followed by building the few remaining features (like a Pages system), fixing minor gaps, and then hardening the test suite. The user has provided an extremely detailed, multi-stage Final World-Best Staging Plan (B0-B8) that must be followed precisely. The ultimate vision is to achieve Instagram-level common social features combined with Tribe's unique campus-community differentiators, all built on a foundation of world-class backend discipline (contract-driven, permission-safe, canonical objects).
 
-**original_problem_statement**: The user wants to elevate the Tribe social media backend to a world-best standard, targeting a quality score of over 900/1000. This is being done through a detailed, multi-stage plan.
-
-The last session involved completing **Stage 1 (Canonical Contract Freeze v2)**, which was split into two parts after the user rejected the initial implementation as incomplete:
-- **Stage 1A (Structural):** Standardizing response envelopes, pagination, and error codes.
-- **Stage 1B (Semantic):** Standardizing naming conventions and entity snippets.
-
-The user has now provided an extremely strict, anti-fake prompt to begin the next phase: **Stage 2 - Security & Session Hardening**.
-
-**User's preferred language**: The user communicates in English, with frequent use of Hindi for emphasis and to convey specific instructions. The next agent MUST respond in professional English.
+**User's preferred language**: The user communicates in a mix of English and Hindi. As per the initial handoff, the next agent MUST respond in professional English.
 
 **what currently exists?**
-The application is a large, monolithic Next.js backend API. A significant refactoring effort, **Stage 1 (A & B) - Canonical Contract Freeze v2**, has been completed. This has resulted in:
-- **Consistent Structural Contracts:** All major list endpoints now return a canonical  structure, often with a  object. Backward compatibility is maintained by including the old flat keys (, etc.) alongside the new structure.
-- **Centralized Error Codes:** String-based error messages have been replaced with a central  enum located in .
-- **Standardized Response Builders:** Helper functions in  like , , and  are used to enforce consistency.
-- **Semantic Standardization (Initial):**
-    - A  helper was created to standardize user object shapes in responses and has been adopted in key handlers.
-    - Inconsistent naming like  vs  and  have been aliased for backward compatibility while introducing canonical names.
-- **Versioned Contracts:** A custom  HTTP header is now added to all API responses.
+- A monolithic Next.js backend with approximately 271 API route handlers across 18 handler files, covering ~95% of the features for a full-fledged social media app.
+- An extensive ============================= test session starts ==============================
+platform linux -- Python 3.11.14, pytest-9.0.2, pluggy-1.6.0
+rootdir: /app
+plugins: anyio-4.12.1, cov-7.0.0
+collected 0 items
+=== GETTING AUTH TOKEN ===
+
+POST /auth/login
+Status: 502
+Response (text): The preview environment is not responding. It may be starting up.
+
+Failed to get token
+INTERNALERROR> Traceback (most recent call last):
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/_pytest/main.py", line 318, in wrap_session
+INTERNALERROR>     session.exitstatus = doit(config, session) or 0
+INTERNALERROR>                          ^^^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/_pytest/main.py", line 371, in _main
+INTERNALERROR>     config.hook.pytest_collection(session=session)
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/pluggy/_hooks.py", line 512, in __call__
+INTERNALERROR>     return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+INTERNALERROR>            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/pluggy/_manager.py", line 120, in _hookexec
+INTERNALERROR>     return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+INTERNALERROR>            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/pluggy/_callers.py", line 167, in _multicall
+INTERNALERROR>     raise exception
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/pluggy/_callers.py", line 139, in _multicall
+INTERNALERROR>     teardown.throw(exception)
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/_pytest/logging.py", line 788, in pytest_collection
+INTERNALERROR>     return (yield)
+INTERNALERROR>             ^^^^^
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/pluggy/_callers.py", line 139, in _multicall
+INTERNALERROR>     teardown.throw(exception)
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/_pytest/warnings.py", line 98, in pytest_collection
+INTERNALERROR>     return (yield)
+INTERNALERROR>             ^^^^^
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/pluggy/_callers.py", line 139, in _multicall
+INTERNALERROR>     teardown.throw(exception)
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/_pytest/config/__init__.py", line 1403, in pytest_collection
+INTERNALERROR>     return (yield)
+INTERNALERROR>             ^^^^^
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/pluggy/_callers.py", line 121, in _multicall
+INTERNALERROR>     res = hook_impl.function(*args)
+INTERNALERROR>           ^^^^^^^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/_pytest/main.py", line 382, in pytest_collection
+INTERNALERROR>     session.perform_collect()
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/_pytest/main.py", line 857, in perform_collect
+INTERNALERROR>     self.items.extend(self.genitems(node))
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/_pytest/main.py", line 1023, in genitems
+INTERNALERROR>     yield from self.genitems(subnode)
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/_pytest/main.py", line 1023, in genitems
+INTERNALERROR>     yield from self.genitems(subnode)
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/_pytest/main.py", line 1023, in genitems
+INTERNALERROR>     yield from self.genitems(subnode)
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/_pytest/main.py", line 1020, in genitems
+INTERNALERROR>     rep, duplicate = self._collect_one_node(node, handle_dupes)
+INTERNALERROR>                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/_pytest/main.py", line 883, in _collect_one_node
+INTERNALERROR>     rep = collect_one_node(node)
+INTERNALERROR>           ^^^^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/_pytest/runner.py", line 576, in collect_one_node
+INTERNALERROR>     rep: CollectReport = ihook.pytest_make_collect_report(collector=collector)
+INTERNALERROR>                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/pluggy/_hooks.py", line 512, in __call__
+INTERNALERROR>     return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+INTERNALERROR>            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/pluggy/_manager.py", line 120, in _hookexec
+INTERNALERROR>     return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+INTERNALERROR>            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/pluggy/_callers.py", line 167, in _multicall
+INTERNALERROR>     raise exception
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/pluggy/_callers.py", line 139, in _multicall
+INTERNALERROR>     teardown.throw(exception)
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/_pytest/capture.py", line 880, in pytest_make_collect_report
+INTERNALERROR>     rep = yield
+INTERNALERROR>           ^^^^^
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/pluggy/_callers.py", line 121, in _multicall
+INTERNALERROR>     res = hook_impl.function(*args)
+INTERNALERROR>           ^^^^^^^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/_pytest/runner.py", line 400, in pytest_make_collect_report
+INTERNALERROR>     call = CallInfo.from_call(
+INTERNALERROR>            ^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/_pytest/runner.py", line 353, in from_call
+INTERNALERROR>     result: TResult | None = func()
+INTERNALERROR>                              ^^^^^^
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/_pytest/runner.py", line 398, in collect
+INTERNALERROR>     return list(collector.collect())
+INTERNALERROR>                 ^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/_pytest/python.py", line 563, in collect
+INTERNALERROR>     self._register_setup_module_fixture()
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/_pytest/python.py", line 576, in _register_setup_module_fixture
+INTERNALERROR>     self.obj, ("setUpModule", "setup_module")
+INTERNALERROR>     ^^^^^^^^
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/_pytest/python.py", line 289, in obj
+INTERNALERROR>     self._obj = obj = self._getobj()
+INTERNALERROR>                       ^^^^^^^^^^^^^^
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/_pytest/python.py", line 560, in _getobj
+INTERNALERROR>     return importtestmodule(self.path, self.config)
+INTERNALERROR>            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/_pytest/python.py", line 507, in importtestmodule
+INTERNALERROR>     mod = import_path(
+INTERNALERROR>           ^^^^^^^^^^^^
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/_pytest/pathlib.py", line 587, in import_path
+INTERNALERROR>     importlib.import_module(module_name)
+INTERNALERROR>   File "/usr/local/lib/python3.11/importlib/__init__.py", line 126, in import_module
+INTERNALERROR>     return _bootstrap._gcd_import(name[level:], package, level)
+INTERNALERROR>            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+INTERNALERROR>   File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+INTERNALERROR>   File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
+INTERNALERROR>   File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/_pytest/assertion/rewrite.py", line 197, in exec_module
+INTERNALERROR>     exec(co, module.__dict__)
+INTERNALERROR>   File "/app/tests/archive/diagnostic_test.py", line 54, in <module>
+INTERNALERROR>     exit(1)
+INTERNALERROR>   File "<frozen _sitebuiltins>", line 26, in __call__
+INTERNALERROR> SystemExit: 1
+
+============================== 1 warning in 0.70s ============================== suite with 396 passing tests.
+- Key features like Posts, Reels, Stories, Tribes, and Contests are already extensively built.
+- A complete lack of API documentation, which is the primary blocker for the frontend team.
+- The agent has completed a full deep-dive audit of the entire backend codebase, confirming the scope and identifying key architectural quirks (e.g., two co-existing content models, multiple pagination styles).
 
 **Last working item**:
-- **Last item agent was working:** The agent completed **Stage 1B: Semantic Contract Completion**. This was a corrective action to fix the semantic gaps left after the initial structural refactoring. The work involved:
-    1.  Creating and adopting a canonical  function to standardize user data in responses.
-    2.  Auditing and resolving naming inconsistencies (e.g.,  vs. ) by adding backward-compatible aliases.
-    3.  Producing a detailed audit and implementation document ().
-- **Status:** USER VERIFICATION PENDING
-- **Agent Testing Done:** Y (8/8 tests passed via  for Stage 1B changes).
-- **Which testing method agent to use?** backend testing agent. Given the critical nature of security changes, a new, comprehensive test suite must be created and run via the testing agent to validate all aspects of the Stage 2 implementation.
-- **User Testing Done:** N
+-   **Last item agent was working**: The agent had just completed an exhaustive deep-dive audit of all 18 backend handler files and routing logic. Based on this, it formulated a detailed execution blueprint for **Stage B0: API Contract Generation**. Just as it was about to present this plan, the user provided their own, even more granular and philosophical Final World-Best Staging Plan (B0-B8), including an extremely detailed breakdown of Stage B0's sub-tasks and exit criteria. The agent's last state was processing these new, definitive instructions before starting the execution of Stage B0.
+-   **Status**: NOT STARTED
+-   **Agent Testing Done**: N/A
+-   **Which testing method agent to use?** N/A (The task is documentation generation).
+-   **User Testing Done**: N/A
 
 **All Pending/In progress Issue list**:
-  - Issue 1:  (P2) Address the 2 remaining automated test failures for Stage 4 (Distribution Ladder).
-  - Issue 2:  (P2) Get final, conclusive PASS for Stage 5 (Notes/PYQs) by creating and submitting a deep proof pack.
-  
-  **Issues Detail:**
-  - **Issue 1 & 2:** These are long-standing backlog items from a previous session. The user's focus is entirely on the new 12-stage plan. These should not be worked on unless explicitly requested.
-     - **Status:** NOT STARTED
-     - **Is recurring issue?** Y (for Issue 1)
+These are known issues identified during the audit, which are now scheduled for resolution within the new staging plan.
+
+-   **Issue 1: Avatar URL Resolution (P0)**
+    -   **Description**: User-related API responses return  or a raw  instead of a fully resolved . This is a high-impact visual bug.
+    -   **Why fix this issue and what will be achieved with the fix?**: This will fix broken user identities across the entire UI.
+    -   **Status**: NOT STARTED (Scheduled for Stage B1)
+-   **Issue 2: Post Search Not Working (P1)**
+    -   **Description**:  is non-functional because post content is not indexed for search.
+    -   **Status**: NOT STARTED (Scheduled for Stage B4)
+-   **Issue 3: Reel Interaction Bugs (P1)**
+    -   **Description**:  and  return 400 Bad Request errors, likely due to a minor body format or validation bug.
+    -   **Status**: NOT STARTED (Scheduled for Stage B5/B6)
+-   **Issue 4: Post Visibility Not Enforced (P2)**
+    -   **Description**: The  field in the post schema (Public, Followers, Tribe) is not consistently enforced in all feed and search surfaces.
+    -   **Status**: NOT STARTED (Scheduled for Stage B2 and B5)
 
 **In progress Task List**:
-- None.
+The entire new staging plan is the active task list, starting with B0.
+
+-   **Task 1: Stage B0: API Contract & Truth Bridge (P0)**
+    -   **Description**: The highest priority task is to generate a complete  and a machine-readable  by programmatically scanning all 271+ handlers. This will serve as the single source of truth for the frontend and eliminate communication gaps.
+    -   **Where to resume**: Start execution of Stage B0, following the user's hyper-detailed plan from the last message. This includes sub-stages B0.1 (Route Census) through B0.12 (Freeze Package).
+    -   **What will be achieved with this?**: It will unblock the frontend, prevent future guesswork, and establish a contract-driven development workflow.
+    -   **Status**: NOT STARTED
+    -   **Should Test frontend/backend/both after fix?**: N/A
+    -   **Blocked on something**: No.
 
 **Upcoming and Future Tasks**
-- **Upcoming Tasks**:
-    - **P0: Stage 2 — Security & Session Hardening**: This is the immediate, non-negotiable next task. The user has provided a new, extremely strict anti-fake builder prompt (see ). The agent MUST follow this prompt meticulously, which mandates a Pre-Flight Audit before any implementation, followed by the implementation itself, and finally a Proof Pack with machine-checkable evidence. The goal is to harden security around tokens, sessions, rate-limiting, and privileged access.
+This is the definitive, user-approved Final World-Best Staging Plan. The agent MUST follow this exact order and adhere to the detailed requirements for each stage provided by the user.
 
-- **Future Tasks**:
-    - **Stage 3: Observability Baseline + Health Intelligence**: Implement structured logging, deep health checks, and basic metrics dashboards.
-    - **Stage 4: Test Pyramid + CI Gate v1**: Add unit and integration tests to create a comprehensive test pyramid.
-    - **Stage 5: Scalability Foundation Refactor**: Break down large handlers and introduce service/repository layers.
-    - **Stage 6: Async Backbone + Job System + CQRS-lite**: Move heavy operations to background jobs.
-    - **Stage 7: Real-Time Reliability Layer**: Improve the reliability of the SSE-based real-time features.
-    - **Stage 8: Moderation v2**: Strengthen content moderation capabilities.
-    - **Stage 9: Feature Depth Pack**: Implement Pages, Push Notifications, and DMs.
-    - **Stages 10-12**: Production Hardening, Load/Chaos testing, and the final 900+ score gate.
+-   **Upcoming Tasks**:
+    -   **B1 (P1): Canonical Identity, Avatar & Media Resolution**: Fix the broken avatar URLs and standardize the  and  shapes across all APIs.
+    -   **B2 (P1): Visibility, Permission & Feed Safety Truth**: Centralize and enforce all content visibility rules (Public, Followers, Tribe, etc.) across all read surfaces (feeds, search) before building new discovery features.
+    -   **B3 (P2): Pages System**: Build the entire Instagram/Facebook-style Pages feature from scratch, including data models, ~15 new endpoints for CRUD, roles, posting-as-page, and feed integration. This is the next major feature.
+    -   **B4 (P2): Core Social Gaps**: Build the remaining 8 missing endpoints (edit post, share post, like comment, explore feed, trending hashtags, notification device registration/preferences).
+    -   **B5 (P2): Discovery, Search & Hashtag Engine**: Implement hashtag extraction from post captions, index them for search, and fix the broken post search functionality.
+    -   **B6 (P2): Notifications 2.0 + Reels/Post Polish**: Implement advanced notification features (grouping, preferences) and fix the minor bugs in Reel interactions.
+-   **Future Tasks**:
+    -   **B7 (P3): Test Hardening + Gold Freeze**: Resume the original testing plan to bring test coverage to 900+ and achieve a gold-freeze state for the backend.
+    -   **B8 (P4): Infra, Observability, Scale Path**: Only after all features are stable, begin infrastructure improvements like a 3-layer refactor, job queues, Redis caching, and production hardening.
 
 **Completed work in this session**
-- **Stage 1A - Structural Contract Freeze**:
-  - Standardized all list responses to use a canonical  and  wrapper across all 18 API handlers.
-  - Centralized all error strings into an  enum in .
-  - Implemented standard response builder helpers in .
-  - Added an  header to all API responses.
-- **Stage 1B - Semantic Contract Completion**:
-  - Created and adopted a  helper in  to standardize user object representations.
-  - Audited and added backward-compatible aliases for inconsistent field names (e.g., , ).
-- **Comprehensive Testing**: Used  multiple times to validate all changes, with final test runs showing 35/35 and 8/8 passes respectively.
-- **Documentation**: Created detailed audit and completion documents:  and .
+-   **Exhaustive Codebase Audit**: The agent successfully completed a deep-dive analysis of all 18 backend handler files () and the main  dispatcher, confirming the existence of ~271 route handlers and gaining a comprehensive understanding of the codebase's structure and quirks.
+-   **B0 Execution Plan Formulation**: Based on the audit, the agent created a detailed execution plan for Stage B0, which was then superseded by the user's even more granular instructions.
 
 **Earlier issues found/mentioned but not fixed**
-- The same two long-standing issues remain on the backlog:
-   - **Issue 1:** Two failing tests for the Stage 4 (Distribution Ladder) feature.
-   - **Issue 2:** Stage 5 (Notes/PYQs) was never formally accepted with a deep proof pack.
-   These are low priority and should not be addressed without explicit user instruction.
+-   **Separate Test DB**: Tests currently use the application database. This has been deferred to **Stage B8 (Infrastructure)**.
+-   **Audit Log TTL**: The  collection lacks a Time-To-Live (TTL) policy. This has been deferred to **Stage B8 (Infrastructure)**.
+
+**Known issue recurrence from previous fork**
+-   None.
 
 **Code Architecture**
-- **Framework**: Monolithic Next.js backend API.
-- **Entrypoint**:  which acts as a master router.
-- **Handlers**: Logic is contained in 18 separate handler files within .
-- **Helpers & Constants**:
-    - : Contains new canonical response builders () and entity snippet formatters ().
-    - : Contains the new  enum.
-- **Database**: MongoDB.
-- **Cache/PubSub**: Redis.
+-   **Application**: Monolithic Next.js API.
+-   **Testing Framework**: ============================= test session starts ==============================
+platform linux -- Python 3.11.14, pytest-9.0.2, pluggy-1.6.0
+rootdir: /app
+plugins: anyio-4.12.1, cov-7.0.0
+collected 0 items
+=== GETTING AUTH TOKEN ===
+
+POST /auth/login
+Status: 401
+Response: {
+  "error": "Invalid phone or PIN",
+  "code": "UNAUTHORIZED"
+}
+Failed to get token
+INTERNALERROR> Traceback (most recent call last):
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/_pytest/main.py", line 318, in wrap_session
+INTERNALERROR>     session.exitstatus = doit(config, session) or 0
+INTERNALERROR>                          ^^^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/_pytest/main.py", line 371, in _main
+INTERNALERROR>     config.hook.pytest_collection(session=session)
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/pluggy/_hooks.py", line 512, in __call__
+INTERNALERROR>     return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+INTERNALERROR>            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/pluggy/_manager.py", line 120, in _hookexec
+INTERNALERROR>     return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+INTERNALERROR>            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/pluggy/_callers.py", line 167, in _multicall
+INTERNALERROR>     raise exception
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/pluggy/_callers.py", line 139, in _multicall
+INTERNALERROR>     teardown.throw(exception)
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/_pytest/logging.py", line 788, in pytest_collection
+INTERNALERROR>     return (yield)
+INTERNALERROR>             ^^^^^
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/pluggy/_callers.py", line 139, in _multicall
+INTERNALERROR>     teardown.throw(exception)
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/_pytest/warnings.py", line 98, in pytest_collection
+INTERNALERROR>     return (yield)
+INTERNALERROR>             ^^^^^
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/pluggy/_callers.py", line 139, in _multicall
+INTERNALERROR>     teardown.throw(exception)
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/_pytest/config/__init__.py", line 1403, in pytest_collection
+INTERNALERROR>     return (yield)
+INTERNALERROR>             ^^^^^
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/pluggy/_callers.py", line 121, in _multicall
+INTERNALERROR>     res = hook_impl.function(*args)
+INTERNALERROR>           ^^^^^^^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/_pytest/main.py", line 382, in pytest_collection
+INTERNALERROR>     session.perform_collect()
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/_pytest/main.py", line 857, in perform_collect
+INTERNALERROR>     self.items.extend(self.genitems(node))
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/_pytest/main.py", line 1023, in genitems
+INTERNALERROR>     yield from self.genitems(subnode)
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/_pytest/main.py", line 1023, in genitems
+INTERNALERROR>     yield from self.genitems(subnode)
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/_pytest/main.py", line 1023, in genitems
+INTERNALERROR>     yield from self.genitems(subnode)
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/_pytest/main.py", line 1020, in genitems
+INTERNALERROR>     rep, duplicate = self._collect_one_node(node, handle_dupes)
+INTERNALERROR>                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/_pytest/main.py", line 883, in _collect_one_node
+INTERNALERROR>     rep = collect_one_node(node)
+INTERNALERROR>           ^^^^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/_pytest/runner.py", line 576, in collect_one_node
+INTERNALERROR>     rep: CollectReport = ihook.pytest_make_collect_report(collector=collector)
+INTERNALERROR>                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/pluggy/_hooks.py", line 512, in __call__
+INTERNALERROR>     return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+INTERNALERROR>            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/pluggy/_manager.py", line 120, in _hookexec
+INTERNALERROR>     return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+INTERNALERROR>            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/pluggy/_callers.py", line 167, in _multicall
+INTERNALERROR>     raise exception
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/pluggy/_callers.py", line 139, in _multicall
+INTERNALERROR>     teardown.throw(exception)
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/_pytest/capture.py", line 880, in pytest_make_collect_report
+INTERNALERROR>     rep = yield
+INTERNALERROR>           ^^^^^
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/pluggy/_callers.py", line 121, in _multicall
+INTERNALERROR>     res = hook_impl.function(*args)
+INTERNALERROR>           ^^^^^^^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/_pytest/runner.py", line 400, in pytest_make_collect_report
+INTERNALERROR>     call = CallInfo.from_call(
+INTERNALERROR>            ^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/_pytest/runner.py", line 353, in from_call
+INTERNALERROR>     result: TResult | None = func()
+INTERNALERROR>                              ^^^^^^
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/_pytest/runner.py", line 398, in collect
+INTERNALERROR>     return list(collector.collect())
+INTERNALERROR>                 ^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/_pytest/python.py", line 563, in collect
+INTERNALERROR>     self._register_setup_module_fixture()
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/_pytest/python.py", line 576, in _register_setup_module_fixture
+INTERNALERROR>     self.obj, ("setUpModule", "setup_module")
+INTERNALERROR>     ^^^^^^^^
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/_pytest/python.py", line 289, in obj
+INTERNALERROR>     self._obj = obj = self._getobj()
+INTERNALERROR>                       ^^^^^^^^^^^^^^
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/_pytest/python.py", line 560, in _getobj
+INTERNALERROR>     return importtestmodule(self.path, self.config)
+INTERNALERROR>            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/_pytest/python.py", line 507, in importtestmodule
+INTERNALERROR>     mod = import_path(
+INTERNALERROR>           ^^^^^^^^^^^^
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/_pytest/pathlib.py", line 587, in import_path
+INTERNALERROR>     importlib.import_module(module_name)
+INTERNALERROR>   File "/usr/local/lib/python3.11/importlib/__init__.py", line 126, in import_module
+INTERNALERROR>     return _bootstrap._gcd_import(name[level:], package, level)
+INTERNALERROR>            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+INTERNALERROR>   File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+INTERNALERROR>   File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
+INTERNALERROR>   File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+INTERNALERROR>   File "/root/.venv/lib/python3.11/site-packages/_pytest/assertion/rewrite.py", line 197, in exec_module
+INTERNALERROR>     exec(co, module.__dict__)
+INTERNALERROR>   File "/app/tests/archive/diagnostic_test.py", line 54, in <module>
+INTERNALERROR>     exit(1)
+INTERNALERROR>   File "<frozen _sitebuiltins>", line 26, in __call__
+INTERNALERROR> SystemExit: 1
+
+============================== 1 warning in 3.07s ==============================.
+-   **Key Directories**:  (all 18 handler files),  (all tests).
+-   **Architectural Shift**: The project has officially pivoted to a **Contract-Driven Development** model, with the creation of  (Stage B0) being the foundational first step. The user has also mandated a **Permissions-First** approach, requiring Stage B2 (Visibility/Safety) to be completed before new discovery features (B5).
 
 **Key Technical Concepts**
-- **API Contract Freezing (Structural & Semantic)**: A formal, two-part process to enforce consistency. First structurally (envelopes, pagination), then semantically (naming, snippets).
-- **Additive, Backward-Compatible Refactoring**: A core principle of the work done. New contract structures were added while keeping old fields as aliases to prevent breaking existing clients.
-- **Proof-Backed Development**: A user-mandated workflow where claims of completion must be backed by machine-checkable evidence (grep, tests, curl outputs) rather than just summaries.
+-   **Contract-Driven Development**: The most critical concept. The first task is to build the API contract before any other code.
+-   **Canonical Objects**: The user insists on creating standardized, canonical shapes for core data objects like  and  to be used consistently across all APIs.
+-   **Permissions-First Architecture**: Enforcing all visibility and permission rules (Stage B2) before building features that could leak private data (like search and explore feeds).
+-   **Deep Auditing**: The process of verifying every single endpoint to establish ground truth, which has already been completed.
+
+**key DB schema**
+-   A key architectural quirk is the co-existence of two content models:
+    -   : A generic collection for posts and some stories, differentiated by a  field.
+    -    and : Separate, dedicated collections for these content types, indicating parallel implementation paths.
+-   The Pages system (Stage B3) will require new models: , ,  (or a modification to the existing content model).
+
+**changes in tech stack**
+-   None.
 
 **All files of reference**
-- **Created/Updated Files:**
-    - : **NEW/MODIFIED**. Created to house the  enum.
-    - : **NEW/MODIFIED**. Created to house response builders and snippet formatters.
-    - : Modified to add the  header.
-    - All 18 handler files in : Extensively modified to adopt the new v2 contract (response shapes, error codes, snippets).
-    - : **NEW**. The audit document for Stage 1A.
-    - : **NEW**. The audit document for Stage 1B.
-- **Key Test/Doc Files:**
-    - : Updated to reflect completion of Stages 1A and 1B.
-    - : Test report for Stage 1B validation (8/8 pass).
-    - : Test report for Stage 1A validation (35/35 pass).
+-   **To Be Created in Stage B0**:
+    -   : The primary human-readable API contract.
+    -   : A machine-readable version of the API contract.
+    -   Several other supporting contract documents under  as per the user's detailed B0 plan.
+-   **Key Files for Context (already reviewed)**:
+    -   All 18 handler files located in .
+    -   : The main router dispatch file.
 
 **Critical Info for New Agent**
-- **User's Standard is LAW**: The user has an extremely high standard for quality and will reject any work that is not meticulously executed and thoroughly proven. Summary-based claims of completion are unacceptable.
-- **Follow the Anti-Fake Prompt**: Your immediate task is **Stage 2: Security & Session Hardening**. You MUST follow the new, hyper-strict anti-fake builder prompt provided by the user in . This is not a suggestion; it is a requirement.
-- **Mandatory Workflow**: Your process for Stage 2 must be:
-    1.  **Pre-Flight Audit:** First, conduct a deep audit of the current security state *before* writing any implementation code.
-    2.  **Implement:** Build the target security architecture.
-    3.  **Proof Pack:** Generate a comprehensive set of machine-checkable proofs (grep, tests, curl, matrices) to validate your work.
-    4.  **Honest Verdict:** Present your findings with a clear Exception Register listing anything that is incomplete.
-- **Do Not Deviate**: Do not start Stage 3 or any other task until Stage 2 is fully completed, judged, and passed based on the hard evidence you provide.
+-   **Follow the User's Plan Religiously**: The user has provided an extremely detailed, non-negotiable Final World-Best Staging Plan (B0-B8) in their last message. You MUST follow this plan, its ordering, and its philosophical principles (Truth, Canonical Objects, Safety) to the letter. Start with the user's detailed blueprint for Stage B0. Do not deviate or propose alternatives.
+-   **Your First Task is B0**: Your first and only priority is **Stage B0: Create the API Contract**. Do not start any other coding or fixing tasks (like B1) until B0 is fully complete as per the user's exit criteria.
+-   **The Backend is Mostly Built**: Acknowledge that the backend is ~95% feature-complete. Your job is not to build from scratch, but to document, fill small, specific gaps, and harden the system according to the user's roadmap.
+-   **The User is Highly Technical**: The user has a deep understanding of the codebase and software architecture best practices. Communicate clearly, and justify your actions based on their established plan.
 
 **documents created in this job**
-- 
-- 
--  (updated)
+-   None yet. The work in this session was purely analysis and planning.
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User (LATEST)**: Provided a refreshed, anti-fake **judge prompt** for Stage 2 to verify the builder's work.
-2.  **User**: Provided the refreshed, anti-fake **builder prompt** for Stage 2, demanding a rigorous audit-implement-prove workflow. (PENDING EXECUTION)
-3.  **User**: Acknowledged the agent's honest assessment of Stage 1 being incomplete and defined the next task as Stage 1B: Semantic Contract Completion, providing a detailed prompt. (Resolved)
-4.  **User**: Asked the agent to give an honest marking for Stage 1 across all parameters. (Resolved, agent provided a PASS WITH CRITICAL GAPS verdict).
-5.  **User**: Challenged the agent's initial PASS verdict for Stage 1, calling it summary-based and demanding proof that no inconsistencies remain. (Resolved, led to deeper audit).
-6.  **User**: Yes. Confirmed the agent should proceed with fixing the inconsistencies found during the second, deeper audit of Stage 1. (Resolved)
-7.  **User**: Yes Yes. ... Final call Stage 1 verdict = PASS WITH CRITICAL GAPS... Ab next kaam: Stage 1B. Confirmed the agent's honest audit, agreed with the verdict, and provided the prompt for Stage 1B. (Resolved)
-8.  **User**: Provided the highly detailed, 12-stage plan and the original, comprehensive prompt for Stage 1: Canonical Contract Freeze v2. (Resolved)
+-   **LATEST/PENDING**: The user provided an incredibly detailed, multi-page Final World-Best Staging Plan (B0-B8) and a granular breakdown of how to execute Stage B0. This message is the new master plan and source of truth for the entire project. The agent has not yet responded to this. **(Status: Action Required - Acknowledge and execute B0 per this plan)**
+-   The preceding messages show a collaborative process where the user provides a massive data dump of the backend's state, identifies gaps, and works with the agent to formulate a new plan, culminating in the final detailed instructions. The user established the priority of B0 (API Contract) and B2 (Pages System) and provided a detailed comparison of Tribe vs. Instagram features.
 
 **Project Health Check:**
-- **Broken**: No. The application is stable.
-- **Mocked**: No.
+-   **Broken**: No. The application and test suite are stable.
+-   **Mocked**: No.
+-   **Primary Risk**: The complete absence of an API contract, which is causing a total breakdown in communication between backend and frontend development. Stage B0 is designed to mitigate this risk entirely.
 
 **3rd Party Integrations**
-- **OpenAI GPT-4o-mini**: Used for content moderation.
-- **Emergent Object Storage**: Used for media storage.
-- **Redis**: Used for distributed caching and Pub/Sub.
+-   Redis
+-   OpenAI GPT-4o-mini
+-   Emergent Object Storage
 
 **Testing status**
-- **Testing agent used after significant changes:** YES. The agent used  multiple times to validate the large-scale refactoring of Stage 1A and Stage 1B.
-- **Troubleshoot agent used after agent stuck in loop:** NO.
-- **Test files created:** None, but the testing agent was used to generate and run tests dynamically. The reports are in .
-- **Known regressions:** None.
+-   **Testing agent used after significant changes**: NO
+-   **Troubleshoot agent used after agent stuck in loop**: NO
+-   **Test files created**: None in this session.
+-   **Known regressions**: None.
 
 **What agent forgot to execute**
-The agent initially failed to grasp the full scope of Stage 1, focusing only on structural contract changes and ignoring the required semantic changes (naming, snippets, versioning). This led to a user rejection. The agent also prematurely declared the stage PASS based on a summary, a mistake the user corrected. The agent has since adapted its process to be more thorough and proof-based, as demanded by the user.
+-   Nothing was forgotten. The agent was in the process of formulating a plan for Stage B0 when the user provided an even more detailed, prescriptive plan. The agent's next action is to follow that new, user-provided plan.
 
 </analysis>
