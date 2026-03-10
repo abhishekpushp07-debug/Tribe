@@ -1,5 +1,6 @@
 # B0.5 — Response Contracts
-> Generated: 2026-03-10 | Source: entity-snippets.js + all handler files
+> Generated: 2026-03-10 | Updated: 2026-03-10 (B1 — Canonical Identity & Media Resolution)
+> Source: entity-snippets.js + all handler files
 > Purpose: Frontend knows EXACTLY what backend returns. No guesswork.
 
 ---
@@ -14,7 +15,9 @@ These shapes are used across multiple endpoints. Defined once here, referenced e
   "id": "string (UUID)",
   "displayName": "string | null",
   "username": "string | null",
-  "avatar": "string | null (QUIRK: raw media ID, NOT a URL. Frontend must construct URL: /api/media/<avatar>)",
+  "avatarUrl": "string | null (B1: CANONICAL display field — resolved URL like /api/media/<id>, or null)",
+  "avatarMediaId": "string | null (B1: raw media ID for edit forms)",
+  "avatar": "string | null (DEPRECATED — legacy alias for avatarMediaId, will be removed post-B4)",
   "role": "string (USER | MODERATOR | ADMIN | SUPER_ADMIN)",
   "collegeId": "string | null",
   "collegeName": "string | null",
@@ -25,6 +28,7 @@ These shapes are used across multiple endpoints. Defined once here, referenced e
 }
 ```
 > Source: `toUserSnippet()` in entity-snippets.js
+> B1 Change: `avatar` was always null (bug: read non-existent field). Now correctly reads `avatarMediaId` from DB. Added `avatarUrl` (resolved) and `avatarMediaId` (raw). Legacy `avatar` kept as deprecated alias.
 
 ### UserProfile (full profile, /auth/me, /users/:id)
 ```json
@@ -34,8 +38,9 @@ These shapes are used across multiple endpoints. Defined once here, referenced e
   "displayName": "string",
   "username": "string | null",
   "bio": "string | null",
-  "avatar": "string | null (QUIRK: raw media ID)",
-  "avatarMediaId": "string | null (QUIRK: same as avatar, field name varies by endpoint)",
+  "avatarUrl": "string | null (B1: CANONICAL display field — /api/media/<id> or null)",
+  "avatarMediaId": "string | null (B1: raw media ID for edit forms)",
+  "avatar": "string | null (DEPRECATED — legacy alias for avatarMediaId)",
   "role": "string",
   "ageStatus": "string (UNKNOWN | ADULT | CHILD)",
   "ageVerified": "boolean",

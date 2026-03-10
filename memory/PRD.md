@@ -47,10 +47,15 @@ All 12 sub-stages completed:
 
 ## Prioritized Backlog
 
-### P0: Stage B1 — Canonical Identity, Avatar & Media Resolution
-- Fix avatar URLs (raw mediaId → resolved URL)
-- Standardize UserSnippet shape across all endpoints
-- Standardize MediaObject resolution
+### P0: Stage B1 — Canonical Identity, Avatar & Media Resolution ✅ (2026-03-10)
+- **B1-B**: Created centralized `resolveMediaUrl()` helper in entity-snippets.js — single source for all media ID → URL resolution (future-safe for CDN/signed URLs)
+- **B1-C**: Fixed `toUserSnippet()` — was reading non-existent `user.avatar` field (always null). Now reads `avatarMediaId`, outputs `avatarUrl` (resolved URL), `avatarMediaId` (raw), `avatar` (deprecated legacy alias)
+- **B1-D**: Rewired `sanitizeUser()` in auth-utils.js to delegate to `toUserProfile()` — all 50+ call sites across 15 handlers now get canonical avatar fields
+- **B1-E**: Fixed `toMediaObject()` — `url` now falls back to `resolveMediaUrl(id)` for DB-stored media (was sometimes null)
+- **B1-G**: Updated response_contracts.md and quirk_ledger.md (QUIRK 1 marked RESOLVED)
+- **Testing**: 396 pytest passing (0 regressions) + 10/12 targeted contract tests (2 failures = rate limiting, not B1)
+- **Files changed**: `lib/entity-snippets.js`, `lib/auth-utils.js`
+- **Backward compatibility**: Legacy `avatar` field preserved as deprecated alias. No route/path/DB/permission changes.
 
 ### P1: Stage B2 — Visibility, Permission & Feed Safety
 - Enforce content visibility rules (PUBLIC/FOLLOWERS/LIMITED) across feeds
@@ -82,7 +87,7 @@ All 12 sub-stages completed:
 - Audit log TTL
 
 ## Known Issues
-1. Avatar returns raw media ID, not URL (B1)
+1. ~~Avatar returns raw media ID, not URL (B1)~~ **RESOLVED in B1**
 2. Post search not working (B5)
 3. Reel comment/report return 400 (B6)
 4. Visibility field not fully enforced in feeds (B2)

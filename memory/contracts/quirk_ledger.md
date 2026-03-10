@@ -4,18 +4,20 @@
 
 ---
 
-## QUIRK 1: Avatar is a Raw Media ID, Not a URL
+## QUIRK 1: ~~Avatar is a Raw Media ID, Not a URL~~ **RESOLVED in B1**
 
-**Symptom**: User objects return `avatar: "f47ac10b-58cc-4372-a567-0e02b2c3d479"` or `avatar: null` — never a URL.
+> **B1 Status**: FIXED. All user objects now return `avatarUrl` (resolved URL) alongside `avatarMediaId` (raw ID).
 
-**Actual truth**: The `avatar` field stores a media asset ID (UUID). The `toUserSnippet()` function passes it through unchanged. No URL resolution happens server-side.
+**Before B1**: User objects returned `avatar: "<mediaId>"` or `avatar: null` — frontend had to construct URLs manually.
 
-**Frontend implication**: ALWAYS construct avatar URLs client-side:
-```
-const avatarUrl = user.avatar ? `${API_BASE}/api/media/${user.avatar}` : defaultAvatar
-```
+**After B1**: All endpoints now return:
+- `avatarUrl`: `/api/media/<id>` or `null` — use this in `<img src>`
+- `avatarMediaId`: raw media ID or `null` — use this for profile edit forms
+- `avatar`: DEPRECATED legacy alias for `avatarMediaId` (will be removed post-B4)
 
-**Do not assume**: That ANY endpoint returns a ready-to-use avatar URL. Not `/auth/me`, not `/users/:id`, not UserSnippet in comments — none of them.
+**Frontend implication**: Use `user.avatarUrl` directly. No client-side URL construction needed.
+
+**Applies to**: ALL surfaces — `/auth/me`, `/auth/login`, `/auth/register`, `/users/:id`, feed post authors, comment authors, followers, following, notifications, stories, reels.
 
 ---
 
