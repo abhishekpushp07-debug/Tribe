@@ -1,5 +1,31 @@
 # Tribe — Changelog
 
+## 2026-03-10: Stage B4 + B4-U — Core Social Gaps (PASS)
+### Features Implemented
+- **Edit Post Caption** (`PATCH /content/:id`): Owner/page-role edit with moderation re-check, editedAt timestamp, enriched response. B2 ownership + page-role guard.
+- **Comment Like/Unlike** (`POST/DELETE /content/:postId/comments/:commentId/like`): Idempotent like/unlike with `commentLikeCount`, B2 parent-content visibility guard, self-notify suppression. Separate `comment_likes` collection with unique index.
+- **Share/Repost** (`POST /content/:id/share`): Creates new content_item linked via `originalContentId`. One-repost-per-user-per-original. Cannot repost a repost. B2 visibility/block checks. Original content embedded in serializer. Increment `shareCount` on original.
+- **Counter Integration**: commentLikeCount, shareCount — proven exact, idempotent, never-negative.
+- **Notification Integration**: COMMENT_LIKE → comment author, SHARE → original author (page-aware for page-owned content). Self-notify suppressed.
+- **Serializer/enrichPosts Updated**: Repost items embed `originalContent` with resolved author. `editedAt` exposed on edited posts.
+- **Content creation fixed**: User-authored posts now always include `authorType: 'USER'`, `createdAs: 'USER'`.
+- **Index setup**: `comment_likes` unique on (userId, commentId), `content_items` sparse on (authorId, originalContentId).
+
+### B4-U Test Gate: PASS
+- **72/72 tests passing** across 14 phases
+- Covers: routes, edit, comment-like, share/repost, counters, notifications, snapshots, B2 safety, page compat, concurrency, failure/rollback, performance, backward compat, observability
+- **Full regression: 633/633 PASS** (zero regressions), 2x idempotent
+
+### Files Changed
+- `/app/lib/constants.js` — Added COMMENT_LIKE, SHARE to NotificationType
+- `/app/lib/handlers/content.js` — Added PATCH /content/:id, added authorType/createdAs to POST
+- `/app/lib/handlers/social.js` — Added comment like/unlike, share/repost handlers + B4 indexes
+- `/app/lib/auth-utils.js` — Updated enrichPosts for repost embedding
+- `/app/app/api/[[...path]]/route.js` — Updated routing for PATCH and path.length >= 3
+- `/app/tests/handlers/test_b4_ultimate.py` — 72-test B4-U gate
+
+---
+
 ## 2026-03-10: Stage B3-U — Ultimate World-Best Test Gate (PASS)
 ### Verdict: PASS
 - **107 tests, 0 failures** across all 19 phases

@@ -432,13 +432,13 @@ async function handleRouteCore(request, { params }, reqCtx) {
       if (!result) {
         result = await handleOnboarding(path, method, request, db)
       }
-    } else if (path[0] === 'content' && path.length <= 2 && (method === 'POST' || method === 'GET' || method === 'DELETE')) {
+    } else if (path[0] === 'content' && path.length <= 2 && (method === 'POST' || method === 'GET' || method === 'DELETE' || method === 'PATCH')) {
       result = await handleContent(path, method, request, db)
     } else if (path[0] === 'feed') {
       result = await handleFeed(path, method, request, db)
     } else if (path[0] === 'follow') {
       result = await handleSocial(path, method, request, db)
-    } else if (path[0] === 'content' && path.length === 3) {
+    } else if (path[0] === 'content' && path.length >= 3) {
       result = await handleSocial(path, method, request, db)
     } else if (path[0] === 'stories') {
       result = await handleStories(path, method, request, db)

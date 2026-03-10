@@ -10,7 +10,7 @@ Build a "world-best" social media backend for the app "Tribe" — a campus-nativ
 
 ## Architecture
 - **Stack**: Monolithic Next.js API backend + MongoDB
-- **Testing**: pytest suite (561 tests)
+- **Testing**: pytest suite (633 tests)
 - **Key Patterns**: Contract-Driven Development, Centralized Policy (access-policy.js), Canonical Serializers (entity-snippets.js)
 - **Collections**: users, sessions, content_items, follows, reactions, saves, comments, notifications, media_assets, audit_logs, pages, page_members, page_follows, reels, stories, ...
 
@@ -101,5 +101,24 @@ id, pageId, userId (unique pair), createdAt
 ### content_items extensions (B3)
 authorType (USER|PAGE), pageId, actingUserId, actingRole, createdAs (USER|PAGE)
 
+### content_items extensions (B4)
+editedAt (timestamp, set on caption edit)
+originalContentId (string, set for reposts — links to original post)
+isRepost (boolean, true for repost items)
+
+### comment_likes collection (B4)
+id, userId, commentId, contentId, createdAt (unique: userId+commentId)
+
+## Completed Stages
+| Stage | Name | Status | Tests |
+|---|---|---|---|
+| B0 | Foundation | ✅ DONE | — |
+| B1 | Identity/Media | ✅ DONE | — |
+| B2 | Visibility/Permissions | ✅ DONE | — |
+| B3 | Pages System | ✅ DONE | 58 |
+| B3-U | Ultimate Test Gate | ✅ PASS | 107 |
+| B4 | Core Social Gaps | ✅ DONE | 72 |
+| B4-U | Ultimate Test Gate | ✅ PASS | 72 |
+
 ## Next Priority
-**B4 — Core Social Gaps**: ~8 missing endpoints (edit post, share post, like comment, etc.)
+**B5 — Discovery, Search & Hashtag Engine**: Hashtag extraction, fix `GET /search?type=posts`
