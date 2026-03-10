@@ -1,10 +1,10 @@
 <analysis>
-**original_problem_statement**: The user wants to build a world-best social media backend for their app, Tribe. After an exhaustive audit revealed the backend is ~95% feature-complete, the project's focus has pivoted from infrastructure hardening to a new, feature-driven master plan. The immediate goal is to create a definitive API contract () to unblock the frontend team, followed by building the few remaining features (like a Pages system), fixing minor gaps, and then hardening the test suite. The user has provided an extremely detailed, multi-stage Final World-Best Staging Plan (B0-B8) that must be followed precisely. The ultimate vision is to achieve Instagram-level common social features combined with Tribe's unique campus-community differentiators, all built on a foundation of world-class backend discipline (contract-driven, permission-safe, canonical objects).
+**original_problem_statement**: The user wants to build a world-best social media backend for their app, Tribe. The project's master plan is to first establish a definitive, programmatically-generated API contract as the single source of truth (Stage B0), and then systematically build the few remaining features (Pages, search, etc.) and fix known issues according to a rigid, user-provided, multi-stage Final World-Best Staging Plan (B0-B8). The ultimate vision is an Instagram-level backend with world-class discipline: contract-driven, permission-safe, and using canonical data objects.
 
-**User's preferred language**: The user communicates in a mix of English and Hindi. As per the initial handoff, the next agent MUST respond in professional English.
+**User's preferred language**: The user communicates in a mix of English and Hindi. The next agent MUST respond in professional English.
 
 **what currently exists?**
-- A monolithic Next.js backend with approximately 271 API route handlers across 18 handler files, covering ~95% of the features for a full-fledged social media app.
+- A monolithic Next.js backend with ~266 live API routes, covering ~95% of the features for a full-fledged social media app.
 - An extensive ============================= test session starts ==============================
 platform linux -- Python 3.11.14, pytest-9.0.2, pluggy-1.6.0
 rootdir: /app
@@ -123,20 +123,18 @@ INTERNALERROR>     exit(1)
 INTERNALERROR>   File "<frozen _sitebuiltins>", line 26, in __call__
 INTERNALERROR> SystemExit: 1
 
-============================== 1 warning in 0.70s ============================== suite with 396 passing tests.
-- Key features like Posts, Reels, Stories, Tribes, and Contests are already extensively built.
-- A complete lack of API documentation, which is the primary blocker for the frontend team.
-- The agent has completed a full deep-dive audit of the entire backend codebase, confirming the scope and identifying key architectural quirks (e.g., two co-existing content models, multiple pagination styles).
+============================== 1 warning in 1.10s ============================== suite with 396 passing tests.
+- A comprehensive, 12-part API Contract has been successfully generated and is located in . This includes a human-readable , a machine-readable , and detailed breakdowns of domains, auth, request/response shapes, errors, and known quirks. This contract is now the definitive source of truth for the backend.
 
 **Last working item**:
--   **Last item agent was working**: The agent had just completed an exhaustive deep-dive audit of all 18 backend handler files and routing logic. Based on this, it formulated a detailed execution blueprint for **Stage B0: API Contract Generation**. Just as it was about to present this plan, the user provided their own, even more granular and philosophical Final World-Best Staging Plan (B0-B8), including an extremely detailed breakdown of Stage B0's sub-tasks and exit criteria. The agent's last state was processing these new, definitive instructions before starting the execution of Stage B0.
--   **Status**: NOT STARTED
--   **Agent Testing Done**: N/A
--   **Which testing method agent to use?** N/A (The task is documentation generation).
--   **User Testing Done**: N/A
+    - Last item agent was working: After completing the massive Stage B0 API contract generation, the user requested an enhancement: to generate a TypeScript API client from the newly created . The agent started this task and was in the process of creating the main client file .
+    - Status: IN PROGRESS
+    - Agent Testing Done: N
+    - Which testing method agent to use? NA (This is a utility file generation task. Verification will be its successful creation and content review).
+    - User Testing Done: N
 
 **All Pending/In progress Issue list**:
-These are known issues identified during the audit, which are now scheduled for resolution within the new staging plan.
+These are known issues identified during the initial audit, which are now scheduled for resolution within the user's staging plan.
 
 -   **Issue 1: Avatar URL Resolution (P0)**
     -   **Description**: User-related API responses return  or a raw  instead of a fully resolved . This is a high-impact visual bug.
@@ -146,51 +144,62 @@ These are known issues identified during the audit, which are now scheduled for 
     -   **Description**:  is non-functional because post content is not indexed for search.
     -   **Status**: NOT STARTED (Scheduled for Stage B4)
 -   **Issue 3: Reel Interaction Bugs (P1)**
-    -   **Description**:  and  return 400 Bad Request errors, likely due to a minor body format or validation bug.
-    -   **Status**: NOT STARTED (Scheduled for Stage B5/B6)
+    -   **Description**:  and  return 400 Bad Request errors.
+    -   **Status**: NOT STARTED (Scheduled for Stage B6)
 -   **Issue 4: Post Visibility Not Enforced (P2)**
-    -   **Description**: The  field in the post schema (Public, Followers, Tribe) is not consistently enforced in all feed and search surfaces.
-    -   **Status**: NOT STARTED (Scheduled for Stage B2 and B5)
+    -   **Description**: The  field in the post schema (Public, Followers, Tribe) is not consistently enforced in all read surfaces.
+    -   **Status**: NOT STARTED (Scheduled for Stage B2)
 
 **In progress Task List**:
-The entire new staging plan is the active task list, starting with B0.
-
--   **Task 1: Stage B0: API Contract & Truth Bridge (P0)**
-    -   **Description**: The highest priority task is to generate a complete  and a machine-readable  by programmatically scanning all 271+ handlers. This will serve as the single source of truth for the frontend and eliminate communication gaps.
-    -   **Where to resume**: Start execution of Stage B0, following the user's hyper-detailed plan from the last message. This includes sub-stages B0.1 (Route Census) through B0.12 (Freeze Package).
-    -   **What will be achieved with this?**: It will unblock the frontend, prevent future guesswork, and establish a contract-driven development workflow.
-    -   **Status**: NOT STARTED
-    -   **Should Test frontend/backend/both after fix?**: N/A
+-   **Task 1: Complete TypeScript API Client Generation (P0)**
+    -   **Where to resume**: The file  has been created but is empty. The next step is to populate this file with the client generation logic based on . This will likely involve creating a companion  file for shared type definitions.
+    -   **What will be achieved with this?**: A fully typed, ready-to-use API client for the frontend team. This will make all 266 backend endpoints callable with full type safety, eliminating manual API call implementation and guesswork.
+    -   **Status**: IN PROGRESS
+    -   **Should Test frontend/backend/both after fix?**: Neither. This is a code generation task.
     -   **Blocked on something**: No.
 
 **Upcoming and Future Tasks**
-This is the definitive, user-approved Final World-Best Staging Plan. The agent MUST follow this exact order and adhere to the detailed requirements for each stage provided by the user.
+This is the definitive, user-approved Final World-Best Staging Plan. The agent MUST follow this exact order after completing the current in-progress task.
 
 -   **Upcoming Tasks**:
-    -   **B1 (P1): Canonical Identity, Avatar & Media Resolution**: Fix the broken avatar URLs and standardize the  and  shapes across all APIs.
-    -   **B2 (P1): Visibility, Permission & Feed Safety Truth**: Centralize and enforce all content visibility rules (Public, Followers, Tribe, etc.) across all read surfaces (feeds, search) before building new discovery features.
-    -   **B3 (P2): Pages System**: Build the entire Instagram/Facebook-style Pages feature from scratch, including data models, ~15 new endpoints for CRUD, roles, posting-as-page, and feed integration. This is the next major feature.
-    -   **B4 (P2): Core Social Gaps**: Build the remaining 8 missing endpoints (edit post, share post, like comment, explore feed, trending hashtags, notification device registration/preferences).
-    -   **B5 (P2): Discovery, Search & Hashtag Engine**: Implement hashtag extraction from post captions, index them for search, and fix the broken post search functionality.
-    -   **B6 (P2): Notifications 2.0 + Reels/Post Polish**: Implement advanced notification features (grouping, preferences) and fix the minor bugs in Reel interactions.
+    -   **B1 (P1): Canonical Identity, Avatar & Media Resolution**: Fix the broken avatar URLs (Issue 1) and standardize the  and  shapes across all APIs.
+    -   **B2 (P1): Visibility, Permission & Feed Safety Truth**: Centralize and enforce all content visibility rules before building new discovery features.
+    -   **B3 (P2): Pages System**: Build the entire Instagram/Facebook-style Pages feature from scratch.
+    -   **B4 (P2): Core Social Gaps**: Build ~8 missing endpoints (edit post, share post, like comment, etc.).
+    -   **B5 (P2): Discovery, Search & Hashtag Engine**: Implement hashtag extraction and fix broken post search (Issue 2).
+    -   **B6 (P2): Notifications 2.0 + Reels/Post Polish**: Implement advanced notification features and fix Reel interaction bugs (Issue 3).
 -   **Future Tasks**:
-    -   **B7 (P3): Test Hardening + Gold Freeze**: Resume the original testing plan to bring test coverage to 900+ and achieve a gold-freeze state for the backend.
-    -   **B8 (P4): Infra, Observability, Scale Path**: Only after all features are stable, begin infrastructure improvements like a 3-layer refactor, job queues, Redis caching, and production hardening.
+    -   **B7 (P3): Test Hardening + Gold Freeze**: Bring test coverage to 900+ and achieve a gold-freeze state.
+    -   **B8 (P4): Infra, Observability, Scale Path**: Begin infrastructure improvements (3-layer refactor, job queues, Redis, etc.).
 
 **Completed work in this session**
--   **Exhaustive Codebase Audit**: The agent successfully completed a deep-dive analysis of all 18 backend handler files () and the main  dispatcher, confirming the existence of ~271 route handlers and gaining a comprehensive understanding of the codebase's structure and quirks.
--   **B0 Execution Plan Formulation**: Based on the audit, the agent created a detailed execution plan for Stage B0, which was then superseded by the user's even more granular instructions.
+- **Stage B0: API Contract & Truth Bridge (DONE)**: The agent performed a complete, programmatic extraction of the backend's API surface, following the user's hyper-detailed 12-step plan. This generated a full suite of API contract documents, establishing a single source of truth for the entire backend.
+
+- Recently completed:
+  - B0.1 Route Census Extraction (DONE)
+  - B0.2 Domain Classification (DONE)
+  - B0.3 Auth & Actor Matrix (DONE)
+  - B0.4 Request Contract Extraction (DONE)
+  - B0.5 Response Contract Extraction (DONE)
+  - B0.6 Error Contract & State Code Map (DONE)
+  - B0.7 Pagination, Cursor & Stream Contract (DONE)
+  - B0.8 Quirk Ledger / Frontend Gotchas (DONE)
+  - B0.9 API_REFERENCE.md (DONE)
+  - B0.10 Machine-Readable Contract Manifest (DONE)
+  - B0.11 Contract Verification & Drift Gate (DONE)
+  - B0.12 B0 Freeze Package (DONE)
+  -  updated with B0 completion status. (DONE)
 
 **Earlier issues found/mentioned but not fixed**
--   **Separate Test DB**: Tests currently use the application database. This has been deferred to **Stage B8 (Infrastructure)**.
--   **Audit Log TTL**: The  collection lacks a Time-To-Live (TTL) policy. This has been deferred to **Stage B8 (Infrastructure)**.
+   - **Issue 1: Separate Test DB**: Tests currently use the application database. This is deferred to **Stage B8 (Infrastructure)**.
+   - **Issue 2: Audit Log TTL**: The  collection lacks a Time-To-Live (TTL) policy. This is deferred to **Stage B8 (Infrastructure)**.
 
 **Known issue recurrence from previous fork**
--   None.
+  - None.
 
 **Code Architecture**
--   **Application**: Monolithic Next.js API.
--   **Testing Framework**: ============================= test session starts ==============================
+- **Application**: Monolithic Next.js API.
+- **Testing Framework**: ============================= test session starts ==============================
 platform linux -- Python 3.11.14, pytest-9.0.2, pluggy-1.6.0
 rootdir: /app
 plugins: anyio-4.12.1, cov-7.0.0
@@ -310,64 +319,84 @@ INTERNALERROR>     exit(1)
 INTERNALERROR>   File "<frozen _sitebuiltins>", line 26, in __call__
 INTERNALERROR> SystemExit: 1
 
-============================== 1 warning in 3.07s ==============================.
--   **Key Directories**:  (all 18 handler files),  (all tests).
--   **Architectural Shift**: The project has officially pivoted to a **Contract-Driven Development** model, with the creation of  (Stage B0) being the foundational first step. The user has also mandated a **Permissions-First** approach, requiring Stage B2 (Visibility/Safety) to be completed before new discovery features (B5).
+============================== 1 warning in 3.98s ==============================.
+- **Key Directories**:  (all handlers),  (all tests).
+- **Development Model**: The project now strictly follows a **Contract-Driven Development** model. The single source of truth for the API is the set of documents under , generated during Stage B0.
 
 **Key Technical Concepts**
--   **Contract-Driven Development**: The most critical concept. The first task is to build the API contract before any other code.
--   **Canonical Objects**: The user insists on creating standardized, canonical shapes for core data objects like  and  to be used consistently across all APIs.
--   **Permissions-First Architecture**: Enforcing all visibility and permission rules (Stage B2) before building features that could leak private data (like search and explore feeds).
--   **Deep Auditing**: The process of verifying every single endpoint to establish ground truth, which has already been completed.
+- **Contract-Driven Development**: All development is now driven by the API contract established in Stage B0.
+- **Permissions-First Architecture**: Enforcing all visibility and permission rules (Stage B2) before building features that could leak private data.
+- **Programmatic Truth Extraction**: The B0 contract was not written manually but generated by scripts that scanned the live codebase, ensuring accuracy.
 
 **key DB schema**
--   A key architectural quirk is the co-existence of two content models:
-    -   : A generic collection for posts and some stories, differentiated by a  field.
-    -    and : Separate, dedicated collections for these content types, indicating parallel implementation paths.
--   The Pages system (Stage B3) will require new models: , ,  (or a modification to the existing content model).
+  - A key architectural quirk is the co-existence of two content models:
+    -   : A generic collection for posts and some stories.
+    -    and : Separate, dedicated collections.
 
 **changes in tech stack**
--   None.
+  - None.
 
 **All files of reference**
--   **To Be Created in Stage B0**:
-    -   : The primary human-readable API contract.
-    -   : A machine-readable version of the API contract.
-    -   Several other supporting contract documents under  as per the user's detailed B0 plan.
--   **Key Files for Context (already reviewed)**:
-    -   All 18 handler files located in .
-    -   : The main router dispatch file.
+- **Created in this session (The B0 API Contract)**:
+    - : Raw machine-readable dump of all 266 routes.
+    - : Human-readable list of routes.
+    - : Documents 11 discovered anomalies (dead code, etc.).
+    - : Audit notes on the census process.
+    - : Routes grouped by feature domain.
+    - : Defines access permissions for every route.
+    - : Documents request bodies for write endpoints.
+    - : Documents response shapes and canonical objects.
+    - : Documents error codes and patterns.
+    - : Documents all list-based endpoints.
+    - : Documents non-obvious behaviors for the frontend.
+    - : The primary, consolidated human-readable API contract.
+    - : A lightweight manifest for tooling.
+    - : Rules for keeping the contract up-to-date.
+    - : The final sign-off document for Stage B0.
+- **In Progress**:
+    - : The file for the TypeScript API client being generated.
+- **Other Important Files**:
+    - All 18 handler files located in .
+    - : The main router dispatch file.
+
+**Areas that need refactoring**:
+- The dual content models ( vs. /) are a known quirk. This may need to be addressed in a future stage (likely B8).
 
 **Critical Info for New Agent**
--   **Follow the User's Plan Religiously**: The user has provided an extremely detailed, non-negotiable Final World-Best Staging Plan (B0-B8) in their last message. You MUST follow this plan, its ordering, and its philosophical principles (Truth, Canonical Objects, Safety) to the letter. Start with the user's detailed blueprint for Stage B0. Do not deviate or propose alternatives.
--   **Your First Task is B0**: Your first and only priority is **Stage B0: Create the API Contract**. Do not start any other coding or fixing tasks (like B1) until B0 is fully complete as per the user's exit criteria.
--   **The Backend is Mostly Built**: Acknowledge that the backend is ~95% feature-complete. Your job is not to build from scratch, but to document, fill small, specific gaps, and harden the system according to the user's roadmap.
--   **The User is Highly Technical**: The user has a deep understanding of the codebase and software architecture best practices. Communicate clearly, and justify your actions based on their established plan.
+- **Follow the User's Plan Religiously**: The user's Final World-Best Staging Plan (B0-B8) is non-negotiable. After the current TS client task is done, you MUST proceed to Stage B1. Do not deviate.
+- **The API Contract is Your Bible**: Stage B0 is complete. The ground truth for the API now lives in the documents under . Refer to  and  before any work.
+- **Immediate Task**: Your first priority is to complete the in-progress task: generating the TypeScript API client in .
+- **The User is Highly Technical**: Communicate clearly and justify your actions based on their established plan and the newly created API contract.
 
 **documents created in this job**
--   None yet. The work in this session was purely analysis and planning.
+  - All documents for Stage B0, as listed under All files of reference.
+  -  was updated to reflect the completion of Stage B0.
 
 **Last 10 User Messages and any pending HUMAN messages**
--   **LATEST/PENDING**: The user provided an incredibly detailed, multi-page Final World-Best Staging Plan (B0-B8) and a granular breakdown of how to execute Stage B0. This message is the new master plan and source of truth for the entire project. The agent has not yet responded to this. **(Status: Action Required - Acknowledge and execute B0 per this plan)**
--   The preceding messages show a collaborative process where the user provides a massive data dump of the backend's state, identifies gaps, and works with the agent to formulate a new plan, culminating in the final detailed instructions. The user established the priority of B0 (API Contract) and B2 (Pages System) and provided a detailed comparison of Tribe vs. Instagram features.
+- **LATEST/PENDING**: None. The user's last action was to select the enhancement.
+- : The user explicitly requested this enhancement after being presented with options post-B0 completion. (Status: In Progress)
+- : User confirmed to proceed after the agent completed Stage B0. (Status: Completed)
+- : User confirming the agent's plan to execute the new, hyper-detailed B0 plan. (Status: Completed)
+- : The most critical message. The user reset the definition of B0, providing an extremely detailed 12-step plan that became the blueprint for all subsequent work in this session. (Status: Completed)
+- : The user's initial message in this session, which correctly identified that a previous attempt at B0 was incomplete and triggered the deep-dive and reset. (Status: Completed)
 
 **Project Health Check:**
--   **Broken**: No. The application and test suite are stable.
--   **Mocked**: No.
--   **Primary Risk**: The complete absence of an API contract, which is causing a total breakdown in communication between backend and frontend development. Stage B0 is designed to mitigate this risk entirely.
+- **Broken**: No. The application and test suite are stable.
+- **Mocked**: No.
+- **Primary Risk Mitigated**: The previous primary risk (no API contract) has been resolved by the completion of Stage B0. The new, lower-level risk is contract drift, which is addressed by the  procedures.
 
 **3rd Party Integrations**
--   Redis
--   OpenAI GPT-4o-mini
--   Emergent Object Storage
+- Redis
+- OpenAI GPT-4o-mini
+- Emergent Object Storage
 
 **Testing status**
--   **Testing agent used after significant changes**: NO
--   **Troubleshoot agent used after agent stuck in loop**: NO
--   **Test files created**: None in this session.
--   **Known regressions**: None.
+  - Testing agent used after significant changes: NO (Work was documentation/code generation).
+  - Troubleshoot agent used after agent stuck in loop: NO
+  - Test files created: None.
+  - Known regressions: None.
 
 **What agent forgot to execute**
--   Nothing was forgotten. The agent was in the process of formulating a plan for Stage B0 when the user provided an even more detailed, prescriptive plan. The agent's next action is to follow that new, user-provided plan.
+- Nothing. The agent followed the user's prescriptive plan meticulously and is now executing a user-requested enhancement before proceeding to the next stage of the main plan.
 
 </analysis>
