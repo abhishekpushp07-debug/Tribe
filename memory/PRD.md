@@ -31,6 +31,16 @@ All 12 sub-stages completed:
 
 **Deliverables**: 15 files in `/app/memory/contracts/` + `/app/memory/API_REFERENCE.md`
 
+### Stage B0.5: TypeScript API Client ✅ (2026-03-10)
+- **File**: `/app/lib/tribe-api-client.ts` (1884 lines)
+- **Coverage**: 265/265 manifest routes (100%)
+- **34 exported types**: UserProfile, ContentItem, Reel, Story, Tribe, TribeContest, Event, BoardNotice, Resource, Notification, etc.
+- **27 domain namespaces**: system, auth, me, content, feed, social, comments, users, discovery, media, stories, blocks, reels, tribes, contests, events, notices, resources, governance, authenticity, reports, appeals, notifications, legal, grievances, claims, admin.*
+- **Features**: SSE streaming, async auto-pagination iterator, AbortController support, auto-401 retry with token refresh, rate-limit error handling, request hooks, media URL resolver, avatarUrl helper
+- **TypeScript strict mode**: 0 errors
+- **Known bugs documented in JSDoc**: reel comment/report 400, post search not indexed
+- **294 JSDoc comments** documenting every method with params, quirks, and constraints
+
 ### Earlier Stages (Pre-B0)
 - Stages 1-9 of original development plan completed
 - 396 tests passing (78 unit + 242 integration + 8 smoke + 68 consistency/permission)
