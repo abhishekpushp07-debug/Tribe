@@ -40,13 +40,36 @@ Executed through staged plan: Security → Observability → Testing → Scalabi
 - 2x idempotent (328/328, 32.15s + 29.95s), full cleanup (20+ collections)
 - True Deep Audit Scorecard: `/app/memory/stage_4b_true_scorecard.md`
 
+### Stage 4C-P0A: Cross-Surface Entity Consistency — PERFECT (24/24)
+- 5 entity domains: Posts (8), Events (6), Resources (4), Notices (3), Reels (3)
+- Proves truth-field consistency across detail, feeds, search, college listings, cross-user reads
+- Mutation→Read consistency for like, dislike, comment, RSVP, vote, acknowledge
+- Delete/Remove consistency (404/410) across all entities
+- 3 dedicated consistency users, full cleanup, idempotent (2x 352/352)
+- Proof pack: `/app/memory/stage_4c_p0a_proof_pack.md`
+
+## In Progress
+
+### Stage 4C: World-Class Product Consistency (P0) — Awaiting P0-B
+- P0-A ✅ Cross-surface entity consistency (24 tests, PERFECT)
+- P0-B ⬜ Visibility + Permission Matrix
+- P0-C ⬜ Moderation-State Exposure Rules
+- P0-D ⬜ Counter and Aggregate Truth
+- P0-E ⬜ Pagination/Cursor Correctness
+- P0-F ⬜ Illegal State Transitions
+- P1-A ⬜ Contract Hardening
+- P1-B ⬜ Auditability / Request Lineage
+- P1-C ⬜ Domain Matrix README
+
 ## Upcoming Tasks
 
-### Stage 5: Scalability Foundation Refactor (P1)
+### Stage 4D: Gold-Freeze / Launch-Readiness (P1)
+
+### Stage 5: Scalability Foundation Refactor (P2)
 - Service/Repository layer separation
 - handler.js → service.js → repository.js pattern
 
-### Future Stages (P2-P3)
+### Future Stages (P3)
 - Stage 6: Async Backbone + Job System + CQRS-lite
 - Stage 10+: Production Hardening (separate test DB, TTL, Redis-backed metrics)
 

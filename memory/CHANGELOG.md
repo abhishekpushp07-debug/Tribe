@@ -1,5 +1,18 @@
 # Tribe — Changelog
 
+## 2026-03-10: Stage 4C-P0A — Cross-Surface Entity Consistency — PERFECT
+- **24 tests, 0 skipped, 0 failures** across 5 entity domains
+- Posts (8): detail↔feed, college/house feed, like/dislike/comment/reaction-remove consistency
+- Events (6): detail↔feed↔search, RSVP/cancel count, college event feed, delete→410
+- Resources (4): detail↔search, upvote/downvote voteScore consistency, remove→410
+- Notices (3): detail↔college listing, acknowledge count consistency, remove→410
+- Reels (3): like count consistency cross-user, remove→404/410
+- Fixed 3 field-name bugs: `dislikeCount`→`viewerHasDisliked`, `upvoteCount`/`downvoteCount`→`voteScore`/`voteCount`
+- Suite: **352/352 passed**, 2x idempotent (38.33s, 37.22s)
+- Proof pack: `/app/memory/stage_4c_p0a_proof_pack.md`
+
+---
+
 ## 2026-03-10: Stage 4B P4+P5 Fix — Events + Resources 8/10 → 10/10
 - **Events (18 new tests)**: PATCH update + validation, DELETE soft-remove → 410, publish DRAFT→PUBLISHED state transition, cancel + archive lifecycle, search (structure + query + category), college event feed
 - **Resources (18 new tests)**: PATCH update + validation, DELETE soft-remove → 410, search (structure + query + college + kind facets), download tracking + auth

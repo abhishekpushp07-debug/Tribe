@@ -154,19 +154,20 @@ class TestPostCrossSurface:
             assert detail['post'][field] == house_item[field], \
                 f'House feed INCONSISTENCY: {field}'
 
-    def test_dislike_count_consistent_across_surfaces(self, api_url, consistency_user_a, consistency_user_b):
-        """Dislike → dislikeCount consistent between detail and feed."""
+    def test_dislike_state_consistent_across_surfaces(self, api_url, consistency_user_a, consistency_user_b):
+        """Dislike → viewerHasDisliked consistent between detail and feed for the disliking user."""
         _, created = create_post(api_url, consistency_user_a['token'], 'Dislike consistency')
         post_id = created['post']['id']
         dislike_post(api_url, post_id, consistency_user_b['token'])
 
-        _, detail = get_post(api_url, post_id, consistency_user_a['token'])
-        _, feed = get_feed(api_url, 'following', token=consistency_user_a['token'])
+        # Check from disliking user's perspective — viewerHasDisliked should be True
+        _, detail = get_post(api_url, post_id, consistency_user_b['token'])
+        _, feed = get_feed(api_url, 'following', token=consistency_user_b['token'])
         feed_item = next((p for p in feed['items'] if p['id'] == post_id), None)
-        assert feed_item is not None
-        assert detail['post']['dislikeCount'] == feed_item['dislikeCount'], \
-            f'dislikeCount inconsistent: detail={detail["post"]["dislikeCount"]} feed={feed_item["dislikeCount"]}'
-        assert detail['post']['dislikeCount'] >= 1
+        assert detail['post']['viewerHasDisliked'] is True, 'viewerHasDisliked should be True in detail'
+        if feed_item:
+            assert detail['post']['viewerHasDisliked'] == feed_item.get('viewerHasDisliked', False), \
+                'viewerHasDisliked inconsistent between detail and feed'
 
     def test_reaction_remove_count_consistent(self, api_url, consistency_user_a, consistency_user_b):
         """Like then remove → likeCount returns to 0, consistent across surfaces."""
@@ -326,8 +327,8 @@ class TestResourceCrossSurface:
             # Search may not index immediately — document as known behavior
             pass
 
-    def test_vote_count_consistent_after_upvote(self, api_url, consistency_resource_user, consistency_user_b):
-        """Vote → voteCount consistent in detail re-read by different users."""
+    def test_vote_score_consistent_after_upvote(self, api_url, consistency_resource_user, consistency_user_b):
+        """Upvote → voteScore & voteCount consistent in detail re-read by different users."""
         _, created = create_resource(api_url, consistency_resource_user['token'],
                                      title='Vote consistency resource',
                                      college_id=self.RESOURCE_COLLEGE)
@@ -337,12 +338,15 @@ class TestResourceCrossSurface:
         vote_resource(api_url, resource_id, consistency_user_b['token'], 'UP')
         _, detail1 = get_resource(api_url, resource_id, consistency_resource_user['token'])
         _, detail2 = get_resource(api_url, resource_id, consistency_user_b['token'])
-        assert detail1['resource']['upvoteCount'] == detail2['resource']['upvoteCount'], \
-            'upvoteCount inconsistent between users'
-        assert detail1['resource']['upvoteCount'] >= 1
+        assert detail1['resource']['voteScore'] == detail2['resource']['voteScore'], \
+            'voteScore inconsistent between users after upvote'
+        assert detail1['resource']['voteCount'] == detail2['resource']['voteCount'], \
+            'voteCount inconsistent between users after upvote'
+        assert detail1['resource']['voteScore'] >= 1, 'voteScore should be >= 1 after upvote'
+        assert detail1['resource']['voteCount'] >= 1, 'voteCount should be >= 1 after upvote'
 
-    def test_vote_count_consistent_after_downvote(self, api_url, consistency_resource_user, consistency_user_b):
-        """Downvote → downvoteCount consistent in detail re-read."""
+    def test_vote_score_consistent_after_downvote(self, api_url, consistency_resource_user, consistency_user_b):
+        """Downvote → voteScore & voteCount consistent in detail re-read."""
         _, created = create_resource(api_url, consistency_resource_user['token'],
                                      title='Downvote consistency',
                                      college_id=self.RESOURCE_COLLEGE)
@@ -352,9 +356,12 @@ class TestResourceCrossSurface:
         vote_resource(api_url, resource_id, consistency_user_b['token'], 'DOWN')
         _, detail1 = get_resource(api_url, resource_id, consistency_resource_user['token'])
         _, detail2 = get_resource(api_url, resource_id, consistency_user_b['token'])
-        assert detail1['resource']['downvoteCount'] == detail2['resource']['downvoteCount'], \
-            'downvoteCount inconsistent between users'
-        assert detail1['resource']['downvoteCount'] >= 1
+        assert detail1['resource']['voteScore'] == detail2['resource']['voteScore'], \
+            'voteScore inconsistent between users after downvote'
+        assert detail1['resource']['voteCount'] == detail2['resource']['voteCount'], \
+            'voteCount inconsistent between users after downvote'
+        assert detail1['resource']['voteScore'] <= -1, 'voteScore should be <= -1 after downvote'
+        assert detail1['resource']['voteCount'] >= 1, 'voteCount should be >= 1 after downvote'
 
     def test_removed_resource_returns_410(self, api_url, consistency_resource_user, db):
         """REMOVED resource → 410 on detail."""
