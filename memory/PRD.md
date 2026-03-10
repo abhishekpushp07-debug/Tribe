@@ -57,9 +57,13 @@ All 12 sub-stages completed:
 - **Files changed**: `lib/entity-snippets.js`, `lib/auth-utils.js`
 - **Backward compatibility**: Legacy `avatar` field preserved as deprecated alias. No route/path/DB/permission changes.
 
-### P1: Stage B2 — Visibility, Permission & Feed Safety
-- Enforce content visibility rules (PUBLIC/FOLLOWERS/LIMITED) across feeds
-- Fix following feed to show FOLLOWERS-only content
+### P1: Stage B2 — Visibility, Permission & Feed Safety ✅ (2026-03-10)
+- Created centralized `access-policy.js` with 9 policy functions
+- Applied to 14 surfaces: content detail, 6 feeds, user profile, user posts, followers, following, comments, notifications
+- Bidirectional block enforcement across all read surfaces (returns 404, no existence leak)
+- Parent-child safety: hidden parent → child objects inaccessible
+- Visibility states enforced: SHADOW_LIMITED/HELD → owner+admin only, REMOVED → nobody
+- 396/396 pytest passing, auth_actor_matrix.md updated
 
 ### P1: Stage B3 — Pages System
 - Build Instagram/Facebook-style "Pages" from scratch
@@ -90,6 +94,6 @@ All 12 sub-stages completed:
 1. ~~Avatar returns raw media ID, not URL (B1)~~ **RESOLVED in B1**
 2. Post search not working (B5)
 3. Reel comment/report return 400 (B6)
-4. Visibility field not fully enforced in feeds (B2)
+4. ~~Visibility field not fully enforced in feeds (B2)~~ **RESOLVED in B2**
 5. Dead code: house-points.js (16 files active, 1 dead)
 6. Dead code: stages.js lines 2247-2623

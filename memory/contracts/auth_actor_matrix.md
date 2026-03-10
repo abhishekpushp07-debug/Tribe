@@ -1,6 +1,50 @@
 # B0.3 — Auth & Actor Matrix
-> Generated: 2026-03-10 | Source: auth-utils.js + all handler files
+> Generated: 2026-03-10 | Updated: 2026-03-10 (B2 — Visibility & Permission Safety)
+> Source: auth-utils.js + access-policy.js + all handler files
 > Purpose: For every endpoint, who can call it and what happens when wrong actor calls
+
+---
+
+## B2 Access Policy Layer
+
+**New module**: `/app/lib/access-policy.js` — centralized visibility + block enforcement.
+
+### Block Enforcement (B2)
+All read surfaces now enforce **bidirectional block checks**. If UserA blocks UserB:
+- UserB cannot see UserA's profile, posts, or comments (returns 404)
+- UserA cannot see UserB's notifications, followers, or feed content
+- Blocked user content is silently excluded from feeds/lists
+- Direct detail access returns 404 (does not leak existence)
+
+### Visibility Enforcement (B2)
+Content items (`content_items` collection) now enforce visibility at the policy layer:
+| Visibility | Detail View | Feed/List | Owner | Admin/Mod |
+|---|---|---|---|---|
+| PUBLIC | ✅ | ✅ | ✅ | ✅ |
+| LIMITED | ✅ | ✅ | ✅ | ✅ |
+| SHADOW_LIMITED | ❌ (404) | ❌ (excluded) | ✅ | ✅ |
+| HELD_FOR_REVIEW | ❌ (404) | ❌ (excluded) | ✅ | ✅ |
+| REMOVED | ❌ (404) | ❌ (excluded) | ❌ | ❌ |
+
+### Parent-Child Safety (B2)
+If a parent content item is inaccessible (hidden/removed/blocked), its child objects (comments, replies) are also inaccessible. The comment list endpoint checks parent content accessibility before returning comments.
+
+### Protected Surfaces (B2)
+| Surface | Block Check | Visibility Check | Parent Check |
+|---|---|---|---|
+| Content detail | ✅ | ✅ | — |
+| Public feed | ✅ | ✅ | — |
+| Following feed | ✅ | ✅ | — |
+| College feed | ✅ | ✅ | — |
+| House feed | ✅ | ✅ | — |
+| Story rail | ✅ | — | — |
+| Reels feed | ✅ | ✅ | — |
+| User posts list | ✅ | ✅ | — |
+| User profile | ✅ | — | — |
+| Followers list | ✅ | — | — |
+| Following list | ✅ | — | — |
+| Comment list | ✅ | — | ✅ |
+| Notification list | ✅ | — | — |
 
 ---
 
