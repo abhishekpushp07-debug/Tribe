@@ -1,109 +1,236 @@
-# Tribe — Frontend Known Gotchas
-Verified backend truth. FH1-U gate.
+# Tribe — Frontend Known Gotchas & Edge Cases
+**Version**: 2.1 (Post B4 + FH1-U)
+**Verified from actual backend code**
 
-## 1. Author Type Duality (CRITICAL)
-- Every content item has `authorType: "USER" | "PAGE"`
-- When `authorType === "USER"`: `author` is UserSnippet (has `username`, `displayName`)
-- When `authorType === "PAGE"`: `author` is PageSnippet (has `slug`, `name`, `category`)
-- **NEVER assume** author has `username`. Check `authorType` FIRST.
-- Feed items can be mixed. Use a single PostCard component that branches on authorType.
+---
 
-## 2. Repost Rendering (B4)
+## GOTCHA 1: Dual Author System (MOST CRITICAL)
+**Affects**: Every screen that shows content (feed, post detail, search, page posts)
+
+```javascript
+// WRONG — will crash on page posts:
+<Text>{post.author.displayName}</Text>
+
+// RIGHT:
+<Text>{post.authorType === 'PAGE' ? post.author.name : (post.author.displayName || post.author.username || 'Anonymous')}</Text>
+```
+
+- `authorType: "USER"` → author is UserSnippet → has `displayName`, `username`, NO `slug`
+- `authorType: "PAGE"` → author is PageSnippet → has `name`, `slug`, NO `username`, NO `displayName`
+- Following feed mixes both. Every PostCard MUST branch on `authorType`.
+
+---
+
+## GOTCHA 2: Repost Rendering (B4 NEW)
+**Affects**: Feed, post detail
+
 - If `post.isRepost === true`, it's a repost
-- `post.originalContent` contains the original post (can be null if original was deleted)
-- `post.author` = the reposter
-- `post.originalContent.author` = original author
-- Frontend must render: "{reposter} reposted" header + original content card
-- If `post.originalContent === null`, show "Original content was removed" placeholder
+- `post.author` = the reposter (always a UserSnippet)
+- `post.originalContent` = the original post (has its own `author`)
+- `post.originalContent` can be `null` if original was deleted → show placeholder
+- Repost has its OWN counters (likeCount, commentCount etc. start at 0)
+- The ORIGINAL post's `shareCount` is what incremented
 
-## 3. Avatar URL Resolution
-- `avatarUrl` is the display URL. Use directly in `<img src>`.
-- If `avatarUrl === null`, show default placeholder.
-- Don't use `avatarMediaId` for display — it's a raw ID, not a URL.
-- URL format: `/api/media/{mediaId}` — relative path.
+```javascript
+if (post.isRepost) {
+  if (post.originalContent) {
+    // Render: "{reposter} reposted" + original content card
+  } else {
+    // Render: "{reposter} reposted" + "Original content was removed"
+  }
+}
+```
 
-## 4. Pagination
-- All list endpoints use cursor-based pagination
-- Request: `?cursor=...&limit=20`
-- Response: `{ items: [...], pagination: { nextCursor: "..."|null, hasMore: boolean } }`
-- When `nextCursor` is null or `hasMore` is false, stop loading
-- Some endpoints use `posts` key instead of `items` — check response shape
+---
 
-## 5. Age Gate
-- Users with `ageStatus !== "ADULT"` cannot create content (posts, stories, reels)
-- API returns `{ error: "Please complete age verification before posting" }`
-- Frontend should check `user.ageStatus` and show age verification screen before create flows
+## GOTCHA 3: Avatar URL Resolution
+- `avatarUrl` = display URL. Use directly: `<img src={avatarUrl} />`
+- If `avatarUrl === null` → show default placeholder
+- `avatarMediaId` = raw media ID. Use for profile edit forms only
+- `avatar` = DEPRECATED alias for `avatarMediaId`. Don't use.
+- URL format is typically `/api/media/{id}` (relative path)
 
-## 6. Comment Like Count Can Go Negative (Edge Case)
-- If backend fails between delete and decrement, `likeCount` might briefly be incorrect
-- Frontend should use `Math.max(0, count)` for display
-- This is an eventually-consistent edge case, not a bug
+---
 
-## 7. Share Count
-- `shareCount` on a post = number of times it was reposted
-- Increments on successful repost
-- Duplicate repost returns 409 (frontend should show "Already shared")
+## GOTCHA 4: Pagination Inconsistency
+- Most endpoints: `{ items: [...], pagination: { nextCursor, hasMore } }`
+- Some endpoints: `{ posts: [...], pagination: {...} }`
+- Comment endpoint: has BOTH `items` AND `comments` (same array)
+- Always check for both keys: `data.items || data.posts || data.comments || []`
 
-## 8. EditedAt
-- If `post.editedAt` is not null, show "(edited)" indicator
-- Only set after PATCH /content/:id succeeds
-- New posts have `editedAt: null` (not present or null)
+---
 
-## 9. Page-authored Content in Feeds
-- Following feed includes posts from followed pages
-- Page posts have `authorType: PAGE`, `pageId` set
-- Tapping page author navigates to `/pages/:slug` not `/users/:id`
+## GOTCHA 5: Age Gate for Content Creation
+- Users with `ageStatus !== "ADULT"` CANNOT create posts/stories/reels
+- API returns: `{ "error": "Please complete age verification before posting", "code": "AGE_REQUIRED" }`
+- Check `user.ageStatus` BEFORE showing create button
+- Age verification: `PATCH /me/age` with `{ "birthDate": "2000-01-15" }`
 
-## 10. Reel Media Exception
-- Reels DON'T use the MediaObject pattern
-- Reels have inline: `playbackUrl`, `thumbnailUrl`, `posterFrameUrl`, `mediaStatus`, `durationMs`
-- Don't try to resolve reel media through /api/media/:id
+---
 
-## 11. Story Expiry
-- Stories expire after 24h (`expiresAt` field)
-- API returns 410 GONE for expired stories
-- Frontend should handle 410 gracefully (remove from rail)
+## GOTCHA 6: editedAt Field (B4 NEW)
+- `editedAt: null` → post was never edited
+- `editedAt: "2026-03-10T..."` → post was edited, show "(edited)" label
+- Only set after `PATCH /content/:id` succeeds
+- Does NOT exist on old posts (treat `undefined` same as `null`)
 
-## 12. Search Type Limitation
-- `GET /search?type=posts` is NOT functional (deferred to B5)
-- Only `type=users`, `type=colleges`, `type=houses`, `type=pages` work
-- Page search also available via `GET /pages?q=...`
+---
 
-## 13. Rate Limiting
-- Backend has tiered rate limits: AUTH (10/min), READ (120/min), WRITE (30/min), STRICT (5/min)
-- 429 responses include `Retry-After` header
-- Frontend should respect 429 and show "Too many requests" message
+## GOTCHA 7: Comment likeCount Can Be Slightly Off
+- In rare edge case: if backend fails between delete and decrement, `likeCount` might be -1 temporarily
+- Frontend: `Math.max(0, comment.likeCount)` for display
+- Eventually consistent — not a permanent state
 
-## 14. Deprecated Fields
-- `user.avatar` → deprecated, use `user.avatarMediaId` instead
-- Both are the same value currently. `avatar` will be removed in a future version.
+---
 
-## 15. Page Slug vs ID
-- `GET /pages/:idOrSlug` accepts both page ID and slug
-- In links, prefer slug for SEO: `/pages/{slug}`
-- In API calls, either works
+## GOTCHA 8: Share/Repost Constraints
+- One repost per user per original → `409 "Already shared this content"`
+- Cannot repost a repost → `400 "Cannot repost a repost"`
+- Cannot repost deleted content → `404`
+- `shareCount` lives on the ORIGINAL post, not the repost
+- Frontend should disable share button after successful share (or show "Shared")
 
-## 16. No Optimistic UI for Moderated Actions
-- Post creation, post edit, and page post publish go through moderation
-- If moderation rejects: 422 with `"Edited content rejected by moderation"`
-- Frontend must NOT optimistically add these to feed
+---
 
-## 17. Content Delete is Soft
-- `DELETE /content/:id` sets `visibility: REMOVED`
-- Content disappears from feeds/lists but ID still exists
-- Detail route returns 404 for REMOVED content
+## GOTCHA 9: Page Posts in Following Feed
+- After following a page, its posts appear in `GET /feed/following`
+- These posts have `authorType: "PAGE"` and `pageId` set
+- Tapping author should navigate to `/page/${author.slug}`, NOT `/profile/`
+- Page posts can be mixed with user posts in the same feed
 
-## 18. Transfer Ownership
-- After transfer, old owner becomes ADMIN
-- PageProfile.viewerRole updates accordingly
-- Frontend should refresh member list after transfer
+---
 
-## 19. Notification Self-suppression
-- Backend never creates self-notifications
-- If you like your own post, no notification
-- Frontend doesn't need to filter — backend handles it
+## GOTCHA 10: Reel Media is DIFFERENT
+- Reels DON'T use the `MediaObject` pattern
+- Reels have INLINE fields: `playbackUrl`, `thumbnailUrl`, `posterFrameUrl`, `mediaStatus`, `durationMs`
+- Also use `creatorId` instead of `authorId`
+- Do NOT try `/api/media/:id` for reel media
+- Use `playbackUrl` directly for video player
 
-## 20. Block Behavior
-- Blocked user's content returns 404 (as if it doesn't exist)
+---
+
+## GOTCHA 11: Story Expiry
+- Stories expire after 24h (field: `expiresAt`)
+- Expired story detail returns `410 GONE`
+- Frontend: handle 410 by removing from rail, showing "Story expired"
+- Don't show stories where `expiresAt < now`
+
+---
+
+## GOTCHA 12: Search Limitations
+- `GET /search?type=posts` → NOT functional (deferred to B5)
+- Working types: `users`, `colleges`, `houses`, `pages`
+- Page search also via: `GET /pages?q=...&category=...`
+
+---
+
+## GOTCHA 13: Rate Limiting
+- Backend enforces per-user rate limits
+- AUTH tier: 10/min, READ tier: 120/min, WRITE tier: 30/min, STRICT tier: 5/min
+- 429 response includes `Retry-After` header
+- Frontend: show "Please wait" message, retry after delay
+- Heavy actions (create post, edit, share) most likely to hit limits
+
+---
+
+## GOTCHA 14: Soft Deletes
+- `DELETE /content/:id` sets `visibility: REMOVED` (soft delete)
+- Content disappears from feeds/lists
+- Detail route returns `404` for REMOVED content
+- The ID still exists in DB — just not accessible
+- Comments/likes on deleted posts become orphaned (no cascade delete)
+
+---
+
+## GOTCHA 15: Page viewerRole for UI Gating
+- `viewerRole` from `GET /pages/:idOrSlug` controls what UI to show
+- `null` → outsider: show Follow button, browse posts
+- `"MODERATOR"` → can view member list
+- `"EDITOR"` → can publish/edit posts, view member list
+- `"ADMIN"` → can manage members, view analytics
+- `"OWNER"` → full control (archive, transfer ownership)
+- After ownership transfer, `viewerRole` changes — refresh page detail
+
+---
+
+## GOTCHA 16: Moderation on Content Create/Edit
+- Post creation and post editing go through moderation re-check
+- If moderation rejects: `422` with `"content rejected by moderation"`
+- Frontend: do NOT optimistically add post to feed
+- Show error message and let user modify content
+
+---
+
+## GOTCHA 17: Block Behavior
+- Blocked user's content returns `404` (as if it doesn't exist)
 - Block is bidirectional for content visibility
-- Frontend: if user blocks someone, their content disappears from feed on next load
+- After blocking: their content disappears from YOUR feed on next load
+- After being blocked: YOUR content disappears from THEIR feed
+- Blocking doesn't delete existing likes/comments
+
+---
+
+## GOTCHA 18: Notification Self-Suppression
+- Backend NEVER creates self-notifications
+- Like your own post → no notification
+- Like your own comment → no notification
+- Share your own post → no notification
+- Frontend does NOT need to filter — backend handles this
+
+---
+
+## GOTCHA 19: Transfer Ownership Side Effects
+- After `POST /pages/:id/transfer-ownership`:
+  - Old owner becomes ADMIN
+  - New owner becomes OWNER
+  - `viewerRole` changes for both users
+- Frontend should refresh page detail + member list after transfer
+
+---
+
+## GOTCHA 20: actingUserId vs authorId (Page Content)
+- For page-authored content:
+  - `authorId` = page ID (public-facing)
+  - `actingUserId` = real human who posted (audit truth)
+  - `actingRole` = role at time of posting (OWNER/ADMIN/EDITOR)
+- Frontend: use `author` object for display. NEVER render `actingUserId` to end users.
+- `actingUserId` is present in API responses but is for internal use only.
+
+---
+
+## GOTCHA 21: Comment parentId for Threading
+- `parentId: null` → top-level comment
+- `parentId: "comment-uuid"` → reply to that comment
+- Frontend: build comment tree from parentId relationships
+- API returns flat list — frontend must nest them
+
+---
+
+## GOTCHA 22: Deprecated Fields
+| Field | Deprecated | Use Instead |
+|-------|-----------|-------------|
+| `user.avatar` | Yes | `user.avatarMediaId` |
+| `post.duration` | Partially | Only for stories. Reels use `durationMs` |
+
+---
+
+## GOTCHA 23: Content Kinds
+- `POST` → regular post
+- `REEL` → reel (uses different object shape!)
+- `STORY` → story (expires, different handling)
+- All three can be created via `POST /content/posts` with different `kind`
+- But reels/stories also have dedicated endpoints with richer features
+
+---
+
+## GOTCHA 24: Empty States to Handle
+| Screen | Empty State |
+|--------|------------|
+| Feed (no posts) | "Nothing to see yet. Follow people or pages!" |
+| Comments (none) | "Be the first to comment" |
+| Page posts (none) | "No posts yet" |
+| Notifications (none) | "You're all caught up!" |
+| Search (no results) | "No results found" |
+| Followers/Following (none) | "No followers/following yet" |
+| User saved (none) | "No saved posts" |
+| Page members (just owner) | Show only owner |

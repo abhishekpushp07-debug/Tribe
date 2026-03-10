@@ -1,153 +1,263 @@
 # Tribe — Screen-to-Endpoint Map
-Verified backend truth. FH1-U gate.
+**Version**: 2.1 (Post B4 + FH1-U)
+**Every screen mapped to exact backend endpoints**
 
-## 1. Splash / Auth
-- **Check auth**: `GET /auth/me` (200 = logged in, 401 = not)
-- **Register**: `POST /auth/register` → { accessToken, user }
-- **Login**: `POST /auth/login` → { accessToken, user }
-- **Refresh**: `POST /auth/refresh` → { accessToken }
-- **Store**: accessToken in secure storage
+---
 
-## 2. Onboarding / Edit Profile
-- **Update profile**: `PATCH /me/profile` → { user }
-- **Set age**: `PATCH /me/age` → { user }
-- **Set college**: `PATCH /me/college` → { user }
-- **Complete onboarding**: `PATCH /me/onboarding` → { user }
-- **Upload avatar**: `POST /media/upload` → { id, url }, then `PATCH /me/profile` with `{ avatarMediaId: id }`
+## 1. Splash / Auth Check
+| Action | Endpoint | Response |
+|--------|----------|----------|
+| Check if logged in | `GET /auth/me` | 200 → logged in, 401 → not |
+| **Flow**: On app launch, call `/auth/me`. If 200, go to home. If 401, go to login. |
 
-## 3. Home Feed
-- **Public feed**: `GET /feed/public?cursor=...&limit=20` → { items: PostObject[], pagination }
-- **Following feed**: `GET /feed/following?cursor=...&limit=20` → { items: PostObject[] }
-- **Pagination**: cursor-based. Use `pagination.nextCursor` for next page.
-- **Mixed authors**: Items can be `authorType: USER` or `authorType: PAGE`. Render author snippet accordingly.
-- **Reposts**: If `item.isRepost === true`, render repost wrapper with `item.originalContent` embedded.
+## 2. Login Screen
+| Action | Endpoint | Body | Response |
+|--------|----------|------|----------|
+| Login | `POST /auth/login` | `{ phone, pin }` | `{ accessToken, refreshToken, user }` |
+| **Error**: Wrong pin → 401. Phone not found → 404. |
 
-## 4. Post Detail
-- **Fetch**: `GET /content/:id` → { post: PostObject }
-- **Like**: `POST /content/:id/like` → { reaction }
-- **Unlike**: `DELETE /content/:id/reaction` → { removed }
-- **Save**: `POST /content/:id/save`
-- **Unsave**: `DELETE /content/:id/save`
-- **Share/Repost**: `POST /content/:id/share` → { post: RepostObject } (201)
-- **Delete own**: `DELETE /content/:id` (200)
+## 3. Register Screen
+| Action | Endpoint | Body | Response |
+|--------|----------|------|----------|
+| Register | `POST /auth/register` | `{ phone, pin, displayName, username }` | `{ accessToken, refreshToken, user }` |
+| **Error**: Phone exists → 409. Username taken → 409. Phone not 10 digits → 400. |
 
-## 5. Comment Sheet
-- **List**: `GET /content/:postId/comments?cursor=...` → { items: CommentObject[], pagination }
-- **Create**: `POST /content/:postId/comments` → { comment }
-- **Like comment**: `POST /content/:postId/comments/:commentId/like` → { liked, commentLikeCount }
-- **Unlike comment**: `DELETE /content/:postId/comments/:commentId/like` → { liked, commentLikeCount }
+## 4. Onboarding Flow
+| Step | Endpoint | Body |
+|------|----------|------|
+| Check step | Read `user.onboardingStep` | — |
+| Set age | `PATCH /me/age` | `{ birthDate: "2000-01-15" }` |
+| Set college | `PATCH /me/college` | `{ collegeId: "uuid" }` |
+| Find colleges | `GET /colleges/search?q=IIT` | — |
+| Complete | `PATCH /me/onboarding` | `{ step: "COMPLETE" }` |
 
-## 6. Create Post
-- **Upload media**: `POST /media/upload` (multipart) → { id, url }
-- **Create**: `POST /content/posts` → { post: PostObject }
-- Body: `{ caption, kind: "POST", media: [mediaId1, ...], visibility: "PUBLIC" }`
-- **Age requirement**: ageStatus must be ADULT to post.
+## 5. Edit Profile Screen
+| Action | Endpoint | Body |
+|--------|----------|------|
+| Update name/bio | `PATCH /me/profile` | `{ displayName, bio }` |
+| Upload avatar | `POST /media/upload` → then `PATCH /me/profile` | `{ avatarMediaId: "id" }` |
+| Change PIN | `PATCH /auth/pin` | `{ currentPin, newPin }` |
 
-## 7. Edit Post (B4)
-- **Edit**: `PATCH /content/:id` → { post: PostObject }
-- Body: `{ caption: "new text" }`
-- **Permission**: Owner only (or page role OWNER/ADMIN/EDITOR for page posts)
-- **editedAt**: Set on response. Show "edited" indicator if not null.
+## 6. Home Feed Screen
+| Action | Endpoint | Notes |
+|--------|----------|-------|
+| Public feed | `GET /feed/public?cursor=...&limit=20` | Mixed user + page posts |
+| Following feed | `GET /feed/following?cursor=...&limit=20` | Includes followed page posts (B3) |
+| Story rail | `GET /stories/feed` or `GET /feed/stories` | Story circles at top |
+| Like post | `POST /content/:id/like` | Optimistic OK |
+| Save post | `POST /content/:id/save` | Optimistic OK |
+| **NEW (B4)** Share post | `POST /content/:id/share` | NOT optimistic — wait for 201 |
 
-## 8. Share/Repost Flow (B4)
-- **Share**: `POST /content/:id/share` → 201 { post: RepostObject }
-- **Duplicate**: Returns 409 (one repost per user per original)
-- **Cannot repost repost**: Returns 400
-- **Cannot repost deleted**: Returns 404
+**Feed items can be**: normal post, page post, repost (B4), edited post (B4)
 
-## 9. Notifications List
-- **Fetch**: `GET /notifications?cursor=...` → { notifications: NotificationObject[] }
-- **Mark read**: `PATCH /notifications/read` → {}
-- **Types**: FOLLOW, LIKE, COMMENT, COMMENT_LIKE, SHARE, MENTION, REPORT_RESOLVED, STRIKE_ISSUED, APPEAL_DECIDED
-- **Deep link**: Use `targetType` + `targetId` to navigate (CONTENT → post detail, USER → profile, COMMENT → comment sheet)
+## 7. Post Detail Screen
+| Action | Endpoint | Notes |
+|--------|----------|-------|
+| Fetch detail | `GET /content/:id` | Returns enriched PostObject |
+| Like | `POST /content/:id/like` | Optimistic OK |
+| Unlike | `DELETE /content/:id/reaction` | Optimistic OK |
+| Save | `POST /content/:id/save` | Optimistic OK |
+| **NEW (B4)** Edit | `PATCH /content/:id` body: `{ caption }` | NOT optimistic (moderation) |
+| **NEW (B4)** Share | `POST /content/:id/share` | NOT optimistic |
+| Delete (own) | `DELETE /content/:id` | Confirm first |
+| **Show edit button**: Only if user is author OR page role OWNER/ADMIN/EDITOR |
+| **Show "(edited)"**: If `post.editedAt !== null` |
+| **Repost detail**: If `post.isRepost === true`, embed original content card |
 
-## 10. Search Screen
-- **Unified**: `GET /search?q=query&type=users|colleges|houses|pages` → { users/colleges/houses/pages: [] }
-- **Page search**: `GET /pages?q=query&category=CLUB` → { pages: PageSnippet[] }
-- **User suggestions**: `GET /suggestions/users` → { users: [] }
-- **NOTE**: `type=posts` is NOT functional (deferred to B5)
+## 8. Comment Sheet
+| Action | Endpoint | Notes |
+|--------|----------|-------|
+| List comments | `GET /content/:postId/comments?cursor=...` | Cursor-paginated |
+| Create comment | `POST /content/:postId/comments` body: `{ text }` | Returns comment |
+| **NEW (B4)** Like comment | `POST /content/:postId/comments/:commentId/like` | Optimistic OK |
+| **NEW (B4)** Unlike comment | `DELETE /content/:postId/comments/:commentId/like` | Optimistic OK |
+| **Each comment shows**: text, author, likeCount, heart icon |
 
-## 11. Profile Screen
-- **Self**: `GET /auth/me` → { user: UserProfile }
-- **Other**: `GET /users/:id` → { user: UserProfile }
-- **Posts**: `GET /users/:id/posts?cursor=...` → { posts: PostObject[] }
-- **Followers**: `GET /users/:id/followers` → { users }
-- **Following**: `GET /users/:id/following` → { users }
-- **Saved**: `GET /users/:id/saved` (self only) → { posts }
-- **Follow**: `POST /follow/:userId`
-- **Unfollow**: `DELETE /follow/:userId`
+## 9. Create Post Screen
+| Action | Endpoint | Notes |
+|--------|----------|-------|
+| Upload media | `POST /media/upload` (multipart) | Returns { id, url } |
+| Create post | `POST /content/posts` body: `{ caption, kind, media, visibility }` | NOT optimistic |
+| **Prerequisite**: `user.ageStatus === "ADULT"` |
 
-## 12. Stories Rail / Viewer
-- **Feed**: `GET /stories/feed` → rails of active stories
-- **Detail**: `GET /stories/:id` → story detail
-- **Create**: `POST /stories` with media
-- **React**: `POST /stories/:id/react`
-- **Reply**: `POST /stories/:id/reply`
-- **Archive**: `GET /me/stories/archive`
-- **Settings**: `GET/PATCH /me/story-settings`
+## 10. NEW: Edit Post Screen (B4)
+| Action | Endpoint | Notes |
+|--------|----------|-------|
+| Edit caption | `PATCH /content/:id` body: `{ caption }` | Returns updated PostObject |
+| **Who can edit**: Post owner, OR page role OWNER/ADMIN/EDITOR for page posts |
+| **What can't be edited**: Media, visibility, author fields |
+| **Moderation**: Backend re-checks edited text. Can reject (422) |
 
-## 13. Reels Feed / Detail
-- **Feed**: `GET /reels/feed?cursor=...` → { reels }
-- **Following**: `GET /reels/following`
-- **Detail**: `GET /reels/:id`
-- **Like**: `POST /reels/:id/like`
-- **Comment**: `POST /reels/:id/comment`
-- **Share**: `POST /reels/:id/share`
+## 11. NEW: Share/Repost Flow (B4)
+| Action | Endpoint | Notes |
+|--------|----------|-------|
+| Share/Repost | `POST /content/:id/share` optionally: `{ caption }` | Returns 201 with repost |
+| **Duplicate**: Returns 409 — disable share button |
+| **Cannot repost repost**: Returns 400 |
+| **Cannot repost deleted**: Returns 404 |
 
-## 14. Page List / Search
-- **List**: `GET /pages?q=...&category=...` → { pages: PageSnippet[] }
-- **My pages**: `GET /me/pages` → { pages }
+## 12. Notifications Screen
+| Action | Endpoint | Notes |
+|--------|----------|-------|
+| List | `GET /notifications?cursor=...` | Returns notification objects |
+| Mark read | `PATCH /notifications/read` | — |
+| **NEW types (B4)**: `COMMENT_LIKE` → comment sheet, `SHARE` → original post |
+| **Deep-link by targetType**: CONTENT→post detail, USER→profile, COMMENT→comment sheet, PAGE→page detail |
 
-## 15. Page Detail
-- **Detail**: `GET /pages/:idOrSlug` → { page: PageProfile }
-- **Posts**: `GET /pages/:id/posts?cursor=...` → { posts: PostObject[] }
-- **Follow**: `POST /pages/:id/follow`
-- **Unfollow**: `DELETE /pages/:id/follow`
-- **Analytics**: `GET /pages/:id/analytics` (owner/admin only)
+## 13. Search Screen
+| Action | Endpoint | Notes |
+|--------|----------|-------|
+| Search users | `GET /search?q=...&type=users` | Returns user snippets |
+| Search colleges | `GET /search?q=...&type=colleges` | Returns college snippets |
+| Search houses | `GET /search?q=...&type=houses` | Returns house snippets |
+| **NEW (B3)** Search pages | `GET /search?q=...&type=pages` | Returns page snippets |
+| Page-specific search | `GET /pages?q=...&category=...` | With category filter |
+| User suggestions | `GET /suggestions/users` | For recommendation rail |
+| **NOT working**: `type=posts` (deferred to B5) |
 
-## 16. Page Create / Edit
-- **Create**: `POST /pages` → { page }
-- Body: `{ name, slug, category, bio?, avatarMediaId? }`
-- **Edit**: `PATCH /pages/:id` → { page }
-- **Archive**: `POST /pages/:id/archive`
-- **Restore**: `POST /pages/:id/restore`
+## 14. Profile Screen
+| Action | Endpoint | Notes |
+|--------|----------|-------|
+| Self profile | `GET /auth/me` | Full profile |
+| Other profile | `GET /users/:id` | Other user's profile |
+| User posts | `GET /users/:id/posts?cursor=...` | Their posts |
+| Followers | `GET /users/:id/followers` | Follower list |
+| Following | `GET /users/:id/following` | Following list |
+| Saved posts | `GET /users/:id/saved` | Self only |
+| Follow | `POST /follow/:userId` | Optimistic OK |
+| Unfollow | `DELETE /follow/:userId` | Optimistic OK |
 
-## 17. Page Member Management
-- **List**: `GET /pages/:id/members` → { members }
-- **Add**: `POST /pages/:id/members` → { member }
-- **Change role**: `PATCH /pages/:id/members/:userId` → { member }
-- **Remove**: `DELETE /pages/:id/members/:userId`
-- **Transfer**: `POST /pages/:id/transfer-ownership`
-- **Permission**: OWNER/ADMIN only for member management
+## 15. Stories Rail / Viewer
+| Action | Endpoint |
+|--------|----------|
+| Story rail | `GET /stories/feed` |
+| View story | `GET /stories/:id` |
+| Create story | `POST /stories` |
+| React | `POST /stories/:id/react` |
+| Reply | `POST /stories/:id/reply` |
+| Delete | `DELETE /stories/:id` |
+| Archive | `GET /me/stories/archive` |
+| Highlights | `POST /me/highlights`, `GET /users/:id/highlights` |
+| Settings | `GET/PATCH /me/story-settings` |
+| Close friends | `GET /me/close-friends`, `POST/DELETE /me/close-friends/:userId` |
 
-## 18. Page Posts Flow
-- **List**: `GET /pages/:id/posts` → { posts }
-- **Publish**: `POST /pages/:id/posts` → { post } (OWNER/ADMIN/EDITOR)
-- **Edit**: `PATCH /pages/:id/posts/:postId` → { post }
-- **Delete**: `DELETE /pages/:id/posts/:postId`
-- **Also editable via**: `PATCH /content/:postId` (checks page role)
+## 16. Reels Feed / Detail
+| Action | Endpoint |
+|--------|----------|
+| Feed | `GET /reels/feed?cursor=...` |
+| Following | `GET /reels/following` |
+| Detail | `GET /reels/:id` |
+| Like/Unlike | `POST/DELETE /reels/:id/like` |
+| Save/Unsave | `POST/DELETE /reels/:id/save` |
+| Comment | `POST /reels/:id/comment` |
+| Comments list | `GET /reels/:id/comments` |
+| Share | `POST /reels/:id/share` |
+| Report | `POST /reels/:id/report` |
+| Watch | `POST /reels/:id/watch` |
+| Analytics | `GET /me/reels/analytics` |
+| User's reels | `GET /users/:id/reels` |
 
-## 19. Tribe Detail / Standings
-- **List**: `GET /tribes` → { tribes }
-- **Detail**: `GET /tribes/:id` → { tribe }
-- **Standings**: `GET /tribes/standings/current` → { standings }
-- **My tribe**: `GET /me/tribe`
+## 17. NEW: Page List / Search (B3)
+| Action | Endpoint |
+|--------|----------|
+| Browse pages | `GET /pages?q=...&category=...` |
+| My pages | `GET /me/pages` |
 
-## 20. Contest List / Detail / Leaderboard
-- **List**: `GET /tribe-contests` → { contests }
-- **Detail**: `GET /tribe-contests/:id` → { contest }
-- **Enter**: `POST /tribe-contests/:id/enter`
-- **Leaderboard**: `GET /tribe-contests/:id/leaderboard`
-- **Vote**: `POST /tribe-contests/:id/vote`
+## 18. NEW: Page Detail (B3)
+| Action | Endpoint | Notes |
+|--------|----------|-------|
+| Detail | `GET /pages/:idOrSlug` | Returns PageProfile with viewerRole |
+| Posts | `GET /pages/:id/posts?cursor=...` | Page's posts |
+| Follow | `POST /pages/:id/follow` | Optimistic OK |
+| Unfollow | `DELETE /pages/:id/follow` | Optimistic OK |
+| Analytics | `GET /pages/:id/analytics` | OWNER/ADMIN only |
+| **Use `viewerRole`** to show/hide admin buttons |
 
-## 21. Events
-- **Feed**: `GET /events/feed` → { events }
-- **Detail**: `GET /events/:id` → { event }
-- **Create**: `POST /events`
-- **RSVP**: `POST /events/:id/rsvp`
-- **My events**: `GET /me/events`
+## 19. NEW: Page Create / Edit (B3)
+| Action | Endpoint | Body |
+|--------|----------|------|
+| Create | `POST /pages` | `{ name, slug, category, bio?, avatarMediaId? }` |
+| Update | `PATCH /pages/:id` | `{ name?, bio?, avatarMediaId? }` |
+| Archive | `POST /pages/:id/archive` | — |
+| Restore | `POST /pages/:id/restore` | — |
 
-## 22. Block Management
-- **Block**: `POST /me/blocks/:userId`
-- **Unblock**: `DELETE /me/blocks/:userId`
-- **List**: `GET /me/blocks`
+## 20. NEW: Page Member Management (B3)
+| Action | Endpoint | Body | Who Can |
+|--------|----------|------|---------|
+| List members | `GET /pages/:id/members` | — | Any member |
+| Add member | `POST /pages/:id/members` | `{ userId, role }` | OWNER/ADMIN |
+| Change role | `PATCH /pages/:id/members/:userId` | `{ role }` | OWNER/ADMIN |
+| Remove member | `DELETE /pages/:id/members/:userId` | — | OWNER/ADMIN |
+| Transfer ownership | `POST /pages/:id/transfer-ownership` | `{ userId }` | OWNER only |
+
+## 21. NEW: Page Posts Flow (B3)
+| Action | Endpoint | Who Can |
+|--------|----------|---------|
+| List page posts | `GET /pages/:id/posts` | Anyone |
+| Publish as page | `POST /pages/:id/posts` body: `{ caption }` | OWNER/ADMIN/EDITOR |
+| Edit page post | `PATCH /pages/:id/posts/:postId` body: `{ caption }` | OWNER/ADMIN/EDITOR |
+| Delete page post | `DELETE /pages/:id/posts/:postId` | OWNER/ADMIN/EDITOR |
+| **Also editable via**: `PATCH /content/:postId` (checks page role) |
+
+## 22. Tribe Detail / Standings
+| Action | Endpoint |
+|--------|----------|
+| List tribes | `GET /tribes` |
+| Detail | `GET /tribes/:id` |
+| Standings | `GET /tribes/standings/current` |
+| Members | `GET /tribes/:id/members` |
+| My tribe | `GET /me/tribe` |
+
+## 23. Contest List / Detail / Leaderboard
+| Action | Endpoint |
+|--------|----------|
+| List | `GET /tribe-contests` |
+| Detail | `GET /tribe-contests/:id` |
+| Enter | `POST /tribe-contests/:id/enter` |
+| Leaderboard | `GET /tribe-contests/:id/leaderboard` |
+| Vote | `POST /tribe-contests/:id/vote` |
+| Seasons | `GET /tribe-contests/seasons` |
+
+## 24. Events
+| Action | Endpoint |
+|--------|----------|
+| Feed | `GET /events/feed` |
+| Detail | `GET /events/:id` |
+| Create | `POST /events` |
+| RSVP | `POST /events/:id/rsvp` |
+| Cancel RSVP | `DELETE /events/:id/rsvp` |
+| My events | `GET /me/events` |
+| My RSVPs | `GET /me/events/rsvps` |
+
+## 25. Block Management
+| Action | Endpoint |
+|--------|----------|
+| Block | `POST /me/blocks/:userId` |
+| Unblock | `DELETE /me/blocks/:userId` |
+| Blocked list | `GET /me/blocks` |
+
+## 26. Board Notices
+| Action | Endpoint |
+|--------|----------|
+| Create | `POST /board/notices` |
+| Detail | `GET /board/notices/:id` |
+| College notices | `GET /colleges/:id/notices` |
+| My notices | `GET /me/board/notices` |
+| Acknowledge | `POST /board/notices/:id/acknowledge` |
+
+## 27. Resources
+| Action | Endpoint |
+|--------|----------|
+| Create | `POST /resources` |
+| Search | `GET /resources/search?q=...` |
+| Detail | `GET /resources/:id` |
+| Vote | `POST /resources/:id/vote` |
+| My resources | `GET /me/resources` |
+
+## 28. Governance
+| Action | Endpoint |
+|--------|----------|
+| College board | `GET /governance/college/:id/board` |
+| Apply for board | `POST /governance/college/:id/apply` |
+| Create proposal | `POST /governance/college/:id/proposals` |
+| Vote on proposal | `POST /governance/proposals/:id/vote` |
