@@ -25,7 +25,7 @@ import sys
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Any
 
-BASE_URL = "https://tribal-architecture.preview.emergentagent.com"
+BASE_URL = "https://gap-closure-phase-c.preview.emergentagent.com"
 API_URL = f"{BASE_URL}/api"
 
 @dataclass 

@@ -9,7 +9,7 @@ import json
 import time
 import random
 
-API_BASE_URL = "https://tribal-architecture.preview.emergentagent.com/api"
+API_BASE_URL = "https://gap-closure-phase-c.preview.emergentagent.com/api"
 
 class B3PagesQuickTest:
     def __init__(self):

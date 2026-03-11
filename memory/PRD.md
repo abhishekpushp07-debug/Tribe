@@ -4,7 +4,7 @@
 World-class social media backend for the "Tribe" platform. Features tribes, content feeds, stories, reels, contests, leaderboards, and a full media pipeline.
 
 ## Backend URL
-`https://tribal-architecture.preview.emergentagent.com`
+`https://gap-closure-phase-c.preview.emergentagent.com`
 
 ## Core Architecture
 - **Application**: Next.js monolithic API with service-oriented architecture

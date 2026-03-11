@@ -12,7 +12,7 @@ import requests
 import time
 import random
 
-BASE_URL = "https://tribal-architecture.preview.emergentagent.com/api"
+BASE_URL = "https://gap-closure-phase-c.preview.emergentagent.com/api"
 
 # ======================== HELPERS ========================
 

@@ -43,4 +43,4 @@
 - Native Android app shell
 
 ## Backend URL
-`https://tribal-architecture.preview.emergentagent.com`
+`https://gap-closure-phase-c.preview.emergentagent.com`

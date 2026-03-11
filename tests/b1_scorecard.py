@@ -20,7 +20,7 @@ import random
 import json
 import sys
 
-API = "https://tribal-architecture.preview.emergentagent.com/api"
+API = "https://gap-closure-phase-c.preview.emergentagent.com/api"
 SCORES = {}
 DETAILS = {}
 
