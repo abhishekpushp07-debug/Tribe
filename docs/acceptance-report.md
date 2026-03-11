@@ -1,7 +1,7 @@
 # Tribe Backend — Proof-Based Acceptance Report
 
 **Date**: 2026-03-07
-**API URL**: https://reel-video-upload.preview.emergentagent.com
+**API URL**: https://media-trust-engine.preview.emergentagent.com
 
 ---
 

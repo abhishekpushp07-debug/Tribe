@@ -3,7 +3,7 @@
 Stage 5 Hardening Test Suite
 Tests 5 world-class fixes to the Notes/PYQs Library
 
-Base API: https://reel-video-upload.preview.emergentagent.com/api
+Base API: https://media-trust-engine.preview.emergentagent.com/api
 
 5 Fixes to Test:
 1. Trust-Weighted Vote System
@@ -20,7 +20,7 @@ import time
 from datetime import datetime, timedelta
 import sys
 
-BASE_URL = "https://reel-video-upload.preview.emergentagent.com/api"
+BASE_URL = "https://media-trust-engine.preview.emergentagent.com/api"
 COLLEGE_ID = "7b61691b-5a7c-48dd-a221-464d04e48e11"  # IIT Bombay
 
 class TestRunner:

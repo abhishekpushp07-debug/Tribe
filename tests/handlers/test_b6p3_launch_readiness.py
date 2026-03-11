@@ -18,7 +18,7 @@ import time
 import random
 import concurrent.futures
 
-BASE_URL = "https://reel-video-upload.preview.emergentagent.com/api"
+BASE_URL = "https://media-trust-engine.preview.emergentagent.com/api"
 
 def random_ip():
     return f"10.{random.randint(1,254)}.{random.randint(1,254)}.{random.randint(1,254)}"

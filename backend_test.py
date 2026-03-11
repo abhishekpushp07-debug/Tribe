@@ -22,7 +22,7 @@ from datetime import datetime
 from typing import Dict, List, Optional, Tuple
 
 # Configuration
-API_BASE_URL = "https://reel-video-upload.preview.emergentagent.com/api"
+API_BASE_URL = "https://media-trust-engine.preview.emergentagent.com/api"
 TIMEOUT = 30
 
 class TribeTestClient:

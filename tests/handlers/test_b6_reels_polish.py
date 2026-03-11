@@ -12,7 +12,7 @@ import requests
 import time
 import random
 
-BASE_URL = "https://reel-video-upload.preview.emergentagent.com/api"
+BASE_URL = "https://media-trust-engine.preview.emergentagent.com/api"
 
 # ======================== HELPERS ========================
 
