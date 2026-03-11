@@ -86,14 +86,15 @@ def _get_with_retry(url, headers, max_retries=3, **kwargs):
 
 
 @pytest.fixture(scope='module')
-def media_user(api_url):
+def media_user(api_url, db):
     """Register/login a dedicated test user for media tests."""
     import random
     phone = f'99999{random.randint(40000,49999)}'
     ip = f'10.{random.randint(0,255)}.{random.randint(0,255)}.{random.randint(0,255)}'
     h = _headers(ip=ip)
     resp = requests.post(f'{api_url}/auth/register', json={
-        'phone': phone, 'pin': '1234', 'displayName': 'Media Test User'
+        'phone': phone, 'pin': '1234', 'displayName': 'Media Test User',
+        'dob': '2000-01-01',
     }, headers=h)
     if resp.status_code not in (200, 201):
         resp = requests.post(f'{api_url}/auth/login', json={
@@ -102,6 +103,8 @@ def media_user(api_url):
     data = resp.json()
     token = data.get('accessToken') or data.get('token')
     user_id = data.get('user', {}).get('id')
+    # Ensure ADULT status for content creation
+    db.users.update_one({'id': user_id}, {'$set': {'ageStatus': 'ADULT', 'dob': '2000-01-01'}})
     return {'token': token, 'userId': user_id, 'phone': phone, 'ip': ip}
 
 
@@ -127,14 +130,15 @@ def media_user_child(api_url, db):
 
 
 @pytest.fixture(scope='module')
-def media_user_b(api_url):
+def media_user_b(api_url, db):
     """A second dedicated media test user for later test classes."""
     import random
     phone = f'99999{random.randint(70000,79999)}'
     ip = f'10.{random.randint(0,255)}.{random.randint(0,255)}.{random.randint(0,255)}'
     h = _headers(ip=ip)
     resp = requests.post(f'{api_url}/auth/register', json={
-        'phone': phone, 'pin': '1234', 'displayName': 'Media Test User B'
+        'phone': phone, 'pin': '1234', 'displayName': 'Media Test User B',
+        'dob': '2000-01-01',
     }, headers=h)
     if resp.status_code not in (200, 201):
         resp = requests.post(f'{api_url}/auth/login', json={
@@ -143,6 +147,8 @@ def media_user_b(api_url):
     data = resp.json()
     token = data.get('accessToken') or data.get('token')
     user_id = data.get('user', {}).get('id')
+    # Ensure ADULT status for content creation
+    db.users.update_one({'id': user_id}, {'$set': {'ageStatus': 'ADULT', 'dob': '2000-01-01'}})
     return {'token': token, 'userId': user_id, 'phone': phone, 'ip': ip}
 
 
@@ -651,3 +657,481 @@ class TestDBRecords:
         assert record['width'] == 800
         assert record['height'] == 600
         assert record['completedAt'] is not None
+
+
+# ============================================================
+# P1 — CONTENT INTEGRATION TESTS (Reels, Stories, Posts with mediaId)
+# ============================================================
+
+class TestReelMediaId:
+    """P1: Reel creation with canonical mediaId pipeline."""
+
+    @pytest.fixture(autouse=True, scope='class')
+    def reel_user(self, api_url, db, request):
+        """Dedicated user for reel tests to avoid rate limits."""
+        import random
+        phone = f'88888{random.randint(10000,19999)}'
+        ip = f'10.{random.randint(0,255)}.{random.randint(0,255)}.{random.randint(0,255)}'
+        resp = requests.post(f'{api_url}/auth/register', json={
+            'phone': phone, 'pin': '1234', 'displayName': 'Reel Tester',
+            'dob': '2000-01-01',
+        }, headers=_headers(ip=ip))
+        if resp.status_code not in (200, 201):
+            resp = requests.post(f'{api_url}/auth/login', json={
+                'phone': phone, 'pin': '1234'
+            }, headers=_headers(ip=ip))
+        data = resp.json()
+        token = data.get('accessToken') or data.get('token')
+        user_id = data.get('user', {}).get('id')
+        db.users.update_one({'id': user_id}, {'$set': {'ageStatus': 'ADULT', 'dob': '2000-01-01'}})
+        request.cls._reel_token = token
+        request.cls._reel_user_id = user_id
+
+    def _fresh_ip(self):
+        import random
+        return f'10.{random.randint(0,255)}.{random.randint(0,255)}.{random.randint(0,255)}'
+
+    def _upload_video(self, api_url):
+        """Upload a video and return mediaId."""
+        ip = self._fresh_ip()
+        fake_video = b'\x00' * 1024
+        resp = _post_with_retry(f'{api_url}/media/upload-init', json={
+            'kind': 'video', 'mimeType': 'video/mp4', 'sizeBytes': len(fake_video), 'scope': 'reels'
+        }, headers=_headers(self._reel_token, ip))
+        assert resp.status_code == 201, f"Init failed: {resp.text}"
+        init_data = resp.json()
+        requests.put(init_data['uploadUrl'], data=fake_video,
+                     headers={'Content-Type': 'video/mp4'})
+        _post_with_retry(f'{api_url}/media/upload-complete', json={
+            'mediaId': init_data['mediaId'], 'duration': 15
+        }, headers=_headers(self._reel_token, self._fresh_ip()))
+        return init_data['mediaId']
+
+    def _upload_image(self, api_url):
+        """Upload an image and return mediaId."""
+        ip = self._fresh_ip()
+        resp = _post_with_retry(f'{api_url}/media/upload-init', json={
+            'kind': 'image', 'mimeType': 'image/jpeg', 'sizeBytes': len(TINY_JPEG), 'scope': 'posts'
+        }, headers=_headers(self._reel_token, ip))
+        assert resp.status_code == 201, f"Init failed: {resp.text}"
+        init_data = resp.json()
+        requests.put(init_data['uploadUrl'], data=TINY_JPEG,
+                     headers={'Content-Type': 'image/jpeg'})
+        _post_with_retry(f'{api_url}/media/upload-complete', json={
+            'mediaId': init_data['mediaId']
+        }, headers=_headers(self._reel_token, self._fresh_ip()))
+        return init_data['mediaId']
+
+    def test_reel_with_valid_video_media_id(self, api_url):
+        """Reel creation with uploaded video mediaId should succeed."""
+        video_id = self._upload_video(api_url)
+        ip = self._fresh_ip()
+        resp = _post_with_retry(f'{api_url}/reels', json={
+            'mediaId': video_id, 'caption': 'Reel with real video'
+        }, headers=_headers(self._reel_token, ip))
+        assert resp.status_code in (200, 201), f"Reel create failed: {resp.text}"
+        reel = resp.json().get('reel', {})
+        assert reel.get('mediaId') == video_id
+        assert reel.get('mediaStatus') == 'READY'
+        assert reel.get('playbackUrl') is not None
+        assert 'supabase.co' in reel.get('playbackUrl', '')
+
+    def test_reel_reject_image_media_id(self, api_url):
+        """Reel creation with image mediaId should be rejected."""
+        image_id = self._upload_image(api_url)
+        ip = self._fresh_ip()
+        resp = _post_with_retry(f'{api_url}/reels', json={
+            'mediaId': image_id, 'caption': 'Should fail'
+        }, headers=_headers(self._reel_token, ip))
+        assert resp.status_code == 400
+        assert 'video' in resp.json().get('error', '').lower()
+
+    def test_reel_reject_pending_media(self, api_url):
+        """Reel creation with PENDING_UPLOAD media should be rejected."""
+        ip = self._fresh_ip()
+        resp = _post_with_retry(f'{api_url}/media/upload-init', json={
+            'kind': 'video', 'mimeType': 'video/mp4', 'sizeBytes': 1024, 'scope': 'reels'
+        }, headers=_headers(self._reel_token, ip))
+        assert resp.status_code == 201, f"Init failed: {resp.text}"
+        pending_id = resp.json()['mediaId']
+
+        resp2 = _post_with_retry(f'{api_url}/reels', json={
+            'mediaId': pending_id, 'caption': 'Should fail'
+        }, headers=_headers(self._reel_token, self._fresh_ip()))
+        assert resp2.status_code == 400
+
+    def test_reel_reject_nonexistent_media(self, api_url):
+        """Reel creation with nonexistent mediaId should be rejected."""
+        ip = self._fresh_ip()
+        resp = _post_with_retry(f'{api_url}/reels', json={
+            'mediaId': 'nonexistent-uuid', 'caption': 'Should fail'
+        }, headers=_headers(self._reel_token, ip))
+        assert resp.status_code == 404
+
+    def test_reel_reject_wrong_owner_media(self, api_url, media_user_b):
+        """Reel creation with another user's media should be rejected."""
+        # Upload as user B
+        ip = self._fresh_ip()
+        fake_video = b'\x00' * 512
+        resp = _post_with_retry(f'{api_url}/media/upload-init', json={
+            'kind': 'video', 'mimeType': 'video/mp4', 'sizeBytes': len(fake_video), 'scope': 'reels'
+        }, headers=_headers(media_user_b['token'], ip))
+        init_data = resp.json()
+        requests.put(init_data['uploadUrl'], data=fake_video,
+                     headers={'Content-Type': 'video/mp4'})
+        _post_with_retry(f'{api_url}/media/upload-complete', json={
+            'mediaId': init_data['mediaId']
+        }, headers=_headers(media_user_b['token'], self._fresh_ip()))
+        video_id = init_data['mediaId']
+
+        # Try to create reel as reel_user (different user)
+        resp2 = _post_with_retry(f'{api_url}/reels', json={
+            'mediaId': video_id, 'caption': 'Should fail'
+        }, headers=_headers(self._reel_token, self._fresh_ip()))
+        assert resp2.status_code == 404
+
+    def test_unique_media_ids_for_multiple_reels(self, api_url):
+        """Each reel should have its own unique mediaId."""
+        video1 = self._upload_video(api_url)
+        video2 = self._upload_video(api_url)
+        assert video1 != video2
+
+        resp1 = _post_with_retry(f'{api_url}/reels', json={
+            'mediaId': video1, 'caption': 'Reel 1'
+        }, headers=_headers(self._reel_token, self._fresh_ip()))
+        resp2 = _post_with_retry(f'{api_url}/reels', json={
+            'mediaId': video2, 'caption': 'Reel 2'
+        }, headers=_headers(self._reel_token, self._fresh_ip()))
+
+        reel1 = resp1.json().get('reel', {})
+        reel2 = resp2.json().get('reel', {})
+        assert reel1.get('mediaId') != reel2.get('mediaId')
+        assert reel1.get('playbackUrl') != reel2.get('playbackUrl')
+
+    def test_reel_legacy_media_url_still_works(self, api_url):
+        """Legacy mediaUrl field should still create a reel."""
+        ip = self._fresh_ip()
+        resp = _post_with_retry(f'{api_url}/reels', json={
+            'mediaUrl': 'https://example.com/test-video.mp4',
+            'caption': 'Legacy reel'
+        }, headers=_headers(self._reel_token, ip))
+        assert resp.status_code in (200, 201)
+        reel = resp.json().get('reel', {})
+        assert reel.get('playbackUrl') == 'https://example.com/test-video.mp4'
+
+
+class TestStoryMediaId:
+    """P1: Story creation with canonical mediaId pipeline."""
+
+    def _fresh_ip(self):
+        import random
+        return f'10.{random.randint(0,255)}.{random.randint(0,255)}.{random.randint(0,255)}'
+
+    def test_story_with_image_media_id(self, api_url, media_user_b):
+        """Story creation with uploaded image mediaId."""
+        ip = self._fresh_ip()
+        resp = _post_with_retry(f'{api_url}/media/upload-init', json={
+            'kind': 'image', 'mimeType': 'image/jpeg', 'sizeBytes': len(TINY_JPEG), 'scope': 'stories'
+        }, headers=_headers(media_user_b['token'], ip))
+        init_data = resp.json()
+        requests.put(init_data['uploadUrl'], data=TINY_JPEG,
+                     headers={'Content-Type': 'image/jpeg'})
+        _post_with_retry(f'{api_url}/media/upload-complete', json={
+            'mediaId': init_data['mediaId']
+        }, headers=_headers(media_user_b['token'], self._fresh_ip()))
+
+        # Create story
+        resp2 = _post_with_retry(f'{api_url}/stories', json={
+            'type': 'IMAGE', 'mediaIds': [init_data['mediaId']], 'caption': 'Story test'
+        }, headers=_headers(media_user_b['token'], self._fresh_ip()))
+        assert resp2.status_code in (200, 201)
+        story = resp2.json().get('story', {})
+        media = story.get('media', [])
+        assert len(media) >= 1
+        assert 'supabase.co' in media[0].get('url', '')
+
+    def test_story_with_video_media_id(self, api_url, media_user_b):
+        """Story creation with uploaded video mediaId."""
+        ip = self._fresh_ip()
+        fake_video = b'\x00' * 512
+        resp = _post_with_retry(f'{api_url}/media/upload-init', json={
+            'kind': 'video', 'mimeType': 'video/mp4', 'sizeBytes': len(fake_video), 'scope': 'stories'
+        }, headers=_headers(media_user_b['token'], ip))
+        init_data = resp.json()
+        requests.put(init_data['uploadUrl'], data=fake_video,
+                     headers={'Content-Type': 'video/mp4'})
+        _post_with_retry(f'{api_url}/media/upload-complete', json={
+            'mediaId': init_data['mediaId'], 'duration': 10
+        }, headers=_headers(media_user_b['token'], self._fresh_ip()))
+
+        resp2 = _post_with_retry(f'{api_url}/stories', json={
+            'type': 'VIDEO', 'mediaIds': [init_data['mediaId']], 'caption': 'Video story'
+        }, headers=_headers(media_user_b['token'], self._fresh_ip()))
+        assert resp2.status_code in (200, 201)
+
+
+class TestPostMediaId:
+    """P1: Post creation with canonical mediaId pipeline."""
+
+    def _fresh_ip(self):
+        import random
+        return f'10.{random.randint(0,255)}.{random.randint(0,255)}.{random.randint(0,255)}'
+
+    def test_post_with_image_and_caption(self, api_url, media_user_b):
+        """Post with image mediaId and caption + hashtags."""
+        ip = self._fresh_ip()
+        resp = _post_with_retry(f'{api_url}/media/upload-init', json={
+            'kind': 'image', 'mimeType': 'image/jpeg', 'sizeBytes': len(TINY_JPEG), 'scope': 'posts'
+        }, headers=_headers(media_user_b['token'], ip))
+        init_data = resp.json()
+        requests.put(init_data['uploadUrl'], data=TINY_JPEG,
+                     headers={'Content-Type': 'image/jpeg'})
+        _post_with_retry(f'{api_url}/media/upload-complete', json={
+            'mediaId': init_data['mediaId']
+        }, headers=_headers(media_user_b['token'], self._fresh_ip()))
+
+        resp2 = _post_with_retry(f'{api_url}/content/posts', json={
+            'caption': 'Post with media #test #supabase',
+            'mediaIds': [init_data['mediaId']]
+        }, headers=_headers(media_user_b['token'], self._fresh_ip()))
+        assert resp2.status_code in (200, 201)
+        post = resp2.json().get('post', {})
+        media = post.get('media', [])
+        assert len(media) >= 1
+        assert 'supabase.co' in media[0].get('url', '')
+        assert media[0].get('storageType') == 'SUPABASE'
+
+    def test_text_only_post_unaffected(self, api_url, media_user_b):
+        """Text-only posts should still work without media."""
+        ip = self._fresh_ip()
+        resp = _post_with_retry(f'{api_url}/content/posts', json={
+            'caption': 'Just text, no media #textonly'
+        }, headers=_headers(media_user_b['token'], ip))
+        assert resp.status_code in (200, 201)
+
+
+# ============================================================
+# P2 — CLEANUP TESTS
+# ============================================================
+
+class TestOrphanCleanup:
+    """P2: Stale PENDING_UPLOAD cleanup."""
+
+    def _fresh_ip(self):
+        import random
+        return f'10.{random.randint(0,255)}.{random.randint(0,255)}.{random.randint(0,255)}'
+
+    def test_admin_cleanup_dry_run(self, api_url, db):
+        """Admin cleanup dry-run should report stale uploads."""
+        import random
+        # Create admin user
+        phone = f'99999{random.randint(80000,89999)}'
+        ip = self._fresh_ip()
+        resp = requests.post(f'{api_url}/auth/register', json={
+            'phone': phone, 'pin': '1234', 'displayName': 'Admin Cleanup'
+        }, headers=_headers(ip=ip))
+        if resp.status_code not in (200, 201):
+            resp = requests.post(f'{api_url}/auth/login', json={
+                'phone': phone, 'pin': '1234'
+            }, headers=_headers(ip=ip))
+        data = resp.json()
+        token = data.get('accessToken') or data.get('token')
+        user_id = data.get('user', {}).get('id')
+        db.users.update_one({'id': user_id}, {'$set': {'role': 'ADMIN'}})
+
+        # Insert a synthetic stale PENDING_UPLOAD (25 hours old)
+        from datetime import datetime, timedelta
+        stale_id = f'stale-test-{random.randint(10000,99999)}'
+        db.media_assets.insert_one({
+            'id': stale_id,
+            'ownerId': user_id,
+            'status': 'PENDING_UPLOAD',
+            'storageType': 'SUPABASE',
+            'storagePath': f'posts/{user_id}/{stale_id}.jpg',
+            'mimeType': 'image/jpeg',
+            'sizeBytes': 1000,
+            'isDeleted': False,
+            'createdAt': datetime.utcnow() - timedelta(hours=25),
+        })
+
+        # Dry run
+        resp2 = _post_with_retry(f'{api_url}/admin/media/cleanup', json={
+            'dryRun': True
+        }, headers=_headers(token, self._fresh_ip()))
+        assert resp2.status_code == 200
+        result = resp2.json()
+        assert result.get('mode') == 'DRY_RUN'
+        assert result.get('staleCount', 0) >= 1
+
+    def test_admin_cleanup_execute(self, api_url, db):
+        """Admin cleanup execute should clean stale uploads."""
+        import random
+        phone = f'99999{random.randint(90000,99999)}'
+        ip = self._fresh_ip()
+        resp = requests.post(f'{api_url}/auth/register', json={
+            'phone': phone, 'pin': '1234', 'displayName': 'Admin Cleanup2'
+        }, headers=_headers(ip=ip))
+        if resp.status_code not in (200, 201):
+            resp = requests.post(f'{api_url}/auth/login', json={
+                'phone': phone, 'pin': '1234'
+            }, headers=_headers(ip=ip))
+        data = resp.json()
+        token = data.get('accessToken') or data.get('token')
+        user_id = data.get('user', {}).get('id')
+        db.users.update_one({'id': user_id}, {'$set': {'role': 'ADMIN'}})
+
+        # Insert stale upload
+        from datetime import datetime, timedelta
+        stale_id = f'stale-exec-{random.randint(10000,99999)}'
+        db.media_assets.insert_one({
+            'id': stale_id,
+            'ownerId': user_id,
+            'status': 'PENDING_UPLOAD',
+            'storageType': 'SUPABASE',
+            'storagePath': f'posts/{user_id}/{stale_id}.jpg',
+            'mimeType': 'image/jpeg',
+            'sizeBytes': 1000,
+            'isDeleted': False,
+            'createdAt': datetime.utcnow() - timedelta(hours=25),
+        })
+
+        # Execute cleanup
+        resp2 = _post_with_retry(f'{api_url}/admin/media/cleanup', json={
+            'dryRun': False
+        }, headers=_headers(token, self._fresh_ip()))
+        assert resp2.status_code == 200
+        result = resp2.json()
+        assert result.get('mode') == 'EXECUTE'
+        assert result.get('cleaned', 0) >= 1
+
+        # Verify record is marked as cleaned
+        record = db.media_assets.find_one({'id': stale_id})
+        assert record['status'] == 'ORPHAN_CLEANED'
+        assert record['isDeleted'] is True
+
+    def test_cleanup_does_not_touch_ready_media(self, api_url, db):
+        """Cleanup must never delete READY media."""
+        import random
+        from datetime import datetime, timedelta
+
+        # Insert a READY media record that's "old"
+        ready_id = f'ready-safe-{random.randint(10000,99999)}'
+        db.media_assets.insert_one({
+            'id': ready_id,
+            'ownerId': 'test',
+            'status': 'READY',
+            'storageType': 'SUPABASE',
+            'storagePath': f'posts/test/{ready_id}.jpg',
+            'mimeType': 'image/jpeg',
+            'sizeBytes': 1000,
+            'isDeleted': False,
+            'createdAt': datetime.utcnow() - timedelta(hours=48),
+        })
+
+        # Insert admin
+        phone = f'88888{random.randint(10000,19999)}'
+        ip = f'10.{random.randint(0,255)}.{random.randint(0,255)}.{random.randint(0,255)}'
+        resp = requests.post(f'{api_url}/auth/register', json={
+            'phone': phone, 'pin': '1234', 'displayName': 'Admin Safe'
+        }, headers=_headers(ip=ip))
+        if resp.status_code not in (200, 201):
+            resp = requests.post(f'{api_url}/auth/login', json={
+                'phone': phone, 'pin': '1234'
+            }, headers=_headers(ip=ip))
+        token = resp.json().get('accessToken') or resp.json().get('token')
+        uid = resp.json().get('user', {}).get('id')
+        db.users.update_one({'id': uid}, {'$set': {'role': 'ADMIN'}})
+
+        # Execute cleanup
+        _post_with_retry(f'{api_url}/admin/media/cleanup', json={
+            'dryRun': False
+        }, headers=_headers(token, ip))
+
+        # READY record must be untouched
+        record = db.media_assets.find_one({'id': ready_id})
+        assert record['status'] == 'READY'
+        assert record.get('isDeleted') is not True
+
+        # Cleanup test data
+        db.media_assets.delete_one({'id': ready_id})
+
+
+# ============================================================
+# P3 — MEDIA SERVING TRUTH TESTS
+# ============================================================
+
+class TestMediaServingTruth:
+    """P3: Media serving returns real content, not stubs."""
+
+    def _fresh_ip(self):
+        import random
+        return f'10.{random.randint(0,255)}.{random.randint(0,255)}.{random.randint(0,255)}'
+
+    def test_supabase_media_serves_real_content(self, api_url, media_user_b):
+        """Supabase-stored media should serve real bytes, not stubs."""
+        ip = self._fresh_ip()
+        resp = _post_with_retry(f'{api_url}/media/upload-init', json={
+            'kind': 'image', 'mimeType': 'image/jpeg', 'sizeBytes': len(TINY_JPEG), 'scope': 'posts'
+        }, headers=_headers(media_user_b['token'], ip))
+        init_data = resp.json()
+        requests.put(init_data['uploadUrl'], data=TINY_JPEG,
+                     headers={'Content-Type': 'image/jpeg'})
+        _post_with_retry(f'{api_url}/media/upload-complete', json={
+            'mediaId': init_data['mediaId']
+        }, headers=_headers(media_user_b['token'], self._fresh_ip()))
+
+        # Fetch via /api/media/:id (follows redirect)
+        serve_resp = _get_with_retry(f'{api_url}/media/{init_data["mediaId"]}',
+                                     headers=_headers(media_user_b['token'], self._fresh_ip()))
+        assert serve_resp.status_code == 200
+        assert len(serve_resp.content) == len(TINY_JPEG)
+        # Must NOT be a tiny stub
+        assert len(serve_resp.content) > 10
+
+    def test_media_redirect_has_correct_headers(self, api_url, media_user_b):
+        """302 redirect should have correct Location and Cache-Control headers."""
+        ip = self._fresh_ip()
+        resp = _post_with_retry(f'{api_url}/media/upload-init', json={
+            'kind': 'image', 'mimeType': 'image/jpeg', 'sizeBytes': len(TINY_JPEG), 'scope': 'posts'
+        }, headers=_headers(media_user_b['token'], ip))
+        init_data = resp.json()
+        requests.put(init_data['uploadUrl'], data=TINY_JPEG,
+                     headers={'Content-Type': 'image/jpeg'})
+        _post_with_retry(f'{api_url}/media/upload-complete', json={
+            'mediaId': init_data['mediaId']
+        }, headers=_headers(media_user_b['token'], self._fresh_ip()))
+
+        serve_resp = _get_with_retry(f'{api_url}/media/{init_data["mediaId"]}',
+                                     allow_redirects=False,
+                                     headers=_headers(media_user_b['token'], self._fresh_ip()))
+        assert serve_resp.status_code == 302
+        location = serve_resp.headers.get('Location', '')
+        assert 'supabase.co' in location
+        assert 'tribe-media' in location
+
+    def test_missing_media_returns_404(self, api_url, media_user_b):
+        """Nonexistent media ID should return 404."""
+        ip = self._fresh_ip()
+        resp = _get_with_retry(f'{api_url}/media/does-not-exist-uuid',
+                               headers=_headers(media_user_b['token'], ip))
+        assert resp.status_code == 404
+
+    def test_video_upload_public_url_accessible(self, api_url, media_user_b):
+        """Uploaded video public URL should be directly accessible."""
+        ip = self._fresh_ip()
+        fake_video = b'\x00\x00\x00\x20ftypmp42' + b'\x00' * 500
+        resp = _post_with_retry(f'{api_url}/media/upload-init', json={
+            'kind': 'video', 'mimeType': 'video/mp4', 'sizeBytes': len(fake_video), 'scope': 'reels'
+        }, headers=_headers(media_user_b['token'], ip))
+        init_data = resp.json()
+        requests.put(init_data['uploadUrl'], data=fake_video,
+                     headers={'Content-Type': 'video/mp4'})
+        complete_resp = _post_with_retry(f'{api_url}/media/upload-complete', json={
+            'mediaId': init_data['mediaId'], 'duration': 30
+        }, headers=_headers(media_user_b['token'], self._fresh_ip()))
+        pub_url = complete_resp.json().get('publicUrl', '')
+
+        # Direct access without auth
+        pub_resp = requests.get(pub_url)
+        assert pub_resp.status_code == 200
+        assert len(pub_resp.content) == len(fake_video)

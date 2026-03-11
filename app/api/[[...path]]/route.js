@@ -8,6 +8,7 @@ import { handleSocial } from '@/lib/handlers/social'
 import { handleUsers } from '@/lib/handlers/users'
 import { handleDiscovery } from '@/lib/handlers/discovery'
 import { handleMedia } from '@/lib/handlers/media'
+import { handleMediaCleanup, startMediaCleanupWorker } from '@/lib/handlers/media-cleanup'
 import { handleAdmin } from '@/lib/handlers/admin'
 import { handleGovernance } from '@/lib/handlers/governance'
 import { handleModerationRoutes } from '@/lib/moderation/routes/moderation.routes'
@@ -472,6 +473,7 @@ async function handleRouteCore(request, { params }, reqCtx) {
         result = await handleDiscovery(path, method, request, db)
       }
     } else if (path[0] === 'media') {
+      startMediaCleanupWorker(db) // Lazy-init cleanup worker
       result = await handleMedia(path, method, request, db)
     } else if (path[0] === 'house-points') {
       result = { error: 'House points system deprecated. Use tribe salutes via /tribe-contests', code: 'DEPRECATED', status: 410 }
@@ -506,6 +508,9 @@ async function handleRouteCore(request, { params }, reqCtx) {
       }
       else if (path[0] === 'admin' && path[1] === 'authenticity') {
         result = await handleAuthenticityTags(path, method, request, db)
+      }
+      else if (path[0] === 'admin' && path[1] === 'media') {
+        result = await handleMediaCleanup(path, method, request, db)
       }
       else if (path[0] === 'admin' && path[1] === 'tribes') {
         result = await handleTribeAdmin(path, method, request, db)

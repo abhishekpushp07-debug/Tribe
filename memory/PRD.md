@@ -72,12 +72,13 @@ Build a "world-best" social media backend for the app "Tribe" — a campus-nativ
 | B5 | Discovery & Hashtag Engine | ✅ DONE (PROVEN) | 77 |
 | B5.1 | Search Quality Upgrade | ✅ DONE (PROVEN) | 27 |
 | B6 | Notifications 2.0 | ✅ DONE (GOLD PROOF) | 78 |
-| **Media Infra** | **Supabase Storage Integration** | **✅ DONE** | **36** |
-| **Content Integration** | **Posts/Reels/Stories → Supabase** | **✅ DONE** | **0 (tested via curl)** |
+| **Media Infra** | **Supabase Storage Integration** | **✅ DONE** | **54** |
+| **Content Integration** | **Posts/Reels/Stories → mediaId** | **✅ DONE** | **included above** |
+| **Media Cleanup** | **Orphan cleanup + Thumbnail gen** | **✅ DONE** | **included above** |
 | B7 | Test Hardening | ⬜ NOT STARTED | - |
 | B8 | Infra & Scale | ⬜ NOT STARTED | - |
 
-**Total test suite: 962+ tests**
+**Total test suite: 980 tests**
 
 ## Known Issues
 1. **Separate Test DB** — deferred to B8
