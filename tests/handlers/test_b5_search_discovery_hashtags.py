@@ -1083,6 +1083,25 @@ class TestIndexesPresent:
         text_indexes = [idx for idx in indexes if any(v == "text" for v in idx.get("key", {}).values())]
         assert len(text_indexes) > 0, "users text index missing"
 
+    def test_user_displayname_ci_index(self):
+        """B5.1: Case-insensitive collation index on displayName."""
+        indexes = list(_db.users.list_indexes())
+        ci_indexes = [idx for idx in indexes if idx.get("name") == "displayName_ci"]
+        assert len(ci_indexes) > 0, "users displayName_ci collation index missing"
+        assert ci_indexes[0].get("collation", {}).get("strength") == 2
+
+    def test_page_name_ci_index(self):
+        """B5.1: Case-insensitive collation index on page name."""
+        indexes = list(_db.pages.list_indexes())
+        ci_indexes = [idx for idx in indexes if idx.get("name") == "name_ci"]
+        assert len(ci_indexes) > 0, "pages name_ci collation index missing"
+
+    def test_page_status_name_ci_index(self):
+        """B5.1: Compound collation index for page search filter+sort."""
+        indexes = list(_db.pages.list_indexes())
+        ci_indexes = [idx for idx in indexes if idx.get("name") == "status_name_ci"]
+        assert len(ci_indexes) > 0, "pages status_name_ci collation index missing"
+
 
 class TestRegression:
     """H2-H4: Existing flows unbroken by B5 changes."""

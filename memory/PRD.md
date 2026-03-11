@@ -58,7 +58,7 @@ Build a "world-best" social media backend for the app "Tribe" — a campus-nativ
 | B7 | Test Hardening | ⬜ NOT STARTED | - |
 | B8 | Infra & Scale | ⬜ NOT STARTED | - |
 
-**Total test suite: 923/923 PASS**
+**Total test suite: 926/926 PASS** (80 B5 + 27 B5.1 + 819 existing)
 
 ## Known Issues
 1. ~~**Post Search Not Working**~~ (FIXED in B5)

@@ -1,6 +1,6 @@
 # B5 — Search & Discovery Contract Freeze
 
-## Version: v2.0 (B5.1 UPGRADE)
+## Version: v2.1 (B5.1 PERFORMANCE UPGRADE)
 ## Status: FROZEN
 ## Date: 2026-03-11
 
@@ -233,13 +233,26 @@ All entity types use **3-tier ranking**: exact > prefix > contains.
 
 ## 9. Indexes
 
-| Collection | Index | Purpose |
-|-----------|-------|---------|
-| hashtags | `{ tag: 1 }` UNIQUE | Tag lookup, dedup |
-| hashtags | `{ postCount: -1, lastUsedAt: -1 }` | Trending query |
-| content_items | `{ hashtags: 1, createdAt: -1 }` | Hashtag feed |
-| content_items | `{ caption: 'text' }` | Post search |
-| users | `{ displayName: 'text', username: 'text' }` | User search |
+| Collection | Index | Type | Purpose |
+|-----------|-------|------|---------|
+| hashtags | `{ tag: 1 }` UNIQUE | B-tree | Exact tag lookup — O(1) |
+| hashtags | `{ postCount: -1, lastUsedAt: -1 }` | B-tree | Trending query |
+| content_items | `{ hashtags: 1, createdAt: -1 }` | B-tree | Hashtag feed |
+| content_items | `{ caption: 'text' }` | Text | Post search via `$text` (B5.1) |
+| users | `{ displayName: 'text', username: 'text' }` | Text | User search fallback |
+| users | `{ username: 1 }` UNIQUE | B-tree | Exact username lookup — O(1) |
+| users | `{ displayName: 1 }` collation:en/s2 | B-tree CI | Prefix matching (B5.1) |
+| pages | `{ slug: 1 }` UNIQUE | B-tree | Exact slug lookup — O(1) |
+| pages | `{ name: 1 }` collation:en/s2 | B-tree CI | Prefix matching (B5.1) |
+| pages | `{ status: 1, name: 1 }` collation:en/s2 | Compound CI | Filtered prefix search (B5.1) |
+
+### Query Strategy (B5.1)
+Each entity uses a **3-query hybrid** for index-aware retrieval:
+1. **Exact match** → Uses unique B-tree index (O(1))
+2. **Prefix match** → Uses anchored `^regex` or collation index
+3. **Contains fallback** → Uses broad regex or `$text` search
+
+Posts use `$text` search as primary (leverages text index), with `$regex` as fallback for substring matches that `$text` misses.
 
 ---
 
