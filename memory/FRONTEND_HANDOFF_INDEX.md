@@ -63,6 +63,11 @@ Content-Type: application/json
 | 7 | [STATE_AND_PERMISSIONS.md](./STATE_AND_PERMISSIONS.md) | 93 | User states, content visibility, page roles, optimistic UI safety matrix |
 | 8 | [NOTIFICATION_EVENT_GUIDE.md](./NOTIFICATION_EVENT_GUIDE.md) | 120 | All 12+ notification types with triggers, recipients, deep-link targets |
 
+### Seed Data & Test Accounts
+| # | Document | What It Covers |
+|---|----------|----------------|
+| 13 | **[SEED_DATA_REFERENCE.md](./SEED_DATA_REFERENCE.md)** | Complete inventory of all seeded data — 996 users, 6461 posts, 549 reels, 28 stories, 1685 pages, 5 tribes, 1369 colleges, 12 houses. Includes all test account phones/PINs, IDs, and architecture notes. |
+
 ### Frozen Contracts (Do Not Deviate)
 | # | Document | What It Freezes |
 |---|----------|----------------|

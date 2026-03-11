@@ -86,7 +86,17 @@ Register new: `POST /api/auth/register { phone, pin, displayName }`
 - **3 outdated tests fixed** (Gap 1 auto-promotion, House→Tribe migration, idempotent delete)
 - **Anti-abuse fix**: Moved action recording to AFTER checks pass, moved input validation BEFORE abuse checks
 
+## Documentation Completed
+- **API_REFERENCE_COMPLETE.md** — 309 endpoints documented
+- **SEED_DATA_REFERENCE.md** — Full database inventory (996 users, 6461 posts, 549 reels, 28 stories, 1685 pages, 5 tribes, 1369 colleges, 12 houses)
+- **FRONTEND_HANDOFF_INDEX.md** — Master index for frontend team (updated with seed data ref)
+
 ## Remaining Roadmap
+- **P0: "Reels, Stories, Posts, Pages to 100%"** — User's master prompt (pending)
+  - Stories: edit endpoint, mute story, view duration tracking, reaction rate limits
+  - Posts: multi-media/carousel, scheduling, drafts
+  - Reels: personalized scoring, trending/audio feeds, creator analytics
+  - Pages: full CRUD, verification, audience graph, page posts, privacy, analytics, discovery
 - **P1: B7 — Test Hardening + Gold Freeze** (zero-flake test suite)
 - **P2: B8 — Infra, Observability, Scale Path** (Redis, job queues, dedicated test DB)
 - **P3: Audit Log TTL policy**
