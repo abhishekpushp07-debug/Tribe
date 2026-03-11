@@ -83,7 +83,7 @@ Build a "world-best" social media backend for the app "Tribe" — a campus-nativ
 | **Content Integration** | **Posts/Reels/Stories → mediaId** | **✅ DONE** | **included above** |
 | **Media Cleanup** | **Orphan cleanup + Thumbnail gen** | **✅ DONE** | **included above** |
 | **Media Lifecycle** | **Hardening (Delete, Expiry, Thumbs)** | **✅ DONE** | **21** |
-| B7 | Test Hardening | ⬜ NOT STARTED | - |
+| **Tribe/House Cutover** | **Legacy house data migrated to tribes** | **✅ DONE** | **tested** |
 | B8 | Infra & Scale | ⬜ NOT STARTED | - |
 
 **Total test suite: 1000+ tests**
@@ -92,7 +92,6 @@ Build a "world-best" social media backend for the app "Tribe" — a campus-nativ
 1. **Separate Test DB** — deferred to B8
 2. **Audit Log TTL** — deferred to B8
 3. **B6-P3 rate-limit flake** (low) — intermittent 429
-4. **House → Tribe data mismatch** — legacy "Rani Laxmibai" house names still appear
 
 ## 3rd Party Integrations
 - **Supabase Storage**: Public bucket `tribe-media` for all media uploads (images, videos)
