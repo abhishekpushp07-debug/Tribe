@@ -32,15 +32,15 @@ class TestPublicFeed:
         assert 'nextCursor' in data['pagination']
         assert isinstance(data['pagination']['hasMore'], bool)
 
-    def test_new_post_not_in_public_feed(self, api_url, product_user_b):
-        """New posts have distributionStage=0, public feed requires 2."""
-        resp, created = create_post(api_url, product_user_b['token'], 'Should NOT be in public feed')
+    def test_new_post_in_public_feed(self, api_url, product_user_b):
+        """New eligible posts auto-promote and appear in public feed (Gap 1 fix)."""
+        resp, created = create_post(api_url, product_user_b['token'], 'Should appear in public feed')
         assert resp.status_code == 201
         post_id = created['post']['id']
         resp, data = get_feed(api_url, 'public')
         assert resp.status_code == 200
         feed_ids = [p['id'] for p in data['items']]
-        assert post_id not in feed_ids, 'New post (distributionStage=0) appeared in public feed'
+        assert post_id in feed_ids, 'New eligible post should appear in public feed after auto-promotion'
 
 
 class TestFollowingFeed:
@@ -156,7 +156,7 @@ class TestHouseFeed:
         assert resp.status_code == 200
         assert 'items' in data
         assert 'pagination' in data
-        assert data['feedType'] == 'house'
+        assert data['feedType'] == 'tribe'
 
     def test_house_feed_pagination_contract(self, api_url):
         resp, data = get_feed(api_url, f'house/{TEST_HOUSE_ID}', params={'limit': 2})

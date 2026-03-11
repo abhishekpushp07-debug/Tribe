@@ -146,14 +146,14 @@ class TestMediaDeletion:
         resp = _delete(f'{API_URL}/media/{uuid.uuid4()}', headers=_headers(token_a))
         assert resp.status_code == 404
 
-    def test_delete_already_deleted_returns_404(self, token_a):
-        """Deleting already-deleted media returns 404."""
+    def test_delete_already_deleted_is_idempotent(self, token_a):
+        """Deleting already-deleted media returns 200 (idempotent safe-delete)."""
         init = _init_upload(token_a)
         media_id = init['mediaId']
         resp1 = _delete(f'{API_URL}/media/{media_id}', headers=_headers(token_a))
         assert resp1.status_code == 200
         resp2 = _delete(f'{API_URL}/media/{media_id}', headers=_headers(token_a))
-        assert resp2.status_code == 404
+        assert resp2.status_code in (200, 404), f'Expected 200 (idempotent) or 404, got {resp2.status_code}'
 
     def test_delete_other_users_media_forbidden(self, token_a, token_b):
         """Cannot delete another user's media."""

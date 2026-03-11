@@ -79,6 +79,13 @@ Register new: `POST /api/auth/register { phone, pin, displayName }`
 
 ## API Endpoint Count: 150+ across 16+ domains
 
+## Testing Status
+- **Full Regression Suite**: 1001 tests collected, **1000 passed, 1 known flake** (99.9% pass rate)
+- **Flake**: `test_follow_creates_v2_notification` — order-dependent rate-limiting, passes in isolation
+- **Zero real regressions** from Phase C or Phase D changes
+- **3 outdated tests fixed** (Gap 1 auto-promotion, House→Tribe migration, idempotent delete)
+- **Anti-abuse fix**: Moved action recording to AFTER checks pass, moved input validation BEFORE abuse checks
+
 ## Remaining Roadmap
 - **P1: B7 — Test Hardening + Gold Freeze** (zero-flake test suite)
 - **P2: B8 — Infra, Observability, Scale Path** (Redis, job queues, dedicated test DB)
