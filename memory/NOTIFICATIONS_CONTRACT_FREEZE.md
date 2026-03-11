@@ -1,7 +1,7 @@
-# Notifications 2.0 — Contract Freeze
-## B6 Phase 4 | Tribe Backend
+# Notifications 2.0 — Contract Freeze (Gold-Proof)
+## B6 Phase 4 + 4G | Tribe Backend
 
-> This document captures the production-grade Notifications 2.0 subsystem truth.
+> This document captures the production-grade, gold-proof Notifications 2.0 subsystem truth.
 > Derived from code, not imagination.
 
 ---
@@ -11,25 +11,26 @@
 ### Canonical Write Path
 All notification creation flows through `createNotificationV2` in `/app/lib/services/notification-service.js`.
 
-The legacy `createNotification` function in `/app/lib/auth-utils.js` now delegates to `createNotificationV2`:
+The legacy `createNotification` function in `/app/lib/auth-utils.js` delegates to `createNotificationV2`:
 ```js
 export async function createNotification(db, userId, type, actorId, targetType, targetId, message) {
   return createNotificationV2(db, { userId, type, actorId, targetType, targetId, message })
 }
 ```
 
-### Why No Split-Brain
-- All existing callers (social.js, reels.js, stories.js, pages.js, content.js) import `createNotification` from `auth-utils.js`
-- That function now delegates to `createNotificationV2`
-- All notification writes pass through the same V2 pipeline: self-suppress → preference check → block check → dedup → insert
-- Zero code paths bypass this pipeline
-
 ### V2 Pipeline Rules (Applied to Every Notification)
 1. **Self-notify suppression**: `userId === actorId` → suppressed (always)
 2. **Preference check**: User's stored preference for `type` must be `true` (defaults: all enabled)
 3. **Force-deliver override**: Types `REPORT_RESOLVED`, `STRIKE_ISSUED`, `APPEAL_DECIDED` bypass preferences
 4. **Block check**: Bidirectional block between recipient and actor → suppressed
-5. **Dedup window**: Same `{userId, type, actorId, targetId}` within 5 minutes → suppressed
+5. **Atomic dedup**: `dedupKey` (unique index, sparse) prevents concurrent duplicate writes. Key format: `${userId}:${type}:${actorId}:${targetId}:${timeBucket}` where timeBucket = 5-minute window
+
+### Gold-Proof Additions
+- **Atomic dedup via unique index** (not check-then-insert)
+- **Structured observability** via `logger` (category: `NOTIFICATION`)
+- **Target existence signal** (`targetExists` field in list responses)
+- **Actor dedup in grouped previews** (no duplicate actor previews)
+- **Null/deleted actor safety** in grouping (filtered from preview, counted in actorCount)
 
 ---
 
@@ -124,7 +125,8 @@ export async function createNotification(db, userId, type, actorId, targetType, 
   "message": "User X liked your post",
   "read": false,
   "createdAt": "2026-03-11T...",
-  "actor": { /* sanitized user snippet or null */ }
+  "actor": { /* sanitized user snippet or null if deleted */ },
+  "targetExists": true
 }
 ```
 
@@ -196,29 +198,28 @@ REPORT_RESOLVED, STRIKE_ISSUED, APPEAL_DECIDED, HOUSE_POINTS
 
 ---
 
-## 7. Files Changed in B6-P4
+## 7. Files Changed in B6-P4 + P4G
 | File | Change |
 |---|---|
-| `/app/lib/services/notification-service.js` | Created V2 service (dedup, prefs, blocks, grouping) |
-| `/app/lib/handlers/notifications.js` | Created handler (7 endpoints) |
+| `/app/lib/services/notification-service.js` | V2 service: atomic dedup (dedupKey + E11000 catch), structured observability, actor dedup in grouping |
+| `/app/lib/handlers/notifications.js` | Handler: target degradation signal (targetExists), dedupKey exclusion from API, structured logging |
 | `/app/app/api/[[...path]]/route.js` | Wired notifications handler, removed from admin catch-all |
 | `/app/lib/handlers/admin.js` | Removed old GET/PATCH notifications routes |
 | `/app/lib/auth-utils.js` | Canonical write path: createNotification → createNotificationV2 |
 | `/app/lib/constants.js` | Added STORY_REACTION, STORY_REPLY, STORY_REMOVED to NotificationType |
-| `/app/lib/db.js` | Added indexes for device_tokens, notification_preferences, notification dedup/grouping |
+| `/app/lib/db.js` | Added indexes: dedupKey unique/sparse, dedup, grouping, device_tokens, notification_preferences |
 | `/app/tests/conftest.py` | Added cleanup for device_tokens, notification_preferences |
 | `/app/tests/handlers/test_b6_p4_notifications.py` | 59-test comprehensive suite |
+| `/app/tests/handlers/test_b6_p4g_gold_proof.py` | 19-test gold-proof suite |
 
 ---
 
-## 8. Test Coverage Summary (59 tests)
-- **Route reachability**: 9 tests
-- **Device tokens**: 10 tests (register, dedup, reassignment, unregister, validation)
-- **Preferences**: 9 tests (defaults, patch, unknown keys, boolean, idempotency)
-- **Unread count truth**: 9 tests (increment, self-suppress, block, preference, dedup, mark-read)
-- **Grouping truth**: 6 tests (same target, different targets, preview cap, unread semantics, ordering)
-- **Canonical write path**: 2 tests (follow→V2, force-deliver)
-- **Contract shapes**: 7 tests (all response shapes verified)
-- **Idempotency**: 3 tests (mark-read, device register, preferences)
-- **Pagination**: 1 test
-- **Regression**: 3 tests (old list, mark-read, no _id leak)
+## 8. Test Coverage Summary (78 tests total)
+### P4 Suite (59 tests)
+- Route reachability: 9 | Device tokens: 10 | Preferences: 9 | Unread count: 9
+- Grouping: 6 | Canonical write path: 2 | Contract shapes: 7
+- Idempotency: 3 | Pagination: 1 | Regression: 3
+
+### P4G Gold-Proof Suite (19 tests)
+- Atomic dedup: 5 | Deleted actor degradation: 3 | Target degradation: 3
+- Grouped unread correctness: 2 | Observability: 3 | Contract stability: 3

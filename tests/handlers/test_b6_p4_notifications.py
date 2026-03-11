@@ -296,9 +296,15 @@ class TestUnreadCountTruth:
         # Reset preferences to allow all
         db.notification_preferences.delete_many({'userId': notif_user_a['userId']})
 
+        # Ensure B is NOT following A (so the follow creates a new follow + notification)
+        _retry_on_429(lambda: requests.delete(f'{API_URL}/follow/{notif_user_a["userId"]}',
+                       headers=_auth(notif_user_b)))
+        db.notifications.delete_many({'userId': notif_user_a['userId']})
+        time.sleep(0.2)
+
         # B follows A → notification for A
-        r = requests.post(f'{API_URL}/follow/{notif_user_a["userId"]}', headers=_auth(notif_user_b))
-        # Might be 200 (already following) or 201 (new follow) — both fine
+        r = _retry_on_429(lambda: requests.post(f'{API_URL}/follow/{notif_user_a["userId"]}',
+                           headers=_auth(notif_user_b)))
         assert r.status_code in (200, 201)
 
         # Wait for eventual consistency

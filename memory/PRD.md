@@ -125,6 +125,7 @@ id, userId, commentId, contentId, createdAt (unique: userId+commentId)
 | B6-P2 | Reels Hardening | ✅ PASS | 28 |
 | B6-P3 | Reels Launch Readiness | ✅ PASS | 49 |
 || B6-P4 | Notifications 2.0 | ✅ PASS | 59 |
+|| B6-P4G | Notifications Gold Proof | ✅ PASS | 19 |
 
 ## Next Priority
 **B5 — Discovery, Search & Hashtag Engine**: Implement hashtag extraction and fix non-functional post search
