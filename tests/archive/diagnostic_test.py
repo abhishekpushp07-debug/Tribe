@@ -7,7 +7,7 @@ Quick check of specific failing endpoints to provide detailed error information
 import requests
 import json
 
-BASE_URL = "https://b5-search-proof.preview.emergentagent.com/api"
+BASE_URL = "https://reel-video-upload.preview.emergentagent.com/api"
 HEADERS = {"Content-Type": "application/json"}
 
 def make_request(method: str, endpoint: str, data=None, token=None):

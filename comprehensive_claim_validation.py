@@ -8,7 +8,7 @@ import requests
 import json
 import time
 
-BASE_URL = "https://b5-search-proof.preview.emergentagent.com/api"
+BASE_URL = "https://reel-video-upload.preview.emergentagent.com/api"
 
 class ComprehensiveClaimValidation:
     def __init__(self):

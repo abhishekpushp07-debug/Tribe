@@ -20,7 +20,7 @@ import random
 import json
 import time
 
-API = "https://b5-search-proof.preview.emergentagent.com/api"
+API = "https://reel-video-upload.preview.emergentagent.com/api"
 SCORES = {}
 DETAILS = {}
 

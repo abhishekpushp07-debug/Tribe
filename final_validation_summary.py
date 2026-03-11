@@ -7,7 +7,7 @@ Comprehensive acceptance test results with corrected field validations
 import requests
 import json
 
-BASE_URL = "https://b5-search-proof.preview.emergentagent.com/api"
+BASE_URL = "https://reel-video-upload.preview.emergentagent.com/api"
 HEADERS = {"Content-Type": "application/json"}
 
 def get_auth_token():

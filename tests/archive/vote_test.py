@@ -6,7 +6,7 @@ Quick test for vote system fix
 import requests
 import json
 
-BASE_URL = "https://b5-search-proof.preview.emergentagent.com/api"
+BASE_URL = "https://reel-video-upload.preview.emergentagent.com/api"
 ADMIN_PHONE = "9000000501"
 USER_PHONE = "9000000502" 
 PIN = "1234"

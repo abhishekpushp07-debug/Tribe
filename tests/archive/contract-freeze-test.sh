@@ -17,7 +17,7 @@
 
 set -e
 
-API="${1:-https://b5-search-proof.preview.emergentagent.com}"
+API="${1:-https://reel-video-upload.preview.emergentagent.com}"
 PASS=0
 FAIL=0
 TOTAL=0
