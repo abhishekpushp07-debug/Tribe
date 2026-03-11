@@ -12,7 +12,7 @@ import requests
 import time
 import random
 
-BASE_URL = "https://tribe-handoff-v1.preview.emergentagent.com/api"
+BASE_URL = "https://social-alerts-4.preview.emergentagent.com/api"
 
 # ======================== HELPERS ========================
 
