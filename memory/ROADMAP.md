@@ -19,17 +19,18 @@
 - Stage 10: World's Best Reels (39 endpoints, 12 collections)
 - Service Layer Files Created: scoring.js, feed-ranking.js
 
-## In Progress (P0)
-- **Service Layer Wiring**: Connect scoring.js → tribes.js, feed-ranking.js → feed.js
-- Algorithmic feed ranking (replace chronological with engagement-weighted)
-- Tiered viral bonuses (1K/5K/10K thresholds) in leaderboard scoring
+## In Progress (P0) — COMPLETED ✅
+- ~~Service Layer Wiring~~: scoring.js → tribes.js, feed-ranking.js → feed.js ✅
+- ~~Algorithmic feed ranking~~ (engagement_weighted_v1 on first page, chronological on paginated) ✅
+- ~~Tiered viral bonuses~~ (1K/5K/10K thresholds) in leaderboard scoring v3 ✅
+- ~~Service Extraction~~: StoryService, ReelService, ContestService ✅
 
 ## Upcoming (P1)
-- **Service Extraction**: StoryService (stories.js 2157 lines), ReelService (reels.js 1708 lines), ContestService (tribe-contests.js 1599 lines)
-- Thin all large handlers to pure request/response routing
+- **B7 — Test Hardening + Gold Freeze**: Zero-flake test suite
+- Continue service extraction: thin remaining handler logic further
+- Extract shared block/privacy logic into common utility
 
 ## Future (P2)
-- B7: Test Hardening + Gold Freeze — zero-flake suite
 - B8: Infra, Observability, Scale Path — Redis job queues, dedicated test DB
 - Audit Log TTL policy
 
