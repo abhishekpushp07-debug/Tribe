@@ -49,7 +49,8 @@ Content-Type: application/json
 ### MUST-READ (Start Here)
 | # | Document | Lines | What It Covers |
 |---|----------|-------|----------------|
-| 1 | **[COMPLETE_FRONTEND_HANDOFF.md](./COMPLETE_FRONTEND_HANDOFF.md)** | 840 | **THE MASTER REFERENCE** — Full API guide, screen maps, gotchas, media contract, reel contract, search contract, notification types. **Read this first.** |
+| 1 | **[API_REFERENCE_COMPLETE.md](./API_REFERENCE_COMPLETE.md)** | 800+ | **THE DEFINITIVE API REFERENCE** — All 309 endpoints, every method, path, auth requirement, request/response examples. 100% coverage. |
+| 2 | **[COMPLETE_FRONTEND_HANDOFF.md](./COMPLETE_FRONTEND_HANDOFF.md)** | 840 | Integration guide with screen maps, gotchas, media contract, reel contract |
 
 ### Detailed References
 | # | Document | Lines | What It Covers |
