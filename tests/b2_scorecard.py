@@ -20,7 +20,7 @@ import random
 import json
 import time
 
-API = "https://media-trust-engine.preview.emergentagent.com/api"
+API = "https://tribal-architecture.preview.emergentagent.com/api"
 SCORES = {}
 DETAILS = {}
 

@@ -1,8 +1,8 @@
 # ============================================================================
 # TRIBE — COMPLETE FRONTEND HANDOFF PACKAGE
 # ============================================================================
-# Backend URL: https://media-trust-engine.preview.emergentagent.com
-# All APIs:    https://media-trust-engine.preview.emergentagent.com/api/*
+# Backend URL: https://tribal-architecture.preview.emergentagent.com
+# All APIs:    https://tribal-architecture.preview.emergentagent.com/api/*
 # Health:      GET /api/healthz → {"status":"ok"}
 # Auth:        Phone/PIN → Bearer token
 # Last Updated: 2026-03-11
