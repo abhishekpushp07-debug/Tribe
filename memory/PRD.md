@@ -92,12 +92,40 @@ All contract freeze docs, operational policies, integration guides, and seed dat
 - Added 4 key test users to auto-seed (7777099001 ADMIN, 7777099002 USER, 9876543210 ADMIN, 9000000001 SUPER_ADMIN)
 - Fixed malformed `.gitignore` (removed duplicate `-e` entries)
 
+## Critical Bug Fixes (2026-03-12 — Session 2)
+### Root Cause Analysis
+The entire app was broken due to 4 bugs in `/app/lib/handlers/feed.js`:
+
+1. **GET /feed (home feed) returning `{}` for anon, 500 for auth:**
+   - `cache.get()` was NOT awaited → returned Promise (truthy) → serialized to `{}`
+   - `applyFeedPolicy()` called with 2 args instead of 4 (db, viewerId, viewerRole, items) AND not awaited → TypeError for auth users
+   - `cache.set()` was NOT awaited
+   
+2. **GET /feed/stories returning empty:**
+   - Queried `content_items` collection with `kind: STORY` → 0 results
+   - Stories are actually stored in the `stories` collection (separate from content_items)
+   - Fixed to query `stories` collection with `status: ACTIVE/PUBLISHED`
+
+3. **GET /feed/reels showing minimal content:**
+   - Queried `content_items` with `kind: REEL` → only 33 results
+   - 553 reels live in the `reels` collection (separate from content_items)
+   - Fixed to query `reels` collection with proper status/visibility filters
+
+4. **Reels follow visibility check broken:**
+   - Used `followingId` field but DB schema uses `followeeId`
+   - Fixed in `/app/lib/handlers/reels.js`
+
+### Verification
+All 6 feed endpoints, Story CRUD, Reel CRUD, Post CRUD, Media Upload, and Social features verified as working via automated testing.
+
 ## Remaining Roadmap
-- **P1: B7 — Test Hardening + Gold Freeze** (zero-flake test suite)
-- **P2: B8 — Infra, Observability, Scale Path** (Redis, job queues, dedicated test DB)
-- **P3: Audit Log TTL policy**
-- **P4: Recommendation engine / ML ranking**
-- **P5: Push notifications infrastructure**
+- **P1: Write pytest tests** for all recently added features (Stories edit/mute, Post drafts/scheduling, Reel analytics) — required by Master Prompt  
+- **P2: Phase 1 Core Blockers** — Post distributionStage automation, feed cache key collision fix
+- **P3: Reel Processing** — Real video transcoding, anti-gaming strengthening
+- **P4: Phase 2-6 Subsystem Completion** — Continue sprints from Master Prompt
+- **P5: Test Suite Hardening** — Zero-flake test suite (rate-limit flake fix)
+- **P6: Infra & Scale** — Redis, job queues, dedicated test DB
+- **P7: Advanced Features** — Recommendation engine, ML ranking, push notifications
 
 ## Test Credentials
 - All seeded accounts use PIN: `1234`
