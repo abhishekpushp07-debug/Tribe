@@ -1,6 +1,6 @@
 # Tribe — Product Requirements Document
-**Version**: 4.0
-**Last Updated**: 2026-03-11
+**Version**: 5.0
+**Last Updated**: 2026-03-12
 
 ## Problem Statement
 Build a world-best social media backend for "Tribe" — a college-centric social platform. The system serves users across colleges, tribes, houses with content types including Posts, Reels, Stories, and Pages.
@@ -19,107 +19,92 @@ Build a world-best social media backend for "Tribe" — a college-centric social
 3. **Moderator**: Reviews flagged content, manages reports
 4. **Admin/Super Admin**: Platform governance, tribe management, analytics
 
-## Current Feature Status (as of 2026-03-11)
+## Current Feature Status (as of 2026-03-12)
 
-### Stories — 100% ✅
-- CRUD: Create, Read, Edit, Delete
-- Privacy: EVERYONE, CLOSE_FRIENDS, CUSTOM, hideStoryFrom
-- Interactions: Views, Reactions, Replies, Sticker responses
-- Story Mutes: Mute/unmute user stories without blocking
-- View Duration Tracking: Per-viewer duration + completion analytics
-- Bulk Moderation: Batch HOLD/REMOVE/RESTORE/APPROVE (MOD+)
-- Sticker Rate Limits: 30/hour per user
-- Story Rail: Batched privacy/mute/block filtering (no N+1)
-- Admin: Moderate, analytics, archive
-- Contract Freeze: STORIES_CONTRACT_FREEZE.md
+### Critical Bugs Fixed (Session 2)
+- GET /feed returned {} (anon) or 500 (auth) — cache.get not awaited + wrong applyFeedPolicy args
+- GET /feed/stories returned empty — queried wrong collection
+- GET /feed/reels showed minimal content — queried wrong collection  
+- Reels follow check used wrong field name (followingId → followeeId)
 
-### Posts — 100% ✅
-- CRUD: Create, Read, Edit, Delete
-- Post Types: STANDARD, POLL, LINK, THREAD, CAROUSEL
-- Polls: Create, Vote, Results with expiry
-- Link Previews: Auto-fetched metadata (SSRF-safe)
-- Threads: Multi-part threaded posts
-- Carousel: Multi-media with explicit ordering (max 10 items)
-- Drafts: Create draft, list drafts, publish draft
-- Scheduling: Schedule future publish (max 30 days), reschedule, auto-publish worker
-- Distribution Pipeline: Stage 0→1→2 auto-promotion
-- Feed Cache: Zero cross-user leakage (auth users bypass cache)
-- Moderation: On create, on edit, content rejection
-- Contract Freeze: POSTS_CONTRACT_FREEZE.md
+### 50 New Social Media Features Added (Session 2)
 
-### Reels — 100% ✅
-- CRUD: Create, Read, Patch, Delete, Publish, Archive, Restore
-- Video Processing: Real ffmpeg transcoding (MP4 H.264), thumbnail generation
-- Feed Types: Default (score), Trending (velocity/age), Personalized (user-aware), Following, Audio
-- Creator Analytics: Detailed — daily views/likes trend, retention curve, top engagers, weekly performance
-- Interactions: Like, Comment, Share, Save, View tracking
-- Anti-abuse: Rate-limited via AntiAbuseService
-- Moderation: Full lifecycle
-- Contract Freeze: REELS_CONTRACT_FREEZE.md + REEL_PROCESSING_POLICY.md
+#### Profile & Settings (12 endpoints)
+1. GET /me — own profile with stats
+2. GET /me/stats — dashboard (posts, reels, stories, followers, following, likes, saves)
+3. GET /me/settings — all settings (privacy, notifications, profile, interests)
+4. PATCH /me/settings — bulk update settings
+5. GET /me/privacy — privacy settings
+6. PATCH /me/privacy — toggle private/public, tagging, mentions, online status
+7. GET /me/activity — 7-day activity summary
+8. POST /me/interests — set interests
+9. GET /me/interests — get interests
+10. GET /me/login-activity — recent sessions
+11. GET /me/bookmarks — all saved content
+12. POST /me/deactivate — deactivate account
 
-### Pages — 100% ✅
-- CRUD: Create, Read, Update, Archive, Restore, Delete
-- Verification Workflow: Request → Admin Review → Approve/Reject with notifications
-- Audience: Members, Followers, Admins, Moderators, Editors
-- Page Invite System: Invite users with role assignment
-- Page Posts: Create as page, page posts in feed
-- Page Report: Dedicated report endpoint
-- Page Analytics: Daily activity, follower growth, engagement, top posts
-- Page Search: Text, category, college-based with verified boost
-- Visibility: ACTIVE/ARCHIVED/SUSPENDED/DELETED with proper filtering
-- Contract Freeze: PAGES_CONTRACT_FREEZE.md
+#### Content Interactions (9 endpoints)
+13. POST /content/:id/report — report content
+14. POST /content/:id/archive — archive post
+15. POST /content/:id/unarchive — restore archived post
+16. POST /content/:id/pin — pin to profile
+17. DELETE /content/:id/pin — unpin
+18. POST /content/:id/hide — hide from feed
+19. GET /content/:id/likers — who liked
+20. GET /content/:id/shares — who shared/reposted
 
-### Shared Systems — Complete ✅
-- Anti-Abuse: 5-layer detection (velocity, burst, same-author, rapid-diverse, cumulative)
-- Feed Cache: Zero cross-user leakage, event-driven invalidation
-- Moderation Pipeline: Content moderation on create/edit, multi-tier review
-- Media Pipeline: Supabase storage, chunked upload, real video transcoding
-- Notifications: 12+ types, grouped view, preferences
-- Search: Multi-type (users, pages, posts, hashtags, colleges, houses)
-- Age Protection: CHILD/ADULT content restrictions
-- Audit Trail: 25,000+ audit log entries
+#### Comment Operations (5 endpoints)
+21. POST /content/:id/comments/:cid/reply — threaded replies
+22. PATCH /content/:id/comments/:cid — edit comment
+23. POST /content/:id/comments/:cid/pin — pin comment (author only)
+24. POST /content/:id/comments/:cid/report — report comment
+25. DELETE /content/:id/comments/:cid — delete comment
 
-## Documentation (22 documents)
-All contract freeze docs, operational policies, integration guides, and seed data references are in `/app/memory/`.
+#### Stories (3 endpoints)
+26. POST /stories/:id/view — mark as viewed + increment count
+27. GET /me/stories/insights — story analytics
+28. POST /stories/:id/share — share story as post
 
-## Deployment Fixes (2026-03-12)
-- Fixed `GET /stories` route — was returning 404, now returns story rail
-- Fixed `POST /media/initiate` — added alias for `/media/upload-init` (frontend compatibility)
-- Fixed media upload-init to accept flexible param names (`type`/`kind`, `size`/`sizeBytes`)
-- Added `POST /media/complete` alias for `/media/upload-complete`
-- Made storage URL configurable via `EMERGENT_STORAGE_URL` env var
-- Fixed Redis connection to skip when `REDIS_URL` not in environment
-- Added 4 key test users to auto-seed (7777099001 ADMIN, 7777099002 USER, 9876543210 ADMIN, 9000000001 SUPER_ADMIN)
-- Fixed malformed `.gitignore` (removed duplicate `-e` entries)
+#### Reels (4 endpoints)
+29. GET /reels/:id/likers — who liked reel
+30. GET /me/reels/saved — saved reels list
+31. POST /reels/:id/duet — create duet
+32. GET /reels/sounds/popular — popular sounds
 
-## Critical Bug Fixes (2026-03-12 — Session 2)
-### Root Cause Analysis
-The entire app was broken due to 4 bugs in `/app/lib/handlers/feed.js`:
+#### Tribes (8 endpoints)
+33. POST /tribes/:id/join — join tribe
+34. POST /tribes/:id/leave — leave tribe
+35. GET /tribes/:id/feed — tribe content feed
+36. GET /tribes/:id/events — tribe events
+37. GET /tribes/:id/stats — tribe statistics
+38. POST /tribes/:id/cheer — daily cheer (rate-limited)
+39. GET /users/:id/mutual-followers — mutual followers
 
-1. **GET /feed (home feed) returning `{}` for anon, 500 for auth:**
-   - `cache.get()` was NOT awaited → returned Promise (truthy) → serialized to `{}`
-   - `applyFeedPolicy()` called with 2 args instead of 4 (db, viewerId, viewerRole, items) AND not awaited → TypeError for auth users
-   - `cache.set()` was NOT awaited
-   
-2. **GET /feed/stories returning empty:**
-   - Queried `content_items` collection with `kind: STORY` → 0 results
-   - Stories are actually stored in the `stories` collection (separate from content_items)
-   - Fixed to query `stories` collection with `status: ACTIVE/PUBLISHED`
+#### Feed & Discovery (7 endpoints)
+40. GET /explore — trending posts + reels + hashtags
+41. GET /explore/creators — popular creators with follow status
+42. GET /explore/reels — trending reels
+43. GET /feed/mixed — interleaved posts + reels
+44. GET /feed/personalized — interest-based ranking
+45. GET /trending/topics — trending hashtags with scores
 
-3. **GET /feed/reels showing minimal content:**
-   - Queried `content_items` with `kind: REEL` → only 33 results
-   - 553 reels live in the `reels` collection (separate from content_items)
-   - Fixed to query `reels` collection with proper status/visibility filters
+#### Notifications (2 endpoints)
+46. POST /notifications/read-all — mark all read
+47. DELETE /notifications/clear — clear all
 
-4. **Reels follow visibility check broken:**
-   - Used `followingId` field but DB schema uses `followeeId`
-   - Fixed in `/app/lib/handlers/reels.js`
-
-### Verification
-All 6 feed endpoints, Story CRUD, Reel CRUD, Post CRUD, Media Upload, and Social features verified as working via automated testing.
+### Pre-existing Features (from prior sessions)
+- Stories: Full CRUD, privacy, reactions, replies, stickers, highlights, close friends, mutes, view duration, bulk moderation
+- Posts: CRUD, polls, link previews, threads, carousel, drafts, scheduling
+- Reels: CRUD, feed, publish, archive, restore, pin, like/save, comments, report, hide, share, audio, remixes, series, analytics
+- Social: Follow/unfollow, like/dislike, comment/reply, save/unsave, share/repost
+- Pages: Full CRUD, members, verification, analytics
+- Events: Full CRUD, RSVP, attendees, reminders
+- Tribes: Leaderboard, standings, distribution, seasons, contests
+- Notifications: List, read, unread count, device registration, preferences
+- Discovery: Search, hashtags, suggestions, colleges
 
 ## Remaining Roadmap
-- **P1: Write pytest tests** for all recently added features (Stories edit/mute, Post drafts/scheduling, Reel analytics) — required by Master Prompt  
+- **P1: Write pytest tests** for all recently added features — required by Master Prompt  
 - **P2: Phase 1 Core Blockers** — Post distributionStage automation, feed cache key collision fix
 - **P3: Reel Processing** — Real video transcoding, anti-gaming strengthening
 - **P4: Phase 2-6 Subsystem Completion** — Continue sprints from Master Prompt
@@ -128,7 +113,6 @@ All 6 feed endpoints, Story CRUD, Reel CRUD, Post CRUD, Media Upload, and Social
 - **P7: Advanced Features** — Recommendation engine, ML ranking, push notifications
 
 ## Test Credentials
-- All seeded accounts use PIN: `1234`
-- Primary test: `7777099001` (ADMIN), `7777099002` (USER)
-- Super Admin: `9000000001`, `9000099001`
+- Admin: `7777099001` / PIN: `1234`
+- User: `7777099002` / PIN: `1234`
 - See SEED_DATA_REFERENCE.md for full inventory
