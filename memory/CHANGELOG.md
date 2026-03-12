@@ -1,12 +1,12 @@
 # Tribe — Changelog
 
 ## 2026-03-12
-- Delivered complete, exhaustive API documentation (API_DOCS.md v3.0.0)
-  - 4,438 lines covering 464 endpoint references across 41 sections
-  - Full request/response examples for every endpoint
-  - Auth requirements, query params, field validation for all endpoints
-  - Frontend integration guide with auth flow, media upload flow, error handling
-  - Smart Feed Algorithm documentation
+- Delivered world-class documentation suite (7,804 lines across 5 documents):
+  1. API_DOCS.md (4,438 lines) — Complete API reference with 464 endpoints, request/response examples
+  2. DATA_MODELS.md (1,082 lines) — All 95 MongoDB collections with schemas, indexes, relationships
+  3. ANDROID_GUIDE.md (905 lines) — Android/mobile integration guide with 15 screen specs, auth/media/SSE flows
+  4. CONSTANTS_REFERENCE.md (754 lines) — All enums, 60+ error codes, 21 tribes, config values
+  5. FEATURE_SPECS.md (625 lines) — Business logic, state machines, algorithms, moderation pipeline
 **Last Updated**: 2026-03-12
 
 ## 2026-03-12: Phase 1–5 Sprint Complete
