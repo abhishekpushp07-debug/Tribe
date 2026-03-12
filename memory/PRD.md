@@ -1,67 +1,79 @@
 # Tribe — Product Requirements Document
-**Version**: 9.0
-**Last Updated**: 2026-03-12
 
-## Problem Statement
-Build a world-best social media backend for "Tribe" — a college-centric social platform with Posts, Reels, Stories, and Pages.
+## Product Vision
+Build the world's best social media application for Indian college students.
 
-## Core Architecture
-- **Application**: Next.js 14 monolithic API with Service-Oriented Architecture
-- **Database**: MongoDB (local) with 80+ indexes
-- **Cache**: Redis (ioredis) with in-memory fallback, 20+ namespaces
+## Tech Stack
+- **Frontend**: Next.js (React)
+- **Backend**: Next.js API Routes (monolithic)
+- **Database**: MongoDB
+- **Caching**: Redis (ioredis)
 - **Media Storage**: Supabase Storage
-- **Video Processing**: ffmpeg (HLS transcoding)
-- **Auth**: Phone + PIN with JWT tokens
+- **Video Processing**: ffmpeg
+- **Testing**: pytest (121 tests, 100% pass rate)
 
-## Feature Status (as of 2026-03-12)
+## Architecture
+- Central router: `/app/app/api/[[...path]]/route.js`
+- Handlers: `/app/lib/handlers/` (modular, service-oriented)
+- Services: `/app/lib/services/`
+- Cache layer: `/app/lib/cache.js` + `/app/lib/cache-utils.js`
+- Feed ranking: `/app/lib/services/feed-ranking.js`
 
-### Pytest Regression Suite: 121/121 PASSED (100%)
-- 19 test files across 19 categories
-- Run: `python -m pytest backend/tests/ -v`
+## Core Features (All Implemented)
+1. Auth (register, login, refresh tokens, sessions, PIN change)
+2. Onboarding (age, college, profile, consent)
+3. User profiles, settings, privacy, interests, deactivation
+4. Content system (posts, polls, threads, carousels, drafts, scheduling)
+5. Feed system (home, public, following, college, tribe, mixed, personalized)
+6. Smart Feed Algorithm (multi-signal ranking)
+7. Social interactions (like/dislike, save, share/repost, hide, pin, archive)
+8. Full comments system (threaded, likes, pin, edit, report)
+9. Stories (24h expiry, stickers, reactions, replies, highlights, close friends, SSE)
+10. Reels (create, feeds, interactions, watch metrics, creator tools, series, duets)
+11. Pages (CRUD, roles, follow, publishing, analytics, verification)
+12. Events (CRUD, RSVP, waitlist, reminders, moderation)
+13. Tribes (21-tribe system, governance, contests, salutes, seasons)
+14. Tribe Contests (full lifecycle, judging, voting, SSE live feeds)
+15. Search (unified full-text, autocomplete, recent searches)
+16. Hashtags (trending, feeds, stats)
+17. Notifications (grouped, preferences, device push tokens)
+18. Follow Requests (private accounts)
+19. Analytics (overview, content, audience, reach, stories, reels)
+20. Media upload (signed URLs, Supabase, HLS transcoding)
+21. Board Notices (CRUD, moderation, acknowledgments)
+22. Authenticity Tags
+23. College Claims & Discovery
+24. Governance (board elections, proposals, voting)
+25. Resources (study materials, voting, download tracking)
+26. Content Distribution (admin pipeline)
+27. Reports, Moderation & Appeals
+28. Content Quality Scoring
+29. Content Recommendations
+30. User Activity Status (heartbeat, friends activity)
+31. Smart Suggestions (people, trending, tribes)
+32. Blocks & Mutes
+33. Admin & Ops (stats, abuse dashboard, health checks)
+34. Redis Caching Layer
 
-### API Documentation: `/app/API_DOCS.md`
-- Complete endpoint reference for frontend team
-- 70+ endpoints documented with request/response examples
+## Test Accounts
+- Phone: `7777099001` / PIN: `1234`
+- Phone: `7777099002` / PIN: `1234`
 
-### Phase 1: Content Quality Scoring ✅
-- Multi-signal scoring (0–100): caption, media, hashtags, author reputation, engagement, freshness
-- Grades: A/B/C/D/F with shadow-ban threshold (25) and low-quality threshold (50)
-- Endpoints: score, batch, dashboard, check
+## Documents
+- `/app/API_DOCS.md` — Complete API documentation (4,438 lines, 464 endpoints, 41 sections)
+- `/app/memory/CHANGELOG.md` — Development history
+- `/app/backend/tests/` — pytest regression suite (19 files, 121 tests)
 
-### Phase 2: Content Recommendations ✅
-- Collaborative filtering: "users who liked X also liked Y"
-- Endpoints: suggested posts, reels you may like, creators for you
-- Cached 30s per user
+## What's Completed
+- All 435+ backend API endpoints implemented and tested
+- Redis caching layer integrated
+- Smart Feed Algorithm with multi-signal ranking
+- Complete pytest regression suite (100% pass rate)
+- **Exhaustive API documentation delivered (v3.0.0)**
 
-### Phase 3: Activity Status ✅
-- Heartbeat tracking, "Active now"/"Active 2h ago"/"Yesterday"
-- Privacy controls: toggle visibility
-- Friends activity list sorted by online status
-
-### Phase 4: Smart Suggestions ✅
-- "People You May Know": mutual follows (×3) + same tribe (×2) + same college (×1)
-- "Trending": hashtags, top posts, top creators (college-scoped or global)
-- "Tribes For You": popular tribes user hasn't joined
-
-### Phase 5: Integration + Documentation ✅
-- All new handlers wired to router
-- Comprehensive API docs created
-- Full regression test coverage
-
-### Previously Completed
-- Smart Feed Algorithm (9-signal ranking for posts + reels)
-- Redis Caching Layer (20+ namespaces, 80+ DB indexes)
-- 54+ Social Features, 4 World-Class Systems
-- Feed Visibility (all content visible to all users)
-- Critical Bug Fixes, Service Refactoring
-
-## Remaining Roadmap
-- **P1:** Frontend integration (hand off API_DOCS.md)
-- **P2:** WebSocket real-time push notifications
-- **P3:** A/B testing framework for algorithm tuning
-- **P4:** Rate limiting dashboard
-- **P5:** CDN integration for media delivery
-
-## Test Credentials
-- Admin: `7777099001` / PIN: `1234`
-- User: `7777099002` / PIN: `1234`
+## Backlog
+- Frontend UI development
+- WebSocket real-time push notifications (P2)
+- route.js refactoring (monolithic if/else → route map) (P3)
+- A/B testing framework for algorithm tuning (P3)
+- CDN integration for media delivery (P4)

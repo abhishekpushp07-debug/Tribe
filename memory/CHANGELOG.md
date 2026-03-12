@@ -1,4 +1,12 @@
 # Tribe — Changelog
+
+## 2026-03-12
+- Delivered complete, exhaustive API documentation (API_DOCS.md v3.0.0)
+  - 4,438 lines covering 464 endpoint references across 41 sections
+  - Full request/response examples for every endpoint
+  - Auth requirements, query params, field validation for all endpoints
+  - Frontend integration guide with auth flow, media upload flow, error handling
+  - Smart Feed Algorithm documentation
 **Last Updated**: 2026-03-12
 
 ## 2026-03-12: Phase 1–5 Sprint Complete
