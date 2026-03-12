@@ -15,9 +15,11 @@ Build a world-best social media backend for "Tribe" — a college-centric social
 
 ## Feature Status (as of 2026-03-12)
 
-### Testing Score: 98% (50/51 endpoints passing)
-- 10 out of 12 categories scored 100%
-- Detailed report: `/app/test_reports/comprehensive_regression_report.md`
+### Pytest Regression Suite ✅ (NEW)
+- 91 tests across 14 categories — **100% pass rate** (10.87s)
+- Categories: Auth (6), Feed (8), Reels (9), Stories (4), Tribes (11), Search (11), Analytics (12), Transcode (6), Follow Requests (4), Social (6), Cache (4), Notifications (2), Users (3), Cross-User (5)
+- Location: `/app/backend/tests/`
+- Run: `python -m pytest backend/tests/ -v`
 
 ### Redis Caching Layer ✅ (NEW)
 - Redis installed + running (256MB, allkeys-lru)
