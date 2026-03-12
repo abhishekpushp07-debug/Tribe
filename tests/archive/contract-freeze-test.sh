@@ -17,7 +17,7 @@
 
 set -e
 
-API="${1:-https://tribe-feed-debug.preview.emergentagent.com}"
+API="${1:-https://tribe-world-class.preview.emergentagent.com}"
 PASS=0
 FAIL=0
 TOTAL=0

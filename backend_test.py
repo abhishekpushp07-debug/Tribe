@@ -11,7 +11,7 @@ import traceback
 from typing import Dict, Any, List, Optional
 
 # Configuration
-BASE_URL = "https://tribe-feed-debug.preview.emergentagent.com/api"
+BASE_URL = "https://tribe-world-class.preview.emergentagent.com/api"
 TIMEOUT = 30
 
 # Test users with pre-configured credentials
