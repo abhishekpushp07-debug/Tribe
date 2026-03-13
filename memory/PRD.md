@@ -106,6 +106,31 @@ Build the world's best social media application for Indian college students.
   - 30-min session expiry, duplicate chunk detection, missing chunk validation
   - Legacy base64 limit bumped from 30MB → 50MB
   - Chunks auto-assembled and uploaded to Supabase/Object Storage
+- **TUS Resumable Upload (Mar 2026)**:
+  - PATCH /media/tus/:sessionId — Binary chunk upload (no base64 overhead)
+  - HEAD /media/tus/:sessionId — Resume point (Upload-Offset header)
+  - TUS 1.0.0 compatible headers for client SDK integration
+- **Feed Visibility Filtering (Mar 2026)**:
+  - Home feed shows PUBLIC + HOUSE_ONLY (same tribe) + COLLEGE_ONLY (same college)
+  - College feed includes COLLEGE_ONLY content
+  - Tribe feed includes HOUSE_ONLY content
+  - Unauthenticated users only see PUBLIC
+- **Auto-Cleanup Worker (Mar 2026)**:
+  - Runs every 5 minutes
+  - Expires stale chunked upload sessions (30-min expiry)
+  - Cleans orphaned chunk data
+  - Publishes overdue scheduled posts
+- **Push Notification System — SSE (Mar 2026)**:
+  - GET /notifications/stream — Real-time SSE push stream
+  - POST /notifications/test-push — Test push event
+  - Dual-mode: Redis Pub/Sub (multi-instance) or in-memory EventEmitter
+  - 26+ event types: post.liked, post.commented, follow.new, tribe.cheer, contest.resolved, etc.
+  - Push events wired into social handler (likes, comments, follows)
+  - 15s heartbeat, auto-reconnect, resumable via Last-Event-ID
+- **Route.js Refactoring (Mar 2026)**:
+  - Admin route block refactored from 50+ line if/else chain to map-based lookup
+  - Created route-registry.js for documentation and future migration
+  - Total route.js reduced while maintaining full backward compatibility
 
 ## Backlog
 - Frontend UI development
