@@ -36,4 +36,4 @@ All 6 gaps from the deep audit are now closed.
 - Cross-account correlation for sockpuppet detection
 
 ## Backend URL
-`https://media-app-docs.preview.emergentagent.com`
+`https://comprehensive-guide-1.preview.emergentagent.com`

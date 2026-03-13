@@ -22,7 +22,7 @@ import uuid
 import subprocess
 import sys
 
-BASE_URL = "https://media-app-docs.preview.emergentagent.com/api"
+BASE_URL = "https://comprehensive-guide-1.preview.emergentagent.com/api"
 TIMEOUT = 30
 
 class TestResult:

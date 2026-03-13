@@ -77,6 +77,7 @@ Build the world's best social media application for Indian college students.
 - Smart Feed Algorithm with multi-signal ranking
 - Complete pytest regression suite (121 tests, 100% pass rate)
 - **World-class documentation suite (7,804 lines across 5 documents)**
+- **Bug Fix (Feb 2026)**: Backend now honors `visibility` field from frontend for posts, reels, and story-to-post sharing. Added `HOUSE_ONLY`, `COLLEGE_ONLY`, `FOLLOWERS` to allowed visibility values. Fixed draft publish to restore intended visibility.
 
 ## Backlog
 - Frontend UI development

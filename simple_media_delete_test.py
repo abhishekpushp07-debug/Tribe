@@ -13,7 +13,7 @@ import uuid
 from typing import Dict, Tuple
 
 # Configuration
-API_BASE_URL = "https://media-app-docs.preview.emergentagent.com/api"
+API_BASE_URL = "https://comprehensive-guide-1.preview.emergentagent.com/api"
 TIMEOUT = 30
 
 def make_request(method: str, endpoint: str, headers: Dict = None, json_data: Dict = None) -> Tuple[int, Dict]:

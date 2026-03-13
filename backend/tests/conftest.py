@@ -3,7 +3,7 @@ import os
 import pytest
 import requests
 
-BASE_URL = "https://media-app-docs.preview.emergentagent.com/api"
+BASE_URL = "https://comprehensive-guide-1.preview.emergentagent.com/api"
 USER1 = {"phone": "7777099001", "pin": "1234"}
 USER2 = {"phone": "7777099002", "pin": "1234"}
 

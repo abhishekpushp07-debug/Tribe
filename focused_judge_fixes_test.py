@@ -10,7 +10,7 @@ import sys
 import time
 
 # Base URL from environment
-BASE_URL = "https://media-app-docs.preview.emergentagent.com/api"
+BASE_URL = "https://comprehensive-guide-1.preview.emergentagent.com/api"
 
 class JudgeFixesFocusedTester:
     def __init__(self):

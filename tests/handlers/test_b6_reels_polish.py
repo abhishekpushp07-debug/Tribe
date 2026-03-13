@@ -12,7 +12,7 @@ import requests
 import time
 import random
 
-BASE_URL = "https://media-app-docs.preview.emergentagent.com/api"
+BASE_URL = "https://comprehensive-guide-1.preview.emergentagent.com/api"
 
 # ======================== HELPERS ========================
 

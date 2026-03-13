@@ -5,9 +5,9 @@
 
 ## 🔗 Backend URL (Production)
 ```
-https://media-app-docs.preview.emergentagent.com
+https://comprehensive-guide-1.preview.emergentagent.com
 ```
-All API calls: `https://media-app-docs.preview.emergentagent.com/api/*`
+All API calls: `https://comprehensive-guide-1.preview.emergentagent.com/api/*`
 
 ### Quick Health Check
 ```
@@ -95,7 +95,7 @@ Content-Type: application/json
 
 ### 1. Set Base URL
 ```javascript
-const API_BASE = 'https://media-app-docs.preview.emergentagent.com/api';
+const API_BASE = 'https://comprehensive-guide-1.preview.emergentagent.com/api';
 ```
 
 ### 2. Register & Login
