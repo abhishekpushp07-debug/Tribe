@@ -251,6 +251,14 @@ Build the world's best social media application for Indian college students.
   - **Processing status**: `GET /media/:id/processing` returns `recommended.primary` (best URL), `recommended.fallback`, `recommended.poster`
   - **Schema**: `hlsUrl` field, `variants.hls` with sub-variant details, `processing.hlsReady`, `processing.retryCount`
 
+- **World's Best CPU-Optimized Pipeline v3 (Mar 2026)**:
+  - **Two-Phase Architecture**: Phase 1 (INSTANT ~5s): ultrafast 720p + thumbnail + poster in parallel → READY immediately. Phase 2 (BACKGROUND): quality 360p/480p/720p + HLS — user sees video within 5 seconds
+  - **Parallel ffmpeg**: All independent operations run via Promise.allSettled — 3 jobs in Phase 1, N jobs in Phase 2
+  - **Thread-aware**: Auto-distributes CPU cores across parallel jobs using `os.cpus().length / parallelJobs`
+  - **Smart preset**: ultrafast for instant playback, fast for quality encode
+  - **HLS segment upload**: Parallel batch uploads (10 at a time) for .ts segments
+  - **Processing metrics**: `phase1Ms`, `phase2Ms`, `totalMs`, `cores` tracked for monitoring
+
 ## Backlog
 - Frontend UI development (Posts grid view +30pts — reuse GridItem component)
 - Full 200+ endpoint sub-60ms optimization (P1)
