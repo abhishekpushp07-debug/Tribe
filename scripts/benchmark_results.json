@@ -1,0 +1,697 @@
+{
+  "threshold": 60,
+  "total": 94,
+  "valid": 94,
+  "slow_count": 4,
+  "fast_count": 90,
+  "slow_endpoints": [
+    {
+      "name": "POST /auth/login",
+      "method": "POST",
+      "path": "auth/login",
+      "status": 200,
+      "latency_ms": 294
+    },
+    {
+      "name": "GET /tribes/leaderboard",
+      "method": "GET",
+      "path": "tribes/leaderboard",
+      "status": 200,
+      "latency_ms": 113
+    },
+    {
+      "name": "GET /feed",
+      "method": "GET",
+      "path": "feed",
+      "status": 200,
+      "latency_ms": 79
+    },
+    {
+      "name": "GET /search?q=test",
+      "method": "GET",
+      "path": "search?q=test",
+      "status": 200,
+      "latency_ms": 74
+    }
+  ],
+  "all": [
+    {
+      "name": "POST /auth/login",
+      "method": "POST",
+      "path": "auth/login",
+      "status": 200,
+      "latency_ms": 294
+    },
+    {
+      "name": "POST /auth/login (user2)",
+      "method": "POST",
+      "path": "auth/login",
+      "status": 200,
+      "latency_ms": 50
+    },
+    {
+      "name": "GET /auth/me",
+      "method": "GET",
+      "path": "auth/me",
+      "status": 200,
+      "latency_ms": 3
+    },
+    {
+      "name": "POST /auth/refresh",
+      "method": "POST",
+      "path": "auth/refresh",
+      "status": 200,
+      "latency_ms": 8
+    },
+    {
+      "name": "GET /auth/sessions",
+      "method": "GET",
+      "path": "auth/sessions",
+      "status": 401,
+      "latency_ms": 3
+    },
+    {
+      "name": "GET /healthz",
+      "method": "GET",
+      "path": "healthz",
+      "status": 200,
+      "latency_ms": 1
+    },
+    {
+      "name": "GET /readyz",
+      "method": "GET",
+      "path": "readyz",
+      "status": 200,
+      "latency_ms": 2
+    },
+    {
+      "name": "GET /ops/metrics",
+      "method": "GET",
+      "path": "ops/metrics",
+      "status": 401,
+      "latency_ms": 4
+    },
+    {
+      "name": "GET /cache/stats",
+      "method": "GET",
+      "path": "cache/stats",
+      "status": 401,
+      "latency_ms": 2
+    },
+    {
+      "name": "GET /feed",
+      "method": "GET",
+      "path": "feed",
+      "status": 200,
+      "latency_ms": 79
+    },
+    {
+      "name": "GET /feed/public",
+      "method": "GET",
+      "path": "feed/public",
+      "status": 200,
+      "latency_ms": 10
+    },
+    {
+      "name": "GET /feed/following",
+      "method": "GET",
+      "path": "feed/following",
+      "status": 401,
+      "latency_ms": 2
+    },
+    {
+      "name": "GET /feed/college",
+      "method": "GET",
+      "path": "feed/college",
+      "status": 404,
+      "latency_ms": 1
+    },
+    {
+      "name": "GET /feed/tribe",
+      "method": "GET",
+      "path": "feed/tribe",
+      "status": 404,
+      "latency_ms": 2
+    },
+    {
+      "name": "GET /feed/personalized",
+      "method": "GET",
+      "path": "feed/personalized",
+      "status": 401,
+      "latency_ms": 3
+    },
+    {
+      "name": "GET /feed/stories",
+      "method": "GET",
+      "path": "feed/stories",
+      "status": 401,
+      "latency_ms": 2
+    },
+    {
+      "name": "GET /feed/reels",
+      "method": "GET",
+      "path": "feed/reels",
+      "status": 200,
+      "latency_ms": 16
+    },
+    {
+      "name": "GET /explore",
+      "method": "GET",
+      "path": "explore",
+      "status": 200,
+      "latency_ms": 51
+    },
+    {
+      "name": "GET /trending",
+      "method": "GET",
+      "path": "trending",
+      "status": 404,
+      "latency_ms": 3
+    },
+    {
+      "name": "POST /content/posts",
+      "method": "POST",
+      "path": "content/posts",
+      "status": 401,
+      "latency_ms": 4
+    },
+    {
+      "name": "GET /content/drafts",
+      "method": "GET",
+      "path": "content/drafts",
+      "status": 401,
+      "latency_ms": 3
+    },
+    {
+      "name": "GET /content/scheduled",
+      "method": "GET",
+      "path": "content/scheduled",
+      "status": 401,
+      "latency_ms": 2
+    },
+    {
+      "name": "POST /follow/:userId",
+      "method": "POST",
+      "path": "follow/e7df40d3-27d0-405a-91c6-a984608c43a5",
+      "status": 401,
+      "latency_ms": 3
+    },
+    {
+      "name": "DELETE /follow/:userId",
+      "method": "DELETE",
+      "path": "follow/e7df40d3-27d0-405a-91c6-a984608c43a5",
+      "status": 401,
+      "latency_ms": 5
+    },
+    {
+      "name": "GET /users/:id",
+      "method": "GET",
+      "path": "users/e7df40d3-27d0-405a-91c6-a984608c43a5",
+      "status": 200,
+      "latency_ms": 3
+    },
+    {
+      "name": "GET /users/:id/posts",
+      "method": "GET",
+      "path": "users/e7df40d3-27d0-405a-91c6-a984608c43a5/posts",
+      "status": 200,
+      "latency_ms": 33
+    },
+    {
+      "name": "GET /users/:id/followers",
+      "method": "GET",
+      "path": "users/514164c7-c889-4edf-b394-5a0985f4bc5a/followers",
+      "status": 200,
+      "latency_ms": 13
+    },
+    {
+      "name": "GET /users/:id/following",
+      "method": "GET",
+      "path": "users/514164c7-c889-4edf-b394-5a0985f4bc5a/following",
+      "status": 200,
+      "latency_ms": 17
+    },
+    {
+      "name": "GET /me/settings",
+      "method": "GET",
+      "path": "me/settings",
+      "status": 401,
+      "latency_ms": 2
+    },
+    {
+      "name": "GET /me/privacy",
+      "method": "GET",
+      "path": "me/privacy",
+      "status": 401,
+      "latency_ms": 2
+    },
+    {
+      "name": "GET /me/blocks",
+      "method": "GET",
+      "path": "me/blocks",
+      "status": 401,
+      "latency_ms": 6
+    },
+    {
+      "name": "GET /me/tribe",
+      "method": "GET",
+      "path": "me/tribe",
+      "status": 401,
+      "latency_ms": 6
+    },
+    {
+      "name": "GET /me/pages",
+      "method": "GET",
+      "path": "me/pages",
+      "status": 401,
+      "latency_ms": 16
+    },
+    {
+      "name": "GET /me/stories",
+      "method": "GET",
+      "path": "me/stories",
+      "status": 404,
+      "latency_ms": 1
+    },
+    {
+      "name": "GET /me/reels",
+      "method": "GET",
+      "path": "me/reels",
+      "status": 404,
+      "latency_ms": 5
+    },
+    {
+      "name": "GET /me/events",
+      "method": "GET",
+      "path": "me/events",
+      "status": 401,
+      "latency_ms": 3
+    },
+    {
+      "name": "GET /me/resources",
+      "method": "GET",
+      "path": "me/resources",
+      "status": 401,
+      "latency_ms": 3
+    },
+    {
+      "name": "POST /stories",
+      "method": "POST",
+      "path": "stories",
+      "status": 401,
+      "latency_ms": 2
+    },
+    {
+      "name": "GET /stories/rail",
+      "method": "GET",
+      "path": "stories/rail",
+      "status": 404,
+      "latency_ms": 4
+    },
+    {
+      "name": "GET /users/:id/stories",
+      "method": "GET",
+      "path": "users/514164c7-c889-4edf-b394-5a0985f4bc5a/stories",
+      "status": 200,
+      "latency_ms": 20
+    },
+    {
+      "name": "GET /me/stories/archive",
+      "method": "GET",
+      "path": "me/stories/archive",
+      "status": 401,
+      "latency_ms": 2
+    },
+    {
+      "name": "GET /me/stories/insights",
+      "method": "GET",
+      "path": "me/stories/insights",
+      "status": 401,
+      "latency_ms": 2
+    },
+    {
+      "name": "GET /me/close-friends",
+      "method": "GET",
+      "path": "me/close-friends",
+      "status": 401,
+      "latency_ms": 4
+    },
+    {
+      "name": "GET /me/highlights",
+      "method": "GET",
+      "path": "me/highlights",
+      "status": 404,
+      "latency_ms": 1
+    },
+    {
+      "name": "GET /me/story-settings",
+      "method": "GET",
+      "path": "me/story-settings",
+      "status": 401,
+      "latency_ms": 2
+    },
+    {
+      "name": "POST /reels",
+      "method": "POST",
+      "path": "reels",
+      "status": 401,
+      "latency_ms": 3
+    },
+    {
+      "name": "GET /reels/feed",
+      "method": "GET",
+      "path": "reels/feed",
+      "status": 401,
+      "latency_ms": 2
+    },
+    {
+      "name": "GET /reels/following",
+      "method": "GET",
+      "path": "reels/following",
+      "status": 401,
+      "latency_ms": 2
+    },
+    {
+      "name": "GET /reels/trending",
+      "method": "GET",
+      "path": "reels/trending",
+      "status": 401,
+      "latency_ms": 1
+    },
+    {
+      "name": "GET /me/reels (saved)",
+      "method": "GET",
+      "path": "me/reels",
+      "status": 404,
+      "latency_ms": 1
+    },
+    {
+      "name": "GET /users/:id/reels",
+      "method": "GET",
+      "path": "users/514164c7-c889-4edf-b394-5a0985f4bc5a/reels",
+      "status": 200,
+      "latency_ms": 15
+    },
+    {
+      "name": "GET /search?q=test",
+      "method": "GET",
+      "path": "search?q=test",
+      "status": 200,
+      "latency_ms": 74
+    },
+    {
+      "name": "GET /search?q=test&type=users",
+      "method": "GET",
+      "path": "search?q=test&type=users",
+      "status": 200,
+      "latency_ms": 3
+    },
+    {
+      "name": "GET /search?q=test&type=posts",
+      "method": "GET",
+      "path": "search?q=test&type=posts",
+      "status": 200,
+      "latency_ms": 51
+    },
+    {
+      "name": "GET /search/autocomplete",
+      "method": "GET",
+      "path": "search/autocomplete?q=te",
+      "status": 200,
+      "latency_ms": 7
+    },
+    {
+      "name": "GET /search/recent",
+      "method": "GET",
+      "path": "search/recent",
+      "status": 401,
+      "latency_ms": 3
+    },
+    {
+      "name": "GET /hashtags/trending",
+      "method": "GET",
+      "path": "hashtags/trending",
+      "status": 200,
+      "latency_ms": 3
+    },
+    {
+      "name": "GET /hashtags/:tag",
+      "method": "GET",
+      "path": "hashtags/test",
+      "status": 200,
+      "latency_ms": 6
+    },
+    {
+      "name": "GET /notifications",
+      "method": "GET",
+      "path": "notifications",
+      "status": 401,
+      "latency_ms": 3
+    },
+    {
+      "name": "GET /notifications/unread-count",
+      "method": "GET",
+      "path": "notifications/unread-count",
+      "status": 401,
+      "latency_ms": 2
+    },
+    {
+      "name": "GET /notifications/preferences",
+      "method": "GET",
+      "path": "notifications/preferences",
+      "status": 401,
+      "latency_ms": 3
+    },
+    {
+      "name": "GET /tribes",
+      "method": "GET",
+      "path": "tribes",
+      "status": 200,
+      "latency_ms": 6
+    },
+    {
+      "name": "GET /tribes/leaderboard",
+      "method": "GET",
+      "path": "tribes/leaderboard",
+      "status": 200,
+      "latency_ms": 113
+    },
+    {
+      "name": "GET /tribes/standings",
+      "method": "GET",
+      "path": "tribes/standings",
+      "status": 404,
+      "latency_ms": 2
+    },
+    {
+      "name": "GET /tribe-contests",
+      "method": "GET",
+      "path": "tribe-contests",
+      "status": 200,
+      "latency_ms": 24
+    },
+    {
+      "name": "GET /tribe-contests/seasons",
+      "method": "GET",
+      "path": "tribe-contests/seasons",
+      "status": 200,
+      "latency_ms": 5
+    },
+    {
+      "name": "GET /tribe-rivalries",
+      "method": "GET",
+      "path": "tribe-rivalries",
+      "status": 200,
+      "latency_ms": 8
+    },
+    {
+      "name": "GET /pages",
+      "method": "GET",
+      "path": "pages",
+      "status": 200,
+      "latency_ms": 5
+    },
+    {
+      "name": "POST /pages",
+      "method": "POST",
+      "path": "pages",
+      "status": 401,
+      "latency_ms": 2
+    },
+    {
+      "name": "GET /events",
+      "method": "GET",
+      "path": "events",
+      "status": 404,
+      "latency_ms": 1
+    },
+    {
+      "name": "GET /me/events",
+      "method": "GET",
+      "path": "me/events",
+      "status": 401,
+      "latency_ms": 2
+    },
+    {
+      "name": "GET /board/notices",
+      "method": "GET",
+      "path": "board/notices",
+      "status": 404,
+      "latency_ms": 2
+    },
+    {
+      "name": "GET /colleges",
+      "method": "GET",
+      "path": "colleges",
+      "status": 404,
+      "latency_ms": 2
+    },
+    {
+      "name": "GET /resources",
+      "method": "GET",
+      "path": "resources",
+      "status": 404,
+      "latency_ms": 1
+    },
+    {
+      "name": "GET /resources/search",
+      "method": "GET",
+      "path": "resources/search?q=test",
+      "status": 200,
+      "latency_ms": 19
+    },
+    {
+      "name": "GET /analytics/overview",
+      "method": "GET",
+      "path": "analytics/overview",
+      "status": 401,
+      "latency_ms": 6
+    },
+    {
+      "name": "GET /analytics/content",
+      "method": "GET",
+      "path": "analytics/content",
+      "status": 401,
+      "latency_ms": 2
+    },
+    {
+      "name": "GET /analytics/audience",
+      "method": "GET",
+      "path": "analytics/audience",
+      "status": 401,
+      "latency_ms": 2
+    },
+    {
+      "name": "GET /analytics/reach",
+      "method": "GET",
+      "path": "analytics/reach",
+      "status": 401,
+      "latency_ms": 2
+    },
+    {
+      "name": "GET /analytics/stories",
+      "method": "GET",
+      "path": "analytics/stories",
+      "status": 401,
+      "latency_ms": 2
+    },
+    {
+      "name": "GET /analytics/reels",
+      "method": "GET",
+      "path": "analytics/reels",
+      "status": 401,
+      "latency_ms": 2
+    },
+    {
+      "name": "GET /follow-requests",
+      "method": "GET",
+      "path": "follow-requests",
+      "status": 404,
+      "latency_ms": 1
+    },
+    {
+      "name": "GET /quality/dashboard",
+      "method": "GET",
+      "path": "quality/dashboard",
+      "status": 401,
+      "latency_ms": 4
+    },
+    {
+      "name": "GET /recommendations/users",
+      "method": "GET",
+      "path": "recommendations/users",
+      "status": 404,
+      "latency_ms": 2
+    },
+    {
+      "name": "GET /recommendations/content",
+      "method": "GET",
+      "path": "recommendations/content",
+      "status": 404,
+      "latency_ms": 1
+    },
+    {
+      "name": "GET /activity/status",
+      "method": "GET",
+      "path": "activity/status",
+      "status": 404,
+      "latency_ms": 2
+    },
+    {
+      "name": "GET /suggestions/users",
+      "method": "GET",
+      "path": "suggestions/users",
+      "status": 404,
+      "latency_ms": 2
+    },
+    {
+      "name": "GET /governance/proposals",
+      "method": "GET",
+      "path": "governance/proposals",
+      "status": 404,
+      "latency_ms": 2
+    },
+    {
+      "name": "POST /media/upload-init",
+      "method": "POST",
+      "path": "media/upload-init",
+      "status": 401,
+      "latency_ms": 4
+    },
+    {
+      "name": "GET /admin/abuse-dashboard",
+      "method": "GET",
+      "path": "admin/abuse-dashboard",
+      "status": 401,
+      "latency_ms": 3
+    },
+    {
+      "name": "GET /admin/abuse-log",
+      "method": "GET",
+      "path": "admin/abuse-log",
+      "status": 401,
+      "latency_ms": 1
+    },
+    {
+      "name": "GET /moderation/config",
+      "method": "GET",
+      "path": "moderation/config",
+      "status": 401,
+      "latency_ms": 1
+    },
+    {
+      "name": "GET /authenticity/stats",
+      "method": "GET",
+      "path": "authenticity/stats",
+      "status": 404,
+      "latency_ms": 1
+    },
+    {
+      "name": "GET /transcode/queue",
+      "method": "GET",
+      "path": "transcode/queue",
+      "status": 401,
+      "latency_ms": 2
+    }
+  ]
+}
