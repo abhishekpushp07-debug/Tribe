@@ -1,0 +1,72 @@
+{
+  "summary": {
+    "total_tests": 25,
+    "passed_tests": 6,
+    "success_rate": 24.0,
+    "total_time_seconds": 4.748548746109009,
+    "base_url": "https://upload-overhaul.preview.emergentagent.com"
+  },
+  "results": [
+    {
+      "test": "Admin Login",
+      "success": true,
+      "status_code": 200,
+      "response_time_ms": 316.69,
+      "details": "Admin user ID: 514164c7-c889-4edf-b394-5a0985f4bc5a",
+      "timestamp": "2026-03-14T06:32:22.348950",
+      "headers": {
+        "x-request-id": "0dfd4fe2-98b9-471e-b544-defe05f6ed00",
+        "x-latency-ms": "47"
+      }
+    },
+    {
+      "test": "User Login",
+      "success": true,
+      "status_code": 200,
+      "response_time_ms": 201.31,
+      "details": "User2 ID: e7df40d3-27d0-405a-91c6-a984608c43a5",
+      "timestamp": "2026-03-14T06:32:22.551022",
+      "headers": {
+        "x-request-id": "6e356d6e-4721-479f-83bc-22d4e98aef60",
+        "x-latency-ms": "46"
+      }
+    },
+    {
+      "test": "GET /auth/me",
+      "success": false,
+      "status_code": 200,
+      "response_time_ms": 161.07,
+      "details": "",
+      "timestamp": "2026-03-14T06:32:22.712665",
+      "headers": {
+        "x-request-id": "0a05a2a4-85a8-4302-9319-4322dede9eb3",
+        "x-latency-ms": "4"
+      }
+    },
+    {
+      "test": "GET /auth/sessions",
+      "success": false,
+      "status_code": 200,
+      "response_time_ms": 130.49,
+      "details": "",
+      "timestamp": "2026-03-14T06:32:22.843947",
+      "headers": {
+        "x-request-id": "a3ef58ff-5fa0-4d56-a416-0736c3895aae",
+        "x-latency-ms": "4"
+      }
+    },
+    {
+      "test": "PUT /auth/pin",
+      "success": true,
+      "status_code": 200,
+      "response_time_ms": 242.83,
+      "details": "",
+      "timestamp": "2026-03-14T06:32:23.087393",
+      "headers": {
+        "x-request-id": "49510501-a1aa-4c2c-b129-f0610c0cea1a",
+        "x-latency-ms": "91"
+      }
+    },
+    {
+      "test": "GET /ops/health",
+      "success": 
