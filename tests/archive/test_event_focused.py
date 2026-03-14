@@ -6,7 +6,7 @@ import time
 
 def test_event_creation():
     """Test event creation with proper fields and XSS sanitization"""
-    base_url = "https://comprehensive-guide-1.preview.emergentagent.com/api"
+    base_url = "https://upload-overhaul.preview.emergentagent.com/api"
     
     # Register and onboard a user
     timestamp = int(time.time())

@@ -6,14 +6,14 @@
 
 ### Base URL
 ```
-https://comprehensive-guide-1.preview.emergentagent.com
+https://upload-overhaul.preview.emergentagent.com
 ```
 
 All API endpoints are prefixed with `/api`. Example:
 ```
-GET  https://comprehensive-guide-1.preview.emergentagent.com/api/healthz
-GET  https://comprehensive-guide-1.preview.emergentagent.com/api/tribes
-POST https://comprehensive-guide-1.preview.emergentagent.com/api/auth/register
+GET  https://upload-overhaul.preview.emergentagent.com/api/healthz
+GET  https://upload-overhaul.preview.emergentagent.com/api/tribes
+POST https://upload-overhaul.preview.emergentagent.com/api/auth/register
 ```
 
 ### Health Check (confirmed working right now):
@@ -70,7 +70,7 @@ Additionally: `/app/memory/android_agent_handoff.md` — Full API reference (1,2
 
 **Backend is deployed, running, and fully functional.** Do not rebuild it.
 
-Base URL: `https://comprehensive-guide-1.preview.emergentagent.com`
+Base URL: `https://upload-overhaul.preview.emergentagent.com`
 
 Keep it configurable in your codebase (env variable / build config), but you have a working backend RIGHT NOW to build against.
 

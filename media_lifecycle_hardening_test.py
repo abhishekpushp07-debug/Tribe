@@ -18,7 +18,7 @@ import sys
 import os
 
 # Configuration
-BASE_URL = "https://comprehensive-guide-1.preview.emergentagent.com"
+BASE_URL = "https://upload-overhaul.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api"
 
 # Admin credentials

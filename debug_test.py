@@ -8,7 +8,7 @@ import asyncio
 from datetime import datetime
 import httpx
 
-BASE_URL = "https://comprehensive-guide-1.preview.emergentagent.com/api"
+BASE_URL = "https://upload-overhaul.preview.emergentagent.com/api"
 TEST_USER = {"phone": "7777099001", "pin": "1234"}
 
 async def debug_issues():

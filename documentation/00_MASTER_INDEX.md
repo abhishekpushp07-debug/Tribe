@@ -70,7 +70,7 @@ Start with → `23_TESTING_GUIDE.md` → `21_ERROR_CATALOG.md` → feature docs 
 ## Base URL
 
 ```
-Production: https://comprehensive-guide-1.preview.emergentagent.com/api
+Production: https://upload-overhaul.preview.emergentagent.com/api
 ```
 
 ## Authentication

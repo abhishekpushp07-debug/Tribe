@@ -9,7 +9,7 @@ import requests
 import json
 import time
 
-API_BASE_URL = "https://comprehensive-guide-1.preview.emergentagent.com/api"
+API_BASE_URL = "https://upload-overhaul.preview.emergentagent.com/api"
 
 def single_user_b2_test():
     """Test B2 functionality with single authenticated user"""

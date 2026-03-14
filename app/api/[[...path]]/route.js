@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getDb } from '@/lib/db'
+import { getDb, getAnalyticsDb } from '@/lib/db'
 import { handleAuth } from '@/lib/handlers/auth'
 import { handleOnboarding } from '@/lib/handlers/onboarding'
 import { handleContent } from '@/lib/handlers/content'
@@ -514,7 +514,9 @@ async function handleRouteCore(request, { params }, reqCtx) {
       result = await handleSearch(path, method, request, db)
       if (!result) result = await handleDiscovery(path, method, request, db)
     } else if (path[0] === 'analytics') {
-      result = await handleAnalytics(path, method, request, db)
+      // Analytics uses read replica for heavy read queries
+      const aDb = await getAnalyticsDb()
+      result = await handleAnalytics(path, method, request, aDb)
     } else if (path[0] === 'transcode') {
       result = await handleTranscode(path, method, request, db)
     } else if (path[0] === 'follow-requests') {

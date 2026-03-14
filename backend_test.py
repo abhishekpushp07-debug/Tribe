@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Backend Test Suite for 6 Major Features
-Tests the following features at https://comprehensive-guide-1.preview.emergentagent.com:
+Tests the following features at https://upload-overhaul.preview.emergentagent.com:
 
 1. Feed Visibility Filtering (HOUSE_ONLY / COLLEGE_ONLY)
 2. Push Notification Stream (WebSocket/SSE)
@@ -21,7 +21,7 @@ import time
 import threading
 from typing import Dict, Any, Optional
 
-BASE_URL = "https://comprehensive-guide-1.preview.emergentagent.com/api"
+BASE_URL = "https://upload-overhaul.preview.emergentagent.com/api"
 
 class BackendTester:
     def __init__(self):
