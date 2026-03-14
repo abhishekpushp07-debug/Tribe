@@ -1,0 +1,148 @@
+{
+  "test_suite": "Comprehensive Regression Test",
+  "timestamp": "2026-03-14 04:37:47",
+  "base_url": "https://upload-overhaul.preview.emergentagent.com/api",
+  "summary": {
+    "total_tests": 27,
+    "passed": 26,
+    "failed": 1,
+    "success_rate": 96.29629629629629
+  },
+  "results": [
+    {
+      "test": "User 1 Login",
+      "passed": true,
+      "details": "Token obtained, User ID: 514164c7-c889-4edf-b394-5a0985f4bc5a"
+    },
+    {
+      "test": "User 2 Login",
+      "passed": true,
+      "details": "Token obtained, User ID: e7df40d3-27d0-405a-91c6-a984608c43a5"
+    },
+    {
+      "test": "Liveness Probe",
+      "passed": true,
+      "details": "Uptime: 384s"
+    },
+    {
+      "test": "Readiness Probe",
+      "passed": true,
+      "details": "Status: healthy, Mongo: ok, Redis: ok"
+    },
+    {
+      "test": "Cache Stats Endpoint",
+      "passed": true,
+      "details": "Redis: connected, CB: CLOSED, Hits: 5"
+    },
+    {
+      "test": "Feed Cache Behavior",
+      "passed": true,
+      "details": "Feed endpoint accessible for cache testing"
+    },
+    {
+      "test": "Post Creation for Cache Test",
+      "passed": true,
+      "details": "Post ID: None"
+    },
+    {
+      "test": "Cache Invalidation Triggered",
+      "passed": true,
+      "details": "Invalidations count: 12"
+    },
+    {
+      "test": "Metrics Endpoint",
+      "passed": true,
+      "details": "Total requests: 51, Latency data: 6 fields, Status codes: 4"
+    },
+    {
+      "test": "Analytics Overview",
+      "passed": true,
+      "details": "Analytics data received: 5 fields"
+    },
+    {
+      "test": "Anonymous Feed",
+      "passed": true,
+      "details": "Retrieved 5 items"
+    },
+    {
+      "test": "Authenticated Feed",
+      "passed": true,
+      "details": "Retrieved 5 items"
+    },
+    {
+      "test": "Public Feed Endpoint",
+      "passed": true,
+      "details": "Retrieved 20 items"
+    },
+    {
+      "test": "Following Feed",
+      "passed": true,
+      "details": "Retrieved 20 items"
+    },
+    {
+      "test": "Create Post",
+      "passed": true,
+      "details": "Post ID: None"
+    },
+    {
+      "test": "Create Post for Social Test",
+      "passed": true,
+      "details": "Post ID: None"
+    },
+    {
+      "test": "Follow User",
+      "passed": true,
+      "details": "Follow successful"
+    },
+    {
+      "test": "Tribes List",
+      "passed": true,
+      "details": "Retrieved 21 tribes"
+    },
+    {
+      "test": "Stories Feed",
+      "passed": true,
+      "details": "Stories feed accessible"
+    },
+    {
+      "test": "Create Story",
+      "passed": false,
+      "details": "Status: 400"
+    },
+    {
+      "test": "Reels Feed",
+      "passed": true,
+      "details": "Reels feed accessible"
+    },
+    {
+      "test": "Search Endpoint",
+      "passed": true,
+      "details": "Search accessible"
+    },
+    {
+      "test": "Notifications List",
+      "passed": true,
+      "details": "Notifications accessible"
+    },
+    {
+      "test": "Media Upload Init",
+      "passed": true,
+      "details": "Session ID: bb9584d3-dbc9-4ef5-812a-8c2d22f57033"
+    },
+    {
+      "test": "Invalid Token Handling",
+      "passed": true,
+      "details": "401 returned for invalid token"
+    },
+    {
+      "test": "404 Route Handling",
+      "passed": true,
+      "details": "404 returned for invalid route"
+    },
+    {
+      "test": "Missing Fields Handling",
+      "passed": true,
+      "details": "400 returned for missing fields"
+    }
+  ]
+}
