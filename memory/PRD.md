@@ -174,6 +174,25 @@ Build the world's best social media application for Indian college students.
   - Backend: Added `profilePicUrl` to user snippet, profile update endpoint, entity-snippets
   - Frontend testing: 100% pass rate
 
+- **WebSocket 2-Way Real-Time Push (Mar 2026)**:
+  - Standalone WebSocket server on port 3001 (`lib/websocket/server.js`, 366 lines)
+  - Token-based auth (same session tokens as REST API)
+  - Redis Pub/Sub for cross-process broadcast with in-memory fallback
+  - 2-way events: likes, comments, follows, typing indicators, presence tracking, read receipts
+  - Heartbeat + dead connection cleanup
+  - `pushWsEvent()` helper wired into social handlers (like, comment, follow)
+  - GET /api/ws/stats endpoint for admin monitoring
+  - Supervisor-managed with auto-restart
+
+- **Route.js Full Registry Completion (Mar 2026)**:
+  - route.js: 706 → **218 lines** (69% reduction) — pure middleware only
+  - All routing → `lib/route-dispatch.js` (278 lines) with switch-based dispatch
+  - Ops/health/cache/moderation → `lib/handlers/ops.js` (147 lines)
+  - Zero inline routing logic remains in route.js
+  - Full regression: 93% pass rate (40/43 tests)
+
+**🔒 BACKEND FROZEN after this point — no more backend changes**
+
 ## Backlog
 - Frontend UI development
 - WebSocket real-time push notifications (P2)
