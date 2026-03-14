@@ -259,6 +259,15 @@ Build the world's best social media application for Indian college students.
   - **HLS segment upload**: Parallel batch uploads (10 at a time) for .ts segments
   - **Processing metrics**: `phase1Ms`, `phase2Ms`, `totalMs`, `cores` tracked for monitoring
 
+- **MPEG-DASH Streaming Support (Mar 2026)**:
+  - **Dual adaptive streaming**: Both HLS (.m3u8) and DASH (.mpd) generated for videos >10MB
+  - **DASH generation**: Single-pass ffmpeg multi-representation DASH with init segments (.m4s) and media segments
+  - **Full browser coverage**: DASH for Chrome/Edge (via dash.js/MSE), HLS for Safari (native) — no polyfill needed
+  - **Manifest rewriting**: DASH .mpd manifests rewritten with CDN URLs after upload
+  - **Schema**: `dashUrl` field, `variants.dash` with representations, `processing.dashReady`
+  - **Processing status**: `recommended: { dash, hls, mp4, poster }` — frontend picks per browser capability
+  - **enrichPosts**: Video media includes `dashUrl` alongside `hlsUrl` for frontend selection
+
 ## Backlog
 - Frontend UI development (Posts grid view +30pts — reuse GridItem component)
 - Full 200+ endpoint sub-60ms optimization (P1)
