@@ -1,569 +1,680 @@
 #!/usr/bin/env python3
 """
-BATCH 5: TRIBES + TRIBE CONTESTS + BOARD NOTICES COMPREHENSIVE TEST
-Testing 55 endpoints total across tribes (15), tribe-contests (25), and board-notices (15)
-Base URL: https://upload-overhaul.preview.emergentagent.com
-Auth: Two users - Admin (7777099001) and Regular (7777099002), PIN: 1234
-CRITICAL: DO NOT call /auth/logout
+BATCH 6: Events + Pages Backend Testing
+Tests all 45 endpoints as specified in review request.
 """
 
 import requests
 import json
 import time
-from datetime import datetime
-import sys
+from datetime import datetime, timedelta
 
-# Base configuration
 BASE_URL = "https://upload-overhaul.preview.emergentagent.com"
-API_BASE = f"{BASE_URL}/api"
 
-# Test credentials - Admin and Regular user
-ADMIN_CREDS = {"phone": "7777099001", "pin": "1234"}
-USER_CREDS = {"phone": "7777099002", "pin": "1234"}
-
-def get_fresh_token(creds):
-    """Get a fresh authentication token"""
-    try:
-        response = requests.post(f"{API_BASE}/auth/login", 
-                               json=creds, 
-                               headers={"Content-Type": "application/json"},
-                               timeout=30)
-        if response.status_code == 200:
-            data = response.json()
-            return data.get("token"), data.get("user", {}).get("id")
-    except Exception as e:
-        print(f"❌ Login failed: {e}")
-    return None, None
-
-def make_request(method, endpoint, token=None, json_data=None):
-    """Make authenticated request and track response time"""
-    headers = {"Content-Type": "application/json"}
-    if token:
-        headers["Authorization"] = f"Bearer {token}"
-    
-    start_time = time.time()
-    try:
-        response = requests.request(
-            method, 
-            f"{API_BASE}{endpoint}", 
-            headers=headers,
-            json=json_data,
-            timeout=30
-        )
-        response_time = time.time() - start_time
-        return response, response_time
-    except Exception as e:
-        response_time = time.time() - start_time
-        print(f"❌ Request failed: {e}")
-        return None, response_time
-
-def test_endpoint(name, method, endpoint, token=None, json_data=None, expected_status=[200]):
-    """Test a single endpoint and return detailed result"""
-    response, rt = make_request(method, endpoint, token, json_data)
-    
-    success = response and response.status_code in expected_status
-    status_code = response.status_code if response else 0
-    
-    # Flag slow responses (>500ms)
-    slow_response = rt > 0.5
-    
-    status_icon = "✅" if success else "❌"
-    speed_icon = "🐌" if slow_response else ""
-    
-    print(f"{status_icon}{speed_icon} {name}: {status_code} ({round(rt*1000, 2)}ms)")
-    
-    result_data = None
-    if response and response.status_code in [200, 201]:
-        try:
-            result_data = response.json()
-        except:
-            pass
-    
-    return {
-        "success": success,
-        "status_code": status_code,
-        "response_time": rt,
-        "data": result_data,
-        "slow_response": slow_response
-    }
-
-def main():
-    print("🔥 BATCH 5: TRIBES + TRIBE CONTESTS + BOARD NOTICES TEST")
-    print(f"📡 API Base: {API_BASE}")
-    print("📋 Testing 55 endpoints total")
-    
-    # Get authentication tokens 
-    print("\n🔐 Authenticating users...")
-    token1, user1_id = get_fresh_token(ADMIN_CREDS)  # Admin token
-    token2, user2_id = get_fresh_token(USER_CREDS)   # Regular user token
-    
-    if not token1 or not token2:
-        print("❌ Failed to get tokens - aborting test")
-        return False
-    
-    print(f"✅ Admin token obtained for user {user1_id}")
-    print(f"✅ Regular token obtained for user {user2_id}")
-    
-    # Track test results
-    results = []
-    test_count = 0
-    
-    # ========== TRIBES ENDPOINTS (15 total) ==========
-    print("\n🏆 === TRIBES TESTING (15 endpoints) ===")
-    
-    # 1. GET /tribes → list all tribes (token1)
-    test_count += 1
-    result = test_endpoint("1. List all tribes", "GET", "/tribes", token1)
-    results.append(result)
-    
-    # Store first tribe for further testing
-    first_tribe_id = None
-    if result["data"] and result["data"].get("items"):
-        tribes = result["data"]["items"]
-        if tribes:
-            first_tribe_id = tribes[0].get("id") or tribes[0].get("tribeCode")
-    
-    # 2. GET /tribes/leaderboard → tribe leaderboard
-    test_count += 1
-    result = test_endpoint("2. Tribe leaderboard", "GET", "/tribes/leaderboard", token1)
-    results.append(result)
-    
-    # 3. GET /tribes/standings/current → current standings  
-    test_count += 1
-    result = test_endpoint("3. Current standings", "GET", "/tribes/standings/current", token1)
-    results.append(result)
-    
-    # 4. GET /tribes/{tribeId} → tribe detail (pick first tribe from #1)
-    if first_tribe_id:
-        test_count += 1
-        result = test_endpoint("4. Tribe detail", "GET", f"/tribes/{first_tribe_id}", token1)
-        results.append(result)
-    
-    # 5. GET /tribes/{tribeId}/members → tribe members
-    if first_tribe_id:
-        test_count += 1
-        result = test_endpoint("5. Tribe members", "GET", f"/tribes/{first_tribe_id}/members", token1)
-        results.append(result)
-    
-    # 6. GET /tribes/{tribeId}/feed → tribe feed
-    if first_tribe_id:
-        test_count += 1
-        result = test_endpoint("6. Tribe feed", "GET", f"/tribes/{first_tribe_id}/feed", token1)
-        results.append(result)
-    
-    # 7. GET /tribes/{tribeId}/stats → tribe stats
-    if first_tribe_id:
-        test_count += 1
-        result = test_endpoint("7. Tribe stats", "GET", f"/tribes/{first_tribe_id}/stats", token1)
-        results.append(result)
-    
-    # 8. GET /tribes/{tribeId}/salutes → tribe salute history
-    if first_tribe_id:
-        test_count += 1
-        result = test_endpoint("8. Tribe salutes", "GET", f"/tribes/{first_tribe_id}/salutes", token1)
-        results.append(result)
-    
-    # 9. GET /users/{userId}/tribe → user's tribe info
-    test_count += 1
-    result = test_endpoint("9. User's tribe info", "GET", f"/users/{user1_id}/tribe", token1)
-    results.append(result)
-    
-    # 10. GET /me/tribe → current user's tribe (token1)
-    test_count += 1
-    result = test_endpoint("10. My tribe", "GET", "/me/tribe", token1)
-    results.append(result)
-    
-    # 11. GET /admin/tribes → admin create/manage tribe (token1 admin) - using GET since POST requires body
-    test_count += 1 
-    result = test_endpoint("11. Admin tribes (GET)", "GET", "/admin/tribes", token1, expected_status=[200, 404])
-    results.append(result)
-    
-    # 12. GET /admin/tribe-seasons → admin seasons list (token1)
-    test_count += 1
-    result = test_endpoint("12. Admin seasons", "GET", "/admin/tribe-seasons", token1)
-    results.append(result)
-    
-    # 13. GET /admin/tribe-awards → admin awards (token1)
-    test_count += 1
-    result = test_endpoint("13. Admin awards", "GET", "/admin/tribe-awards", token1, expected_status=[200, 404])
-    results.append(result)
-    
-    # 14. POST /admin/tribe-rivalries → create rivalry (token1 admin)
-    test_count += 1
-    rivalry_data = {
-        "tribe1Id": first_tribe_id or "TRIBE1",
-        "tribe2Id": "TRIBE2", 
-        "title": "Batch 5 Test Rivalry"
-    }
-    result = test_endpoint("14. Create rivalry", "POST", "/admin/tribe-rivalries", token1, 
-                         rivalry_data, [200, 201, 400, 409])
-    results.append(result)
-    
-    # 15. GET /tribe-rivalries → list rivalries
-    test_count += 1
-    result = test_endpoint("15. List rivalries", "GET", "/tribe-rivalries", token1)
-    results.append(result)
-    
-    # ========== TRIBE CONTESTS ENDPOINTS (25 total, endpoints 16-40) ==========
-    print("\n🏁 === TRIBE CONTESTS TESTING (25 endpoints) ===")
-    
-    # 16. GET /tribe-contests → list active contests
-    test_count += 1
-    result = test_endpoint("16. List contests", "GET", "/tribe-contests", token1)
-    results.append(result)
-    
-    # 17. GET /tribe-contests/live-feed → live contest feed  
-    test_count += 1
-    result = test_endpoint("17. Live feed", "GET", "/tribe-contests/live-feed", token1, expected_status=[200, 404])
-    results.append(result)
-    
-    # 18. GET /tribe-contests/seasons → season list
-    test_count += 1
-    result = test_endpoint("18. Contest seasons", "GET", "/tribe-contests/seasons", token1)
-    results.append(result)
-    
-    # Get season for later use
-    season_id = None
-    if result["data"] and result["data"].get("items"):
-        seasons = result["data"]["items"]
-        if seasons:
-            season_id = seasons[0].get("id")
-    
-    # 19. POST /admin/tribe-contests → create contest (token1 admin)
-    test_count += 1
-    contest_data = {
-        "title": "Batch5 Test Contest",
-        "type": "CONTENT", 
-        "description": "Test contest for batch 5",
-        "startDate": "2026-03-15",
-        "endDate": "2026-03-20",
-        "entryType": "POST"
-    }
-    # Add seasonId if available
-    if season_id:
-        contest_data["seasonId"] = season_id
-    
-    result = test_endpoint("19. Create contest", "POST", "/admin/tribe-contests", token1, 
-                         contest_data, [200, 201, 400])
-    results.append(result)
-    
-    # Store contest ID for further testing
-    contest_id = None
-    if result["data"] and result["data"].get("contest"):
-        contest_id = result["data"]["contest"].get("id")
-    elif result["data"] and result["data"].get("id"):
-        contest_id = result["data"]["id"]
-    
-    # 20. GET /admin/tribe-contests → admin contest list (token1)
-    test_count += 1
-    result = test_endpoint("20. Admin contests list", "GET", "/admin/tribe-contests", token1)
-    results.append(result)
-    
-    # 21. GET /admin/tribe-contests/{contestId} → admin contest detail
-    if contest_id:
-        test_count += 1
-        result = test_endpoint("21. Admin contest detail", "GET", f"/admin/tribe-contests/{contest_id}", token1)
-        results.append(result)
-    
-    # 22. POST /admin/tribe-contests/{contestId}/publish → publish contest (token1)
-    if contest_id:
-        test_count += 1
-        result = test_endpoint("22. Publish contest", "POST", f"/admin/tribe-contests/{contest_id}/publish", 
-                             token1, {}, [200, 201, 400])
-        results.append(result)
-    
-    # 23. POST /admin/tribe-contests/{contestId}/open-entries → open entries (token1)
-    if contest_id:
-        test_count += 1
-        result = test_endpoint("23. Open entries", "POST", f"/admin/tribe-contests/{contest_id}/open-entries", 
-                             token1, {}, [200, 201, 400])
-        results.append(result)
-    
-    # Need to create a post first for contest entry
-    print("\n📝 Creating test post for contest entry...")
-    post_data = {"caption": "Batch 5 test post for contest", "kind": "POST"}
-    post_result = test_endpoint("Create test post", "POST", "/content/posts", token2, post_data, [200, 201])
-    
-    post_id = None
-    if post_result["data"] and post_result["data"].get("post"):
-        post_id = post_result["data"]["post"].get("id")
-    elif post_result["data"] and post_result["data"].get("id"):
-        post_id = post_result["data"]["id"]
-    
-    # 24. POST /tribe-contests/{contestId}/enter → enter contest (token2)
-    if contest_id and post_id:
-        test_count += 1
-        entry_data = {"contentId": post_id}
-        result = test_endpoint("24. Enter contest", "POST", f"/tribe-contests/{contest_id}/enter", 
-                             token2, entry_data, [200, 201, 400])
-        results.append(result)
+class TestRunner:
+    def __init__(self):
+        self.results = []
+        self.token1 = None  # ADMIN user
+        self.token2 = None  # Regular user
+        self.user1_id = None
+        self.user2_id = None
+        self.event_id = None
+        self.page_id = None
         
-        # Store entry ID for voting
-        entry_id = None
-        if result["data"] and result["data"].get("entry"):
-            entry_id = result["data"]["entry"].get("id")
-    
-    # 25. GET /tribe-contests/{contestId}/entries → list entries
-    if contest_id:
-        test_count += 1
-        result = test_endpoint("25. List entries", "GET", f"/tribe-contests/{contest_id}/entries", token1)
-        results.append(result)
-    
-    # 26. GET /tribe-contests/{contestId}/leaderboard → contest leaderboard
-    if contest_id:
-        test_count += 1
-        result = test_endpoint("26. Contest leaderboard", "GET", f"/tribe-contests/{contest_id}/leaderboard", token1)
-        results.append(result)
-    
-    # 27. GET /tribe-contests/{contestId}/results → results
-    if contest_id:
-        test_count += 1
-        result = test_endpoint("27. Contest results", "GET", f"/tribe-contests/{contest_id}/results", 
-                             token1, expected_status=[200, 400])
-        results.append(result)
-    
-    # 28. POST /tribe-contests/{contestId}/vote → vote on entry (token1)
-    if contest_id and 'entry_id' in locals():
-        test_count += 1
-        vote_data = {"entryId": entry_id, "score": 5}
-        result = test_endpoint("28. Vote on entry", "POST", f"/tribe-contests/{contest_id}/vote", 
-                             token1, vote_data, [200, 201, 400, 403])
-        results.append(result)
-    
-    # 29. GET /tribe-contests/{contestId}/live → live data
-    if contest_id:
-        test_count += 1
-        result = test_endpoint("29. Contest live data", "GET", f"/tribe-contests/{contest_id}/live", 
-                             token1, expected_status=[200, 404])
-        results.append(result)
-    
-    # 30. GET /tribe-contests/seasons/{seasonId}/standings → season standings  
-    if season_id:
-        test_count += 1
-        result = test_endpoint("30. Season standings", "GET", f"/tribe-contests/seasons/{season_id}/standings", token1)
-        results.append(result)
-    
-    # 31. GET /tribe-contests/seasons/{seasonId}/live-standings → live standings
-    if season_id:
-        test_count += 1
-        result = test_endpoint("31. Live standings", "GET", f"/tribe-contests/seasons/{season_id}/live-standings", 
-                             token1, expected_status=[200, 404])
-        results.append(result)
-    
-    # 32. POST /admin/tribe-contests/{contestId}/close-entries → close entries (token1)
-    if contest_id:
-        test_count += 1
-        result = test_endpoint("32. Close entries", "POST", f"/admin/tribe-contests/{contest_id}/close-entries", 
-                             token1, {}, [200, 201, 400])
-        results.append(result)
-    
-    # 33. POST /admin/tribe-contests/{contestId}/lock → lock contest (token1)
-    if contest_id:
-        test_count += 1
-        result = test_endpoint("33. Lock contest", "POST", f"/admin/tribe-contests/{contest_id}/lock", 
-                             token1, {}, [200, 201, 400])
-        results.append(result)
-    
-    # 34. POST /admin/tribe-contests/{contestId}/compute-scores → compute scores (token1)
-    if contest_id:
-        test_count += 1
-        result = test_endpoint("34. Compute scores", "POST", f"/admin/tribe-contests/{contest_id}/compute-scores", 
-                             token1, {}, [200, 201, 400, 404])
-        results.append(result)
-    
-    # 35. POST /admin/tribe-contests/{contestId}/resolve → resolve contest (token1)
-    if contest_id:
-        test_count += 1
-        resolve_data = {"mode": "auto"}
-        result = test_endpoint("35. Resolve contest", "POST", f"/admin/tribe-contests/{contest_id}/resolve", 
-                             token1, resolve_data, [200, 201, 400])
-        results.append(result)
-    
-    # 36. POST /admin/tribe-contests/{contestId}/cancel → cancel (token1)
-    # Skip this as it would interfere with other tests
-    
-    # 37. POST /admin/tribe-contests/rules → contest rules (token1)
-    test_count += 1
-    rules_data = {"rules": [{"type": "CONTENT", "scoring": "engagement"}]}
-    result = test_endpoint("37. Contest rules", "POST", "/admin/tribe-contests/rules", 
-                         token1, rules_data, [200, 201, 400])
-    results.append(result)
-    
-    # 38. POST /admin/tribe-salutes/adjust → adjust salutes (token1)
-    test_count += 1
-    if first_tribe_id:
-        salute_data = {"tribeId": first_tribe_id, "amount": 10, "reason": "Batch 5 test"}
-        result = test_endpoint("38. Adjust salutes", "POST", "/admin/tribe-salutes/adjust", 
-                             token1, salute_data, [200, 201, 400])
-        results.append(result)
-    
-    # ========== BOARD NOTICES ENDPOINTS (15 total, endpoints 39-53) ==========
-    print("\n📋 === BOARD NOTICES TESTING (15 endpoints) ===")
-    
-    # Get college ID from user profile for notice creation
-    college_id = None
-    me_result = test_endpoint("Get me for college", "GET", "/auth/me", token1)
-    if me_result["data"] and me_result["data"].get("user"):
-        college_id = me_result["data"]["user"].get("collegeId")
-    
-    # 39. POST /board/notices → create notice (token1)
-    test_count += 1
-    notice_data = {
-        "title": "Batch5 Notice",
-        "body": "Test notice body for batch 5 testing",
-        "type": "GENERAL"
-    }
-    if college_id:
-        notice_data["collegeId"] = college_id
-    
-    result = test_endpoint("39. Create notice", "POST", "/board/notices", token1, 
-                         notice_data, [200, 201, 403])  # May fail if not board member
-    results.append(result)
-    
-    # Store notice ID for further testing
-    notice_id = None
-    if result["data"] and result["data"].get("notice"):
-        notice_id = result["data"]["notice"].get("id")
-    
-    # 40. GET /board/notices/{noticeId} → notice detail
-    if notice_id:
-        test_count += 1
-        result = test_endpoint("40. Notice detail", "GET", f"/board/notices/{notice_id}", token1)
-        results.append(result)
-    
-    # 41. PATCH /board/notices/{noticeId} → update notice (token1)
-    if notice_id:
-        test_count += 1
-        update_data = {"title": "Updated Notice Title"}
-        result = test_endpoint("41. Update notice", "PATCH", f"/board/notices/{notice_id}", 
-                             token1, update_data, [200, 403])
-        results.append(result)
-    
-    # 42. POST /board/notices/{noticeId}/pin → pin notice (token1 admin)
-    if notice_id:
-        test_count += 1
-        result = test_endpoint("42. Pin notice", "POST", f"/board/notices/{notice_id}/pin", 
-                             token1, {}, [200, 400, 403])
-        results.append(result)
-    
-    # 43. DELETE /board/notices/{noticeId}/pin → unpin (token1)
-    if notice_id:
-        test_count += 1
-        result = test_endpoint("43. Unpin notice", "DELETE", f"/board/notices/{notice_id}/pin", 
-                             token1, {}, [200, 403])
-        results.append(result)
-    
-    # 44. POST /board/notices/{noticeId}/acknowledge → acknowledge (token2)
-    if notice_id:
-        test_count += 1
-        result = test_endpoint("44. Acknowledge notice", "POST", f"/board/notices/{notice_id}/acknowledge", 
-                             token2, {}, [200, 404])
-        results.append(result)
-    
-    # 45. GET /board/notices/{noticeId}/acknowledgments → list acknowledgments
-    if notice_id:
-        test_count += 1
-        result = test_endpoint("45. List acknowledgments", "GET", f"/board/notices/{notice_id}/acknowledgments", token1)
-        results.append(result)
-    
-    # 46. GET /colleges/{collegeId}/notices → college notices
-    if college_id:
-        test_count += 1
-        result = test_endpoint("46. College notices", "GET", f"/colleges/{college_id}/notices", token1)
-        results.append(result)
-    
-    # 47. GET /me/board/notices → my notices (token1)
-    test_count += 1
-    result = test_endpoint("47. My notices", "GET", "/me/board/notices", token1)
-    results.append(result)
-    
-    # 48. GET /moderation/board-notices → moderation queue (token1 admin)
-    test_count += 1
-    result = test_endpoint("48. Moderation queue", "GET", "/moderation/board-notices", token1)
-    results.append(result)
-    
-    # 49. POST /moderation/board-notices/{noticeId}/decide → moderate notice (token1 admin)
-    if notice_id:
-        test_count += 1
-        mod_data = {"action": "APPROVE"}
-        result = test_endpoint("49. Moderate notice", "POST", f"/moderation/board-notices/{notice_id}/decide", 
-                             token1, mod_data, [200, 404, 409])
-        results.append(result)
-    
-    # 50. GET /admin/board-notices/analytics → notice analytics (token1 admin)
-    test_count += 1
-    result = test_endpoint("50. Notice analytics", "GET", "/admin/board-notices/analytics", token1)
-    results.append(result)
-    
-    # 51. POST /authenticity/tag → create auth tag (token1 admin)
-    if post_id:  # Use the post we created earlier
-        test_count += 1
-        tag_data = {"contentId": post_id, "type": "OFFICIAL"}
-        result = test_endpoint("51. Create auth tag", "POST", "/authenticity/tag", 
-                             token1, tag_data, [200, 201, 400, 403])
-        results.append(result)
-    
-    # 52. GET /authenticity/tags/{contentId}/{type} → tag status  
-    if post_id:
-        test_count += 1
-        result = test_endpoint("52. Get tag status", "GET", f"/authenticity/tags/{post_id}/OFFICIAL", token1)
-        results.append(result)
-    
-    # 53. GET /admin/authenticity/stats → authenticity stats (token1 admin)
-    test_count += 1
-    result = test_endpoint("53. Auth stats", "GET", "/admin/authenticity/stats", token1)
-    results.append(result)
-    
-    # 54. DELETE /board/notices/{noticeId} → delete notice (token1)
-    if notice_id:
-        test_count += 1
-        result = test_endpoint("54. Delete notice", "DELETE", f"/board/notices/{notice_id}", 
-                             token1, {}, [200, 403])
-        results.append(result)
-    
-    # ========== GENERATE SUMMARY REPORT ==========
-    print("\n📊 === BATCH 5 TEST RESULTS SUMMARY ===")
-    
-    successful_tests = sum(1 for r in results if r["success"])
-    total_tests = len(results)
-    success_rate = (successful_tests / total_tests * 100) if total_tests > 0 else 0
-    
-    slow_responses = sum(1 for r in results if r.get("slow_response", False))
-    avg_response_time = sum(r["response_time"] for r in results) / len(results) if results else 0
-    
-    print(f"📈 Overall Success Rate: {success_rate:.1f}% ({successful_tests}/{total_tests})")
-    print(f"⏱️  Average Response Time: {avg_response_time*1000:.1f}ms")
-    print(f"🐌 Slow Responses (>500ms): {slow_responses}")
-    
-    # Performance analysis
-    if slow_responses > 0:
-        print(f"⚠️  Performance Alert: {slow_responses} endpoints exceeded 500ms threshold")
-    
-    # Category breakdown
-    tribes_success = sum(1 for r in results[:15] if r["success"])
-    contests_results = results[15:40] if len(results) > 15 else []
-    notices_results = results[40:] if len(results) > 40 else []
-    contests_success = sum(1 for r in contests_results if r["success"]) if contests_results else 0
-    notices_success = sum(1 for r in notices_results if r["success"]) if notices_results else 0
-    
-    print(f"\n🏆 Tribes: {tribes_success}/15 ({tribes_success/15*100:.1f}%)")
-    contests_total = len(contests_results) if contests_results else 1
-    notices_total = len(notices_results) if notices_results else 1
-    print(f"🏁 Contests: {contests_success}/{contests_total} ({contests_success/contests_total*100:.1f}%)")
-    print(f"📋 Notices: {notices_success}/{notices_total} ({notices_success/notices_total*100:.1f}%)")
-    
-    # Final status
-    if success_rate >= 95:
-        print("\n🎉 EXCELLENT: Backend performing exceptionally well!")
-    elif success_rate >= 85:
-        print("\n✅ GOOD: Backend performing well with minor issues")
-    elif success_rate >= 70:
-        print("\n⚠️  ACCEPTABLE: Backend functional but needs attention")
-    else:
-        print("\n❌ CRITICAL: Backend has significant issues requiring immediate attention")
-    
-    return success_rate >= 85
+    def log_result(self, test_num, endpoint, method, status_code, response_time, success, details=""):
+        result = {
+            'test_num': test_num,
+            'endpoint': endpoint,
+            'method': method,
+            'status_code': status_code,
+            'response_time': response_time,
+            'success': success,
+            'details': details,
+            'slow': response_time > 500
+        }
+        self.results.append(result)
+        status = "✅ PASS" if success else "❌ FAIL"
+        slow_flag = " 🐌 SLOW" if response_time > 500 else ""
+        print(f"Test {test_num:2d}: {status}{slow_flag} {method:6s} {endpoint} ({response_time}ms) - {details}")
+
+    def make_request(self, method, endpoint, data=None, headers=None, expected_status=None):
+        url = f"{BASE_URL}{endpoint}"
+        start_time = time.time()
+        
+        try:
+            if method == "GET":
+                response = requests.get(url, headers=headers, timeout=30)
+            elif method == "POST":
+                response = requests.post(url, json=data, headers=headers, timeout=30)
+            elif method == "PATCH":
+                response = requests.patch(url, json=data, headers=headers, timeout=30)
+            elif method == "DELETE":
+                response = requests.delete(url, headers=headers, timeout=30)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+                
+            response_time = int((time.time() - start_time) * 1000)
+            
+            if expected_status:
+                success = response.status_code == expected_status
+            else:
+                success = 200 <= response.status_code < 300
+                
+            return response, response_time, success
+        except Exception as e:
+            response_time = int((time.time() - start_time) * 1000)
+            print(f"Request failed: {e}")
+            return None, response_time, False
+
+    def authenticate(self):
+        """Authenticate both admin and regular users."""
+        print("🔐 Authenticating users...")
+        
+        # Login admin user (token1)
+        response, response_time, success = self.make_request(
+            "POST", "/api/auth/login",
+            {"phone": "7777099001", "pin": "1234"}
+        )
+        
+        if success and response:
+            data = response.json()
+            self.token1 = data.get('token')
+            self.user1_id = data.get('user', {}).get('id')
+            print(f"✅ Admin user authenticated - ID: {self.user1_id}")
+        else:
+            print("❌ Failed to authenticate admin user")
+            return False
+            
+        # Login regular user (token2) 
+        response, response_time, success = self.make_request(
+            "POST", "/api/auth/login", 
+            {"phone": "7777099002", "pin": "1234"}
+        )
+        
+        if success and response:
+            data = response.json()
+            self.token2 = data.get('token')
+            self.user2_id = data.get('user', {}).get('id')
+            print(f"✅ Regular user authenticated - ID: {self.user2_id}")
+        else:
+            print("❌ Failed to authenticate regular user")
+            return False
+            
+        return True
+
+    def get_headers(self, token):
+        """Get headers with authentication token."""
+        return {"Authorization": f"Bearer {token}"} if token else {}
+
+    def test_events(self):
+        """Test all 20 Events endpoints (1-20)."""
+        print("\n🎉 TESTING EVENTS ENDPOINTS...")
+        
+        # Test 1: POST /api/events - Create event (trying with proper field names)
+        future_date = (datetime.now() + timedelta(days=30)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        end_date = (datetime.now() + timedelta(days=30, hours=8)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        
+        event_data = {
+            "title": "Batch6 Test Event",
+            "description": "Testing events", 
+            "startAt": future_date,  # Using startAt instead of startDate
+            "endAt": end_date,       # Using endAt instead of endDate
+            "location": "Test Hall",
+            "category": "CULTURAL",   # Using category instead of type
+            "collegeId": "test-college"
+        }
+        
+        response, response_time, success = self.make_request(
+            "POST", "/api/events", event_data, self.get_headers(self.token1)
+        )
+        
+        if success and response:
+            data = response.json()
+            self.event_id = data.get('event', {}).get('id') or data.get('id')
+            details = f"Event created with ID: {self.event_id}"
+        else:
+            error_text = response.text if response else 'No response'
+            status_code = response.status_code if response else 500
+            details = f"Failed to create event (status {status_code}): {error_text[:200]}"
+            
+        self.log_result(1, "/api/events", "POST", response.status_code if response else 500, 
+                       response_time, success, details)
+
+        # Test 2: GET /api/events/search - Events search (instead of GET /events)
+        response, response_time, success = self.make_request("GET", "/api/events/search")
+        details = f"Events count: {len(response.json().get('items', []))} events" if success and response else "Failed to search events"
+        self.log_result(2, "/api/events/search", "GET", response.status_code if response else 500,
+                       response_time, success, details)
+
+        # Test 3: GET /api/events/feed - Events feed (authenticated)
+        response, response_time, success = self.make_request("GET", "/api/events/feed", headers=self.get_headers(self.token1))
+        details = f"Feed events count: {len(response.json().get('items', []))}" if success and response else "Failed to get events feed"
+        self.log_result(3, "/api/events/feed", "GET", response.status_code if response else 500,
+                       response_time, success, details)
+
+        # Test 4: Skip past events (endpoint does not exist)
+        self.log_result(4, "/api/events/past", "GET", 404, 0, False, "Endpoint not implemented")
+
+        # Test 5: Skip featured events (endpoint does not exist) 
+        self.log_result(5, "/api/events/featured", "GET", 404, 0, False, "Endpoint not implemented")
+
+        # Test 6: GET /api/events/{eventId} - Event detail
+        if self.event_id:
+            response, response_time, success = self.make_request("GET", f"/api/events/{self.event_id}")
+            details = f"Event detail retrieved: {response.json().get('title', 'Unknown')}" if success and response else "Failed to get event detail"
+        else:
+            response, response_time, success = None, 0, False
+            details = "No event ID available"
+        self.log_result(6, f"/api/events/{self.event_id or 'N/A'}", "GET", response.status_code if response else 404,
+                       response_time, success, details)
+
+        # Test 7: PATCH /api/events/{eventId} - Update event
+        if self.event_id:
+            response, response_time, success = self.make_request(
+                "PATCH", f"/api/events/{self.event_id}",
+                {"title": "Updated Event"}, self.get_headers(self.token1)
+            )
+            details = "Event updated successfully" if success else "Failed to update event"
+        else:
+            response, response_time, success = None, 0, False
+            details = "No event ID available"
+        self.log_result(7, f"/api/events/{self.event_id or 'N/A'}", "PATCH", response.status_code if response else 404,
+                       response_time, success, details)
+
+        # Test 8: POST /api/events/{eventId}/rsvp - RSVP to event
+        if self.event_id:
+            response, response_time, success = self.make_request(
+                "POST", f"/api/events/{self.event_id}/rsvp",
+                {"status": "GOING"}, self.get_headers(self.token2)
+            )
+            details = "RSVP created successfully" if success else "Failed to create RSVP"
+        else:
+            response, response_time, success = None, 0, False
+            details = "No event ID available"
+        self.log_result(8, f"/api/events/{self.event_id or 'N/A'}/rsvp", "POST", response.status_code if response else 404,
+                       response_time, success, details)
+
+        # Test 9: PATCH /api/events/{eventId}/rsvp - Update RSVP
+        if self.event_id:
+            response, response_time, success = self.make_request(
+                "PATCH", f"/api/events/{self.event_id}/rsvp",
+                {"status": "MAYBE"}, self.get_headers(self.token2)
+            )
+            details = "RSVP updated successfully" if success else "Failed to update RSVP"
+        else:
+            response, response_time, success = None, 0, False
+            details = "No event ID available"
+        self.log_result(9, f"/api/events/{self.event_id or 'N/A'}/rsvp", "PATCH", response.status_code if response else 404,
+                       response_time, success, details)
+
+        # Test 10: DELETE /api/events/{eventId}/rsvp - Cancel RSVP
+        if self.event_id:
+            response, response_time, success = self.make_request(
+                "DELETE", f"/api/events/{self.event_id}/rsvp",
+                headers=self.get_headers(self.token2)
+            )
+            details = "RSVP cancelled successfully" if success else "Failed to cancel RSVP"
+        else:
+            response, response_time, success = None, 0, False
+            details = "No event ID available"
+        self.log_result(10, f"/api/events/{self.event_id or 'N/A'}/rsvp", "DELETE", response.status_code if response else 404,
+                       response_time, success, details)
+
+        # Test 11: GET /api/events/{eventId}/attendees - List attendees (correct route)
+        if self.event_id:
+            response, response_time, success = self.make_request("GET", f"/api/events/{self.event_id}/attendees")
+            details = f"Attendees count: {len(response.json().get('attendees', []))}" if success and response else "Failed to get attendees"
+        else:
+            response, response_time, success = None, 0, False
+            details = "No event ID available"
+        self.log_result(11, f"/api/events/{self.event_id or 'N/A'}/attendees", "GET", response.status_code if response else 404,
+                       response_time, success, details)
+
+        # Test 12: GET /api/events/{eventId}/rsvp-count - RSVP count
+        if self.event_id:
+            response, response_time, success = self.make_request("GET", f"/api/events/{self.event_id}/rsvp-count")
+            details = f"RSVP count retrieved" if success and response else "Failed to get RSVP count"
+        else:
+            response, response_time, success = None, 0, False
+            details = "No event ID available"
+        self.log_result(12, f"/api/events/{self.event_id or 'N/A'}/rsvp-count", "GET", response.status_code if response else 404,
+                       response_time, success, details)
+
+        # Test 13: POST /api/events/{eventId}/share - Share event
+        if self.event_id:
+            response, response_time, success = self.make_request(
+                "POST", f"/api/events/{self.event_id}/share",
+                headers=self.get_headers(self.token2)
+            )
+            details = "Event shared successfully" if success else "Failed to share event"
+        else:
+            response, response_time, success = None, 0, False
+            details = "No event ID available"
+        self.log_result(13, f"/api/events/{self.event_id or 'N/A'}/share", "POST", response.status_code if response else 404,
+                       response_time, success, details)
+
+        # Test 14: POST /api/events/{eventId}/report - Report event
+        if self.event_id:
+            response, response_time, success = self.make_request(
+                "POST", f"/api/events/{self.event_id}/report",
+                {"reason": "spam"}, self.get_headers(self.token2)
+            )
+            details = "Event reported successfully" if success else "Failed to report event"
+        else:
+            response, response_time, success = None, 0, False
+            details = "No event ID available"
+        self.log_result(14, f"/api/events/{self.event_id or 'N/A'}/report", "POST", response.status_code if response else 404,
+                       response_time, success, details)
+
+        # Test 15: GET /api/events/categories - Event categories
+        response, response_time, success = self.make_request("GET", "/api/events/categories")
+        details = f"Categories count: {len(response.json().get('categories', []))}" if success and response else "Failed to get categories"
+        self.log_result(15, "/api/events/categories", "GET", response.status_code if response else 500,
+                       response_time, success, details)
+
+        # Test 16: GET /api/me/events - My events
+        response, response_time, success = self.make_request("GET", "/api/me/events", headers=self.get_headers(self.token1))
+        details = f"My events count: {len(response.json().get('events', []))}" if success and response else "Failed to get my events"
+        self.log_result(16, "/api/me/events", "GET", response.status_code if response else 500,
+                       response_time, success, details)
+
+        # Test 17: GET /api/me/events/rsvps - My RSVPs
+        response, response_time, success = self.make_request("GET", "/api/me/events/rsvps", headers=self.get_headers(self.token2))
+        details = f"My RSVPs count: {len(response.json().get('rsvps', []))}" if success and response else "Failed to get my RSVPs"
+        self.log_result(17, "/api/me/events/rsvps", "GET", response.status_code if response else 500,
+                       response_time, success, details)
+
+        # Test 18: POST /api/admin/events/{eventId}/feature - Feature event
+        if self.event_id:
+            response, response_time, success = self.make_request(
+                "POST", f"/api/admin/events/{self.event_id}/feature",
+                headers=self.get_headers(self.token1)
+            )
+            details = "Event featured successfully" if success else "Failed to feature event"
+        else:
+            response, response_time, success = None, 0, False
+            details = "No event ID available"
+        self.log_result(18, f"/api/admin/events/{self.event_id or 'N/A'}/feature", "POST", response.status_code if response else 404,
+                       response_time, success, details)
+
+        # Test 19: DELETE /api/admin/events/{eventId}/feature - Unfeature event
+        if self.event_id:
+            response, response_time, success = self.make_request(
+                "DELETE", f"/api/admin/events/{self.event_id}/feature",
+                headers=self.get_headers(self.token1)
+            )
+            details = "Event unfeatured successfully" if success else "Failed to unfeature event"
+        else:
+            response, response_time, success = None, 0, False
+            details = "No event ID available"
+        self.log_result(19, f"/api/admin/events/{self.event_id or 'N/A'}/feature", "DELETE", response.status_code if response else 404,
+                       response_time, success, details)
+
+        # Test 20: DELETE /api/events/{eventId} - Delete event
+        if self.event_id:
+            response, response_time, success = self.make_request(
+                "DELETE", f"/api/events/{self.event_id}",
+                headers=self.get_headers(self.token1)
+            )
+            details = "Event deleted successfully" if success else "Failed to delete event"
+        else:
+            response, response_time, success = None, 0, False
+            details = "No event ID available"
+        self.log_result(20, f"/api/events/{self.event_id or 'N/A'}", "DELETE", response.status_code if response else 404,
+                       response_time, success, details)
+
+    def test_pages(self):
+        """Test all 25 Pages endpoints (21-45)."""
+        print("\n📄 TESTING PAGES ENDPOINTS...")
+        
+        # Test 21: POST /api/pages - Create page (using correct category)
+        page_data = {
+            "name": "Batch6 Test Page",
+            "description": "Testing pages",
+            "category": "COLLEGE_OFFICIAL",  # Using valid category
+            "collegeId": "test-college"
+        }
+        
+        response, response_time, success = self.make_request(
+            "POST", "/api/pages", page_data, self.get_headers(self.token1)
+        )
+        
+        if success and response:
+            data = response.json()
+            self.page_id = data.get('page', {}).get('id') or data.get('id')
+            details = f"Page created with ID: {self.page_id}"
+        else:
+            error_text = response.text if response else 'No response'
+            status_code = response.status_code if response else 500
+            details = f"Failed to create page (status {status_code}): {error_text[:200]}"
+            
+        self.log_result(21, "/api/pages", "POST", response.status_code if response else 500, 
+                       response_time, success, details)
+
+        # Test 22: GET /api/pages - List pages
+        response, response_time, success = self.make_request("GET", "/api/pages")
+        details = f"Pages count: {len(response.json().get('pages', []))} pages" if success and response else "Failed to list pages"
+        self.log_result(22, "/api/pages", "GET", response.status_code if response else 500,
+                       response_time, success, details)
+
+        # Test 23: GET /api/pages/discover - Discover pages
+        response, response_time, success = self.make_request("GET", "/api/pages/discover")
+        details = f"Discovery pages count: {len(response.json().get('pages', []))}" if success and response else "Failed to discover pages"
+        self.log_result(23, "/api/pages/discover", "GET", response.status_code if response else 500,
+                       response_time, success, details)
+
+        # Test 24: GET /api/pages/categories - Page categories
+        response, response_time, success = self.make_request("GET", "/api/pages/categories")
+        details = f"Categories count: {len(response.json().get('categories', []))}" if success and response else "Failed to get categories"
+        self.log_result(24, "/api/pages/categories", "GET", response.status_code if response else 500,
+                       response_time, success, details)
+
+        # Test 25: GET /api/pages/{pageId} - Page detail
+        if self.page_id:
+            response, response_time, success = self.make_request("GET", f"/api/pages/{self.page_id}")
+            details = f"Page detail retrieved: {response.json().get('name', 'Unknown')}" if success and response else "Failed to get page detail"
+        else:
+            response, response_time, success = None, 0, False
+            details = "No page ID available"
+        self.log_result(25, f"/api/pages/{self.page_id or 'N/A'}", "GET", response.status_code if response else 404,
+                       response_time, success, details)
+
+        # Test 26: PATCH /api/pages/{pageId} - Update page
+        if self.page_id:
+            response, response_time, success = self.make_request(
+                "PATCH", f"/api/pages/{self.page_id}",
+                {"description": "Updated page desc"}, self.get_headers(self.token1)
+            )
+            details = "Page updated successfully" if success else "Failed to update page"
+        else:
+            response, response_time, success = None, 0, False
+            details = "No page ID available"
+        self.log_result(26, f"/api/pages/{self.page_id or 'N/A'}", "PATCH", response.status_code if response else 404,
+                       response_time, success, details)
+
+        # Test 27: POST /api/pages/{pageId}/follow - Follow page
+        if self.page_id:
+            response, response_time, success = self.make_request(
+                "POST", f"/api/pages/{self.page_id}/follow",
+                headers=self.get_headers(self.token2)
+            )
+            details = "Page followed successfully" if success else "Failed to follow page"
+        else:
+            response, response_time, success = None, 0, False
+            details = "No page ID available"
+        self.log_result(27, f"/api/pages/{self.page_id or 'N/A'}/follow", "POST", response.status_code if response else 404,
+                       response_time, success, details)
+
+        # Test 28: DELETE /api/pages/{pageId}/follow - Unfollow page
+        if self.page_id:
+            response, response_time, success = self.make_request(
+                "DELETE", f"/api/pages/{self.page_id}/follow",
+                headers=self.get_headers(self.token2)
+            )
+            details = "Page unfollowed successfully" if success else "Failed to unfollow page"
+        else:
+            response, response_time, success = None, 0, False
+            details = "No page ID available"
+        self.log_result(28, f"/api/pages/{self.page_id or 'N/A'}/follow", "DELETE", response.status_code if response else 404,
+                       response_time, success, details)
+
+        # Test 29: GET /api/pages/{pageId}/followers - Page followers
+        if self.page_id:
+            response, response_time, success = self.make_request("GET", f"/api/pages/{self.page_id}/followers")
+            details = f"Followers count: {len(response.json().get('followers', []))}" if success and response else "Failed to get followers"
+        else:
+            response, response_time, success = None, 0, False
+            details = "No page ID available"
+        self.log_result(29, f"/api/pages/{self.page_id or 'N/A'}/followers", "GET", response.status_code if response else 404,
+                       response_time, success, details)
+
+        # Test 30: GET /api/pages/{pageId}/follower-count - Follower count
+        if self.page_id:
+            response, response_time, success = self.make_request("GET", f"/api/pages/{self.page_id}/follower-count")
+            details = f"Follower count retrieved" if success and response else "Failed to get follower count"
+        else:
+            response, response_time, success = None, 0, False
+            details = "No page ID available"
+        self.log_result(30, f"/api/pages/{self.page_id or 'N/A'}/follower-count", "GET", response.status_code if response else 404,
+                       response_time, success, details)
+
+        # Test 31: POST /api/pages/{pageId}/posts - Create page post
+        if self.page_id:
+            response, response_time, success = self.make_request(
+                "POST", f"/api/pages/{self.page_id}/posts",
+                {"caption": "Page post test"}, self.get_headers(self.token1)
+            )
+            details = "Page post created successfully" if success else "Failed to create page post"
+        else:
+            response, response_time, success = None, 0, False
+            details = "No page ID available"
+        self.log_result(31, f"/api/pages/{self.page_id or 'N/A'}/posts", "POST", response.status_code if response else 404,
+                       response_time, success, details)
+
+        # Test 32: GET /api/pages/{pageId}/feed - Page feed
+        if self.page_id:
+            response, response_time, success = self.make_request("GET", f"/api/pages/{self.page_id}/feed")
+            details = f"Page feed count: {len(response.json().get('posts', []))}" if success and response else "Failed to get page feed"
+        else:
+            response, response_time, success = None, 0, False
+            details = "No page ID available"
+        self.log_result(32, f"/api/pages/{self.page_id or 'N/A'}/feed", "GET", response.status_code if response else 404,
+                       response_time, success, details)
+
+        # Test 33: POST /api/pages/{pageId}/invite - Invite member
+        if self.page_id and self.user2_id:
+            response, response_time, success = self.make_request(
+                "POST", f"/api/pages/{self.page_id}/invite",
+                {"userId": self.user2_id}, self.get_headers(self.token1)
+            )
+            details = "Member invited successfully" if success else "Failed to invite member"
+        else:
+            response, response_time, success = None, 0, False
+            details = "No page ID or user ID available"
+        self.log_result(33, f"/api/pages/{self.page_id or 'N/A'}/invite", "POST", response.status_code if response else 404,
+                       response_time, success, details)
+
+        # Test 34: GET /api/pages/{pageId}/members - Page members
+        if self.page_id:
+            response, response_time, success = self.make_request("GET", f"/api/pages/{self.page_id}/members")
+            details = f"Members count: {len(response.json().get('members', []))}" if success and response else "Failed to get members"
+        else:
+            response, response_time, success = None, 0, False
+            details = "No page ID available"
+        self.log_result(34, f"/api/pages/{self.page_id or 'N/A'}/members", "GET", response.status_code if response else 404,
+                       response_time, success, details)
+
+        # Test 35: PATCH /api/pages/{pageId}/members/{userId} - Update member role
+        if self.page_id and self.user2_id:
+            response, response_time, success = self.make_request(
+                "PATCH", f"/api/pages/{self.page_id}/members/{self.user2_id}",
+                {"role": "EDITOR"}, self.get_headers(self.token1)
+            )
+            details = "Member role updated successfully" if success else "Failed to update member role"
+        else:
+            response, response_time, success = None, 0, False
+            details = "No page ID or user ID available"
+        self.log_result(35, f"/api/pages/{self.page_id or 'N/A'}/members/{self.user2_id or 'N/A'}", "PATCH", 
+                       response.status_code if response else 404, response_time, success, details)
+
+        # Test 36: DELETE /api/pages/{pageId}/members/{userId} - Remove member
+        if self.page_id and self.user2_id:
+            response, response_time, success = self.make_request(
+                "DELETE", f"/api/pages/{self.page_id}/members/{self.user2_id}",
+                headers=self.get_headers(self.token1)
+            )
+            details = "Member removed successfully" if success else "Failed to remove member"
+        else:
+            response, response_time, success = None, 0, False
+            details = "No page ID or user ID available"
+        self.log_result(36, f"/api/pages/{self.page_id or 'N/A'}/members/{self.user2_id or 'N/A'}", "DELETE", 
+                       response.status_code if response else 404, response_time, success, details)
+
+        # Test 37: POST /api/pages/{pageId}/report - Report page
+        if self.page_id:
+            response, response_time, success = self.make_request(
+                "POST", f"/api/pages/{self.page_id}/report",
+                {"reason": "inappropriate"}, self.get_headers(self.token2)
+            )
+            details = "Page reported successfully" if success else "Failed to report page"
+        else:
+            response, response_time, success = None, 0, False
+            details = "No page ID available"
+        self.log_result(37, f"/api/pages/{self.page_id or 'N/A'}/report", "POST", response.status_code if response else 404,
+                       response_time, success, details)
+
+        # Test 38: GET /api/me/pages - My pages
+        response, response_time, success = self.make_request("GET", "/api/me/pages", headers=self.get_headers(self.token1))
+        details = f"My pages count: {len(response.json().get('pages', []))}" if success and response else "Failed to get my pages"
+        self.log_result(38, "/api/me/pages", "GET", response.status_code if response else 500,
+                       response_time, success, details)
+
+        # Test 39: GET /api/me/pages/following - Pages I follow
+        response, response_time, success = self.make_request("GET", "/api/me/pages/following", headers=self.get_headers(self.token2))
+        details = f"Following pages count: {len(response.json().get('pages', []))}" if success and response else "Failed to get following pages"
+        self.log_result(39, "/api/me/pages/following", "GET", response.status_code if response else 500,
+                       response_time, success, details)
+
+        # Test 40: POST /api/admin/pages/{pageId}/verify - Verify page
+        if self.page_id:
+            response, response_time, success = self.make_request(
+                "POST", f"/api/admin/pages/{self.page_id}/verify",
+                headers=self.get_headers(self.token1)
+            )
+            details = "Page verified successfully" if success else "Failed to verify page"
+        else:
+            response, response_time, success = None, 0, False
+            details = "No page ID available"
+        self.log_result(40, f"/api/admin/pages/{self.page_id or 'N/A'}/verify", "POST", response.status_code if response else 404,
+                       response_time, success, details)
+
+        # Test 41: DELETE /api/admin/pages/{pageId}/verify - Unverify page
+        if self.page_id:
+            response, response_time, success = self.make_request(
+                "DELETE", f"/api/admin/pages/{self.page_id}/verify",
+                headers=self.get_headers(self.token1)
+            )
+            details = "Page unverified successfully" if success else "Failed to unverify page"
+        else:
+            response, response_time, success = None, 0, False
+            details = "No page ID available"
+        self.log_result(41, f"/api/admin/pages/{self.page_id or 'N/A'}/verify", "DELETE", response.status_code if response else 404,
+                       response_time, success, details)
+
+        # Test 42: POST /api/admin/pages/{pageId}/feature - Feature page
+        if self.page_id:
+            response, response_time, success = self.make_request(
+                "POST", f"/api/admin/pages/{self.page_id}/feature",
+                headers=self.get_headers(self.token1)
+            )
+            details = "Page featured successfully" if success else "Failed to feature page"
+        else:
+            response, response_time, success = None, 0, False
+            details = "No page ID available"
+        self.log_result(42, f"/api/admin/pages/{self.page_id or 'N/A'}/feature", "POST", response.status_code if response else 404,
+                       response_time, success, details)
+
+        # Test 43: DELETE /api/admin/pages/{pageId}/feature - Unfeature page
+        if self.page_id:
+            response, response_time, success = self.make_request(
+                "DELETE", f"/api/admin/pages/{self.page_id}/feature",
+                headers=self.get_headers(self.token1)
+            )
+            details = "Page unfeatured successfully" if success else "Failed to unfeature page"
+        else:
+            response, response_time, success = None, 0, False
+            details = "No page ID available"
+        self.log_result(43, f"/api/admin/pages/{self.page_id or 'N/A'}/feature", "DELETE", response.status_code if response else 404,
+                       response_time, success, details)
+
+        # Test 44: GET /api/admin/pages/analytics - Page analytics
+        response, response_time, success = self.make_request("GET", "/api/admin/pages/analytics", headers=self.get_headers(self.token1))
+        details = "Page analytics retrieved" if success and response else "Failed to get page analytics"
+        self.log_result(44, "/api/admin/pages/analytics", "GET", response.status_code if response else 500,
+                       response_time, success, details)
+
+        # Test 45: DELETE /api/pages/{pageId} - Delete page
+        if self.page_id:
+            response, response_time, success = self.make_request(
+                "DELETE", f"/api/pages/{self.page_id}",
+                headers=self.get_headers(self.token1)
+            )
+            details = "Page deleted successfully" if success else "Failed to delete page"
+        else:
+            response, response_time, success = None, 0, False
+            details = "No page ID available"
+        self.log_result(45, f"/api/pages/{self.page_id or 'N/A'}", "DELETE", response.status_code if response else 404,
+                       response_time, success, details)
+
+    def print_summary(self):
+        """Print comprehensive test summary."""
+        print("\n" + "="*80)
+        print("🏁 BATCH 6 TESTING SUMMARY")
+        print("="*80)
+        
+        total_tests = len(self.results)
+        passed_tests = sum(1 for r in self.results if r['success'])
+        failed_tests = total_tests - passed_tests
+        success_rate = (passed_tests / total_tests) * 100 if total_tests > 0 else 0
+        
+        slow_tests = [r for r in self.results if r['slow']]
+        
+        print(f"📊 OVERALL STATS:")
+        print(f"   Total Tests: {total_tests}")
+        print(f"   Passed: {passed_tests}")
+        print(f"   Failed: {failed_tests}")
+        print(f"   Success Rate: {success_rate:.1f}%")
+        print(f"   Slow Tests (>500ms): {len(slow_tests)}")
+        
+        if slow_tests:
+            print(f"\n🐌 SLOW ENDPOINTS (>500ms):")
+            for test in slow_tests:
+                print(f"   Test {test['test_num']:2d}: {test['method']} {test['endpoint']} ({test['response_time']}ms)")
+        
+        # Events vs Pages breakdown
+        events_tests = [r for r in self.results if r['test_num'] <= 20]
+        pages_tests = [r for r in self.results if r['test_num'] > 20]
+        
+        events_passed = sum(1 for r in events_tests if r['success'])
+        pages_passed = sum(1 for r in pages_tests if r['success'])
+        
+        print(f"\n📈 CATEGORY BREAKDOWN:")
+        print(f"   Events (Tests 1-20): {events_passed}/20 ({(events_passed/20)*100:.1f}%)")
+        print(f"   Pages (Tests 21-45): {pages_passed}/25 ({(pages_passed/25)*100:.1f}%)")
+        
+        if failed_tests > 0:
+            print(f"\n❌ FAILED TESTS:")
+            for test in self.results:
+                if not test['success']:
+                    print(f"   Test {test['test_num']:2d}: {test['method']} {test['endpoint']} - {test['details']}")
+        
+        print("\n✅ CRITICAL FEATURES:")
+        print("   - Authentication: Working (both admin and regular users)")
+        print("   - Events CRUD: Tested")
+        print("   - Pages CRUD: Tested")  
+        print("   - RSVP System: Tested")
+        print("   - Follow System: Tested")
+        print("   - Admin Operations: Tested")
+        print("   - Performance: Response times recorded")
+        
+        print("="*80)
+
+    def run_all_tests(self):
+        """Run the complete test suite."""
+        print(f"🚀 Starting BATCH 6: Events + Pages Testing")
+        print(f"🌐 Base URL: {BASE_URL}")
+        print(f"📅 Started at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        
+        if not self.authenticate():
+            print("❌ Authentication failed, aborting tests")
+            return
+            
+        self.test_events()
+        self.test_pages()
+        self.print_summary()
+        
+        print(f"\n🏁 Testing completed at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
 if __name__ == "__main__":
-    success = main()
-    sys.exit(0 if success else 1)
+    runner = TestRunner()
+    runner.run_all_tests()
