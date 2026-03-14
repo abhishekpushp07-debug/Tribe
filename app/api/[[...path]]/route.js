@@ -654,7 +654,23 @@ async function handleRoute(request, context) {
 
   // Observability headers
   response.headers.set('x-request-id', requestId)
+  response.headers.set('x-latency-ms', String(latencyMs))
   applyFreezeHeaders(response, route, method)
+
+  // Cache-Control headers for GET responses (client + CDN caching)
+  if (method === 'GET' && statusCode === 200) {
+    if (route.includes('/feed') || route.includes('/reels/feed') || route.includes('/discover')) {
+      response.headers.set('Cache-Control', 'public, max-age=10, s-maxage=15, stale-while-revalidate=30')
+    } else if (route.includes('/tribes') || route.includes('/tribe-contests') || route.includes('/tribe-rivalries')) {
+      response.headers.set('Cache-Control', 'public, max-age=30, s-maxage=60, stale-while-revalidate=120')
+    } else if (route.includes('/media/') && !route.includes('/upload')) {
+      response.headers.set('Cache-Control', 'public, max-age=3600, s-maxage=86400, immutable')
+    } else if (route.includes('/search') || route.includes('/hashtags')) {
+      response.headers.set('Cache-Control', 'public, max-age=15, s-maxage=20, stale-while-revalidate=60')
+    } else {
+      response.headers.set('Cache-Control', 'private, max-age=5, stale-while-revalidate=15')
+    }
+  }
 
   // Structured access log (every request)
   logger.info('HTTP', 'request_completed', {
