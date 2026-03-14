@@ -1,35 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getDb, getAnalyticsDb } from '@/lib/db'
-import { handleAuth } from '@/lib/handlers/auth'
-import { handleOnboarding } from '@/lib/handlers/onboarding'
-import { handleContent } from '@/lib/handlers/content'
-import { handleFeed } from '@/lib/handlers/feed'
-import { handleSocial } from '@/lib/handlers/social'
-import { handleUsers } from '@/lib/handlers/users'
-import { handleDiscovery } from '@/lib/handlers/discovery'
-import { handleMedia } from '@/lib/handlers/media'
-import { handleMediaCleanup, startMediaCleanupWorker } from '@/lib/handlers/media-cleanup'
-import { startCleanupWorker } from '@/lib/services/cleanup-worker'
-import { handleAdmin } from '@/lib/handlers/admin'
-import { handleGovernance } from '@/lib/handlers/governance'
-import { handleModerationRoutes } from '@/lib/moderation/routes/moderation.routes'
-import { handleAppealDecision, handleCollegeClaims, handleDistribution, handleResources } from '@/lib/handlers/stages'
-import { handleEvents } from '@/lib/handlers/events'
-import { handleBoardNotices, handleAuthenticityTags } from '@/lib/handlers/board-notices'
-import { handleStories } from '@/lib/handlers/stories'
-import { handleReels } from '@/lib/handlers/reels'
-import { handleTribes, handleTribeAdmin } from '@/lib/handlers/tribes'
-import { handleTribeContests, handleTribeContestAdmin } from '@/lib/handlers/tribe-contests'
-import { handlePages } from '@/lib/handlers/pages'
-import { handleNotifications } from '@/lib/handlers/notifications'
-import { handleSearch } from '@/lib/handlers/search'
-import { handleTranscode } from '@/lib/handlers/transcode'
-import { handleAnalytics } from '@/lib/handlers/analytics'
-import { handleFollowRequests, interceptFollowForPrivateAccount } from '@/lib/handlers/follow-requests'
-import { handleQuality } from '@/lib/handlers/quality'
-import { handleRecommendations } from '@/lib/handlers/recommendations'
-import { handleActivity } from '@/lib/handlers/activity'
-import { handleSuggestions } from '@/lib/handlers/suggestions'
+import { getDb } from '@/lib/db'
 import { cache } from '@/lib/cache'
 import { applyFreezeHeaders } from '@/lib/freeze-registry'
 import { applySecurityHeaders, getEndpointTier, checkTieredRateLimit, extractIP, checkPayloadSize, deepSanitizeStrings } from '@/lib/security'
@@ -37,6 +7,8 @@ import logger from '@/lib/logger'
 import metrics from '@/lib/metrics'
 import { checkLiveness, checkReadiness, checkDeepHealth } from '@/lib/health'
 import { requestContext } from '@/lib/request-context'
+import { handleModerationRoutes } from '@/lib/moderation/routes/moderation.routes'
+import { dispatchRoute } from '@/lib/route-dispatch'
 
 // ========== CORS ==========
 function cors(response) {
@@ -65,7 +37,24 @@ function jsonErr(message, code, status = 400, extraHeaders = {}) {
   return resp
 }
 
-// ========== OPTIONS (Stage 3B: with observability) ==========
+// ========== ADMIN AUTH HELPER ==========
+async function requireAdmin(request, db, reqCtx, roles = ['ADMIN', 'SUPER_ADMIN']) {
+  try {
+    const { requireAuth } = await import('@/lib/auth-utils')
+    const user = await requireAuth(request, db)
+    if (!roles.includes(user.role)) {
+      reqCtx.errorCode = 'FORBIDDEN'
+      return { err: jsonErr(`${roles[0]} access required`, 'FORBIDDEN', 403) }
+    }
+    return { user }
+  } catch (e) {
+    if (e.status) { reqCtx.errorCode = e.code; return { err: jsonErr(e.message, e.code, e.status) } }
+    reqCtx.errorCode = 'UNAUTHORIZED'
+    return { err: jsonErr('Authentication required', 'UNAUTHORIZED', 401) }
+  }
+}
+
+// ========== OPTIONS ==========
 export async function OPTIONS(request, context) {
   const requestId = crypto.randomUUID()
   const startTime = Date.now()
@@ -79,41 +68,112 @@ export async function OPTIONS(request, context) {
   applyFreezeHeaders(resp, route, 'OPTIONS')
 
   const latencyMs = Date.now() - startTime
-  logger.info('HTTP', 'request_completed', {
-    requestId, method: 'OPTIONS', route, statusCode: 200, latencyMs, ip,
-  })
+  logger.info('HTTP', 'request_completed', { requestId, method: 'OPTIONS', route, statusCode: 200, latencyMs, ip })
   metrics.recordRequest(route, 'OPTIONS', 200, latencyMs)
   return resp
 }
 
+// ========== OPS ENDPOINTS ==========
+async function handleOpsEndpoints(route, method, request, db, reqCtx) {
+  if (route === '/ops/health' && method === 'GET') {
+    const { err } = await requireAdmin(request, db, reqCtx)
+    if (err) return err
+    return jsonOk(await checkDeepHealth(db))
+  }
+
+  if (route === '/ops/metrics' && method === 'GET') {
+    const { err } = await requireAdmin(request, db, reqCtx)
+    if (err) return err
+    const [userCount, postCount, activeSessionCount, reportCount, grievanceCount] = await Promise.all([
+      db.collection('users').countDocuments(),
+      db.collection('content_items').countDocuments(),
+      db.collection('sessions').countDocuments({ expiresAt: { $gt: new Date() } }),
+      db.collection('reports').countDocuments({ status: 'OPEN' }),
+      db.collection('grievance_tickets').countDocuments({ status: 'OPEN' }),
+    ])
+    const cacheStats = await cache.getStats()
+    return jsonOk({
+      ...metrics.getMetrics(),
+      business: {
+        users: userCount, posts: postCount, activeSessions: activeSessionCount,
+        openReports: reportCount, openGrievances: grievanceCount,
+        cache: { hitRate: cacheStats.hitRate, redisStatus: cacheStats.redis.status },
+      },
+    })
+  }
+
+  if (route === '/ops/slis' && method === 'GET') {
+    const { err } = await requireAdmin(request, db, reqCtx)
+    if (err) return err
+    return jsonOk(metrics.getSLIs())
+  }
+
+  if (route === '/ops/backup-check' && method === 'GET') {
+    const { err } = await requireAdmin(request, db, reqCtx)
+    if (err) return err
+    const collections = await db.listCollections().toArray()
+    const sizes = await Promise.all(collections.map(async (c) => {
+      const count = await db.collection(c.name).countDocuments()
+      return { name: c.name, docs: count }
+    }))
+    return jsonOk({
+      backupReady: true, collections: sizes.length,
+      totalDocuments: sizes.reduce((s, c) => s + c.docs, 0),
+      collectionDetails: sizes,
+      backupCommand: 'mongodump --db=your_database_name --out=/backup/$(date +%Y%m%d_%H%M%S)',
+      restoreCommand: 'mongorestore --db=your_database_name /backup/<timestamp>/',
+      timestamp: new Date().toISOString(),
+    })
+  }
+
+  return null // Not an ops endpoint
+}
+
+// ========== SPECIAL INLINE ENDPOINTS ==========
+async function handleInlineEndpoints(route, method, path, request, db, reqCtx) {
+  // Cache stats
+  if (route === '/cache/stats' && method === 'GET') {
+    const { err } = await requireAdmin(request, db, reqCtx)
+    if (err) return err
+    return jsonOk(await cache.getStats())
+  }
+
+  // Moderation config & check
+  if ((route === '/moderation/config' && method === 'GET') || (route === '/moderation/check' && method === 'POST')) {
+    const { err } = await requireAdmin(request, db, reqCtx, ['MODERATOR', 'ADMIN', 'SUPER_ADMIN'])
+    if (err) return err
+    const modResult = await handleModerationRoutes(path, method, request, db)
+    if (modResult) {
+      if (modResult.error) { reqCtx.errorCode = modResult.code; return jsonErr(modResult.error, modResult.code || 'ERROR', modResult.status || 400) }
+      return jsonOk(modResult.data, modResult.status || 200)
+    }
+  }
+
+  return null
+}
+
 // ========== MAIN ROUTER CORE ==========
-// reqCtx: mutable context populated during request lifecycle, read by observability wrapper
 async function handleRouteCore(request, { params }, reqCtx) {
   const { path = [] } = params
   const route = `/${path.join('/')}`
   const method = request.method
   const ip = extractIP(request)
 
-  // ---- LIVENESS PROBE: runs BEFORE rate limiting and DB (must always work) ----
+  // Liveness probe: runs BEFORE everything (must always work)
   if (route === '/healthz' && method === 'GET') {
     return jsonOk(await checkLiveness())
   }
 
-  // Stage 2: Tiered rate limiting — Phase 1: Per-IP (pre-auth, no DB needed)
+  // Tiered rate limiting — Phase 1: Per-IP
   const tier = getEndpointTier(route, method)
   const ipRateResult = await checkTieredRateLimit(ip, null, tier)
   if (!ipRateResult.allowed) {
     reqCtx.rateLimited = true
     reqCtx.errorCode = 'RATE_LIMITED'
-    return jsonErr(
-      `Rate limit exceeded (${tier.name}). Try again later.`,
-      'RATE_LIMITED',
-      429,
-      { 'Retry-After': String(ipRateResult.retryAfter) }
-    )
+    return jsonErr(`Rate limit exceeded (${tier.name}). Try again later.`, 'RATE_LIMITED', 429, { 'Retry-After': String(ipRateResult.retryAfter) })
   }
 
-  // Stage 2: Payload size check (non-media routes)
+  // Payload size check (non-media routes)
   if (['POST', 'PUT', 'PATCH'].includes(method) && !route.startsWith('/media')) {
     if (!checkPayloadSize(request)) {
       reqCtx.errorCode = 'PAYLOAD_TOO_LARGE'
@@ -121,7 +181,7 @@ async function handleRouteCore(request, { params }, reqCtx) {
     }
   }
 
-  // Stage 2 Recovery: Centralized input sanitization for ALL JSON request bodies
+  // Input sanitization for JSON bodies
   if (['POST', 'PUT', 'PATCH'].includes(method) && !route.startsWith('/media')) {
     const contentType = request.headers.get('content-type')
     if (contentType?.includes('application/json')) {
@@ -137,12 +197,7 @@ async function handleRouteCore(request, { params }, reqCtx) {
           })
         }
       } catch (e) {
-        // Body parsing failure: log and let handler deal with original request
-        logger.warn('HTTP', 'body_parse_failed', {
-          requestId: reqCtx.requestId,
-          route, method,
-          error: e.message,
-        })
+        logger.warn('HTTP', 'body_parse_failed', { requestId: reqCtx.requestId, route, method, error: e.message })
       }
     }
   }
@@ -150,443 +205,70 @@ async function handleRouteCore(request, { params }, reqCtx) {
   try {
     const db = await getDb()
 
-    // Stage 2 Recovery: Per-user rate limiting — Phase 2 (post-DB, real userId)
+    // Per-user rate limiting — Phase 2 (post-DB)
     let authUserId = null
     try {
       const authHeader = request.headers.get('authorization')
       if (authHeader?.startsWith('Bearer ')) {
         const tkn = authHeader.slice(7)
         if (tkn.length > 10) {
-          const sess = await db.collection('sessions').findOne(
-            { token: tkn },
-            { projection: { userId: 1, _id: 0 } }
-          )
+          const sess = await db.collection('sessions').findOne({ token: tkn }, { projection: { userId: 1, _id: 0 } })
           if (sess) {
             authUserId = sess.userId
             reqCtx.userId = sess.userId
-            // Update AsyncLocalStorage context with userId for downstream audit correlation
             const ctx = requestContext.getStore()
             if (ctx) ctx.userId = sess.userId
           }
         }
       }
     } catch (e) {
-      // userId extraction failed: rate limiting falls back to IP-only.
-      // Not a request-breaking error — log and continue.
-      logger.debug('HTTP', 'userid_extraction_failed', {
-        requestId: reqCtx.requestId,
-        error: e.message,
-      })
+      logger.debug('HTTP', 'userid_extraction_failed', { requestId: reqCtx.requestId, error: e.message })
     }
 
-    // Apply per-user rate limit (separate from per-IP, uses userId as key)
     if (authUserId) {
       const userRateResult = await checkTieredRateLimit(null, authUserId, tier)
       if (!userRateResult.allowed) {
         reqCtx.rateLimited = true
         reqCtx.errorCode = 'RATE_LIMITED'
-        return jsonErr(
-          `Rate limit exceeded (${tier.name}). Try again later.`,
-          'RATE_LIMITED',
-          429,
-          { 'Retry-After': String(userRateResult.retryAfter) }
-        )
+        return jsonErr(`Rate limit exceeded (${tier.name}). Try again later.`, 'RATE_LIMITED', 429, { 'Retry-After': String(userRateResult.retryAfter) })
       }
     }
 
-    // ---- READINESS PROBE: public, no auth, checks critical deps ----
+    // Readiness probe
     if (route === '/readyz' && method === 'GET') {
       const readiness = await checkReadiness(db)
-      if (!readiness.ready) {
-        return jsonErr('Service not ready', 'NOT_READY', 503)
-      }
+      if (!readiness.ready) return jsonErr('Service not ready', 'NOT_READY', 503)
       return jsonOk(readiness)
     }
 
-    // ---- API root info ----
+    // API root info
     if (route === '/' && method === 'GET') {
       return jsonOk({
-        name: 'Tribe API',
-        version: '3.0.0',
-        status: 'running',
+        name: 'Tribe API', version: '3.0.0', status: 'running',
         timestamp: new Date().toISOString(),
-        stages: 'Stages 1-9 complete (Appeal, Claims, Distribution, Resources, Events, Notices, Authenticity, Stories)',
+        stages: 'Stages 1-9 complete',
         endpoints: {
-          auth: '/api/auth/*',
-          profile: '/api/me/*',
-          users: '/api/users/*',
-          content: '/api/content/*',
-          feed: '/api/feed/*',
+          auth: '/api/auth/*', profile: '/api/me/*', users: '/api/users/*',
+          content: '/api/content/*', feed: '/api/feed/*',
           social: '/api/follow/*, /api/content/*/like|save|comments',
-          colleges: '/api/colleges/*',
-          collegeClaims: '/api/colleges/:id/claim, /api/admin/college-claims',
-          houses: '/api/houses/*',
-          media: '/api/media/*',
-          search: '/api/search',
-          notifications: '/api/notifications',
-          moderation: '/api/moderation/*',
-          reports: '/api/reports',
-          appeals: '/api/appeals, /api/appeals/:id/decide',
-          grievances: '/api/grievances',
-          legal: '/api/legal/*',
-          admin: '/api/admin/*',
-          resources: '/api/resources, /api/resources/search, /api/resources/:id, /api/resources/:id/vote, /api/resources/:id/download, /api/resources/:id/report, /api/me/resources, /api/admin/resources',
-          events: '/api/events, /api/events/search, /api/events/:id/rsvp',
-          boardNotices: '/api/board/notices, /api/colleges/:id/notices',
-          authenticity: '/api/authenticity/tag, /api/authenticity/tags/:type/:id',
-          distribution: '/api/admin/distribution/*',
-          health: '/api/healthz, /api/readyz, /api/ops/health, /api/ops/metrics, /api/ops/slis',
+          colleges: '/api/colleges/*', media: '/api/media/*',
+          search: '/api/search', notifications: '/api/notifications',
+          health: '/api/healthz, /api/readyz, /api/ops/health, /api/ops/metrics',
         },
       })
     }
 
-    if (route === '/cache/stats' && method === 'GET') {
-      try {
-        const { requireAuth } = await import('@/lib/auth-utils')
-        const user = await requireAuth(request, db)
-        if (!['ADMIN', 'SUPER_ADMIN'].includes(user.role)) {
-          reqCtx.errorCode = 'FORBIDDEN'
-          return jsonErr('Admin access required', 'FORBIDDEN', 403)
-        }
-      } catch (e) {
-        if (e.status) { reqCtx.errorCode = e.code; return jsonErr(e.message, e.code, e.status) }
-        reqCtx.errorCode = 'UNAUTHORIZED'
-        return jsonErr('Authentication required', 'UNAUTHORIZED', 401)
-      }
-      return jsonOk(await cache.getStats())
-    }
+    // Ops endpoints (admin-authed)
+    const opsResult = await handleOpsEndpoints(route, method, request, db, reqCtx)
+    if (opsResult) return opsResult
 
-    if (route === '/moderation/config' && method === 'GET') {
-      try {
-        const { requireAuth } = await import('@/lib/auth-utils')
-        const user = await requireAuth(request, db)
-        if (!['MODERATOR', 'ADMIN', 'SUPER_ADMIN'].includes(user.role)) {
-          reqCtx.errorCode = 'FORBIDDEN'
-          return jsonErr('Moderator access required', 'FORBIDDEN', 403)
-        }
-      } catch (e) {
-        if (e.status) { reqCtx.errorCode = e.code; return jsonErr(e.message, e.code, e.status) }
-        reqCtx.errorCode = 'UNAUTHORIZED'
-        return jsonErr('Authentication required', 'UNAUTHORIZED', 401)
-      }
-      const modResult = await handleModerationRoutes(path, method, request, db)
-      if (modResult) {
-        if (modResult.error) { reqCtx.errorCode = modResult.code; return jsonErr(modResult.error, modResult.code || 'ERROR', modResult.status || 400) }
-        return jsonOk(modResult.data, modResult.status || 200)
-      }
-    }
+    // Special inline endpoints (cache stats, moderation)
+    const inlineResult = await handleInlineEndpoints(route, method, path, request, db, reqCtx)
+    if (inlineResult) return inlineResult
 
-    if (route === '/moderation/check' && method === 'POST') {
-      try {
-        const { requireAuth } = await import('@/lib/auth-utils')
-        const user = await requireAuth(request, db)
-        if (!['MODERATOR', 'ADMIN', 'SUPER_ADMIN'].includes(user.role)) {
-          reqCtx.errorCode = 'FORBIDDEN'
-          return jsonErr('Moderator access required', 'FORBIDDEN', 403)
-        }
-      } catch (e) {
-        if (e.status) { reqCtx.errorCode = e.code; return jsonErr(e.message, e.code, e.status) }
-        reqCtx.errorCode = 'UNAUTHORIZED'
-        return jsonErr('Authentication required', 'UNAUTHORIZED', 401)
-      }
-      const modResult = await handleModerationRoutes(path, method, request, db)
-      if (modResult) {
-        if (modResult.error) { reqCtx.errorCode = modResult.code; return jsonErr(modResult.error, modResult.code || 'ERROR', modResult.status || 400) }
-        return jsonOk(modResult.data, modResult.status || 200)
-      }
-    }
+    // ---- Route dispatch via registry ----
+    const result = await dispatchRoute(path, method, request, db)
 
-    // ======================== OPS ENDPOINTS (admin auth) ========================
-    if (route === '/ops/health' && method === 'GET') {
-      try {
-        const { requireAuth } = await import('@/lib/auth-utils')
-        const user = await requireAuth(request, db)
-        if (!['ADMIN', 'SUPER_ADMIN'].includes(user.role)) {
-          reqCtx.errorCode = 'FORBIDDEN'
-          return jsonErr('Admin access required', 'FORBIDDEN', 403)
-        }
-      } catch (e) {
-        if (e.status) { reqCtx.errorCode = e.code; return jsonErr(e.message, e.code, e.status) }
-        reqCtx.errorCode = 'UNAUTHORIZED'
-        return jsonErr('Authentication required', 'UNAUTHORIZED', 401)
-      }
-      return jsonOk(await checkDeepHealth(db))
-    }
-
-    if (route === '/ops/metrics' && method === 'GET') {
-      try {
-        const { requireAuth } = await import('@/lib/auth-utils')
-        const user = await requireAuth(request, db)
-        if (!['ADMIN', 'SUPER_ADMIN'].includes(user.role)) {
-          reqCtx.errorCode = 'FORBIDDEN'
-          return jsonErr('Admin access required', 'FORBIDDEN', 403)
-        }
-      } catch (e) {
-        if (e.status) { reqCtx.errorCode = e.code; return jsonErr(e.message, e.code, e.status) }
-        reqCtx.errorCode = 'UNAUTHORIZED'
-        return jsonErr('Authentication required', 'UNAUTHORIZED', 401)
-      }
-      const [userCount, postCount, activeSessionCount, reportCount, grievanceCount] = await Promise.all([
-        db.collection('users').countDocuments(),
-        db.collection('content_items').countDocuments(),
-        db.collection('sessions').countDocuments({ expiresAt: { $gt: new Date() } }),
-        db.collection('reports').countDocuments({ status: 'OPEN' }),
-        db.collection('grievance_tickets').countDocuments({ status: 'OPEN' }),
-      ])
-      const cacheStats = await cache.getStats()
-      const observability = metrics.getMetrics()
-      return jsonOk({
-        ...observability,
-        business: {
-          users: userCount,
-          posts: postCount,
-          activeSessions: activeSessionCount,
-          openReports: reportCount,
-          openGrievances: grievanceCount,
-          cache: { hitRate: cacheStats.hitRate, redisStatus: cacheStats.redis.status },
-        },
-      })
-    }
-
-    if (route === '/ops/slis' && method === 'GET') {
-      try {
-        const { requireAuth } = await import('@/lib/auth-utils')
-        const user = await requireAuth(request, db)
-        if (!['ADMIN', 'SUPER_ADMIN'].includes(user.role)) {
-          reqCtx.errorCode = 'FORBIDDEN'
-          return jsonErr('Admin access required', 'FORBIDDEN', 403)
-        }
-      } catch (e) {
-        if (e.status) { reqCtx.errorCode = e.code; return jsonErr(e.message, e.code, e.status) }
-        reqCtx.errorCode = 'UNAUTHORIZED'
-        return jsonErr('Authentication required', 'UNAUTHORIZED', 401)
-      }
-      return jsonOk(metrics.getSLIs())
-    }
-
-    if (route === '/ops/backup-check' && method === 'GET') {
-      try {
-        const { requireAuth: requireAuthFn } = await import('@/lib/auth-utils')
-        const user = await requireAuthFn(request, db)
-        if (!['ADMIN', 'SUPER_ADMIN'].includes(user.role)) {
-          reqCtx.errorCode = 'FORBIDDEN'
-          return jsonErr('Admin access required', 'FORBIDDEN', 403)
-        }
-      } catch (e) {
-        if (e.status) { reqCtx.errorCode = e.code; return jsonErr(e.message, e.code, e.status) }
-        reqCtx.errorCode = 'UNAUTHORIZED'
-        return jsonErr('Authentication required', 'UNAUTHORIZED', 401)
-      }
-      try {
-        const collections = await db.listCollections().toArray()
-        const sizes = await Promise.all(collections.map(async (c) => {
-          const count = await db.collection(c.name).countDocuments()
-          return { name: c.name, docs: count }
-        }))
-        const totalDocs = sizes.reduce((s, c) => s + c.docs, 0)
-        return jsonOk({
-          backupReady: true,
-          collections: sizes.length,
-          totalDocuments: totalDocs,
-          collectionDetails: sizes,
-          backupCommand: 'mongodump --db=your_database_name --out=/backup/$(date +%Y%m%d_%H%M%S)',
-          restoreCommand: 'mongorestore --db=your_database_name /backup/<timestamp>/',
-          timestamp: new Date().toISOString(),
-        })
-      } catch (e) {
-        return jsonErr(`Backup check failed: ${e.message}`, 'INTERNAL', 500)
-      }
-    }
-
-    // ---- Route dispatch ----
-    let result = null
-
-    if (path[0] === 'auth') {
-      result = await handleAuth(path, method, request, db)
-    } else if (path[0] === 'me') {
-      if (path[1] === 'stories' && path[2] === 'archive') {
-        result = await handleStories(path, method, request, db)
-      }
-      else if (path[1] === 'stories' && path[2] === 'insights') {
-        result = await handleStories(path, method, request, db)
-      }
-      else if (path[1] === 'close-friends') {
-        result = await handleStories(path, method, request, db)
-      }
-      else if (path[1] === 'highlights') {
-        result = await handleStories(path, method, request, db)
-      }
-      else if (path[1] === 'story-settings') {
-        result = await handleStories(path, method, request, db)
-      }
-      else if (path[1] === 'story-mutes') {
-        result = await handleStories(path, method, request, db)
-      }
-      else if (path[1] === 'blocks') {
-        result = await handleStories(path, method, request, db)
-      }
-      else if (path[1] === 'reels') {
-        result = await handleReels(path, method, request, db)
-      }
-      else if (path[1] === 'events') {
-        result = await handleEvents(path, method, request, db)
-      }
-      else if (path[1] === 'board') {
-        result = await handleBoardNotices(path, method, request, db)
-      }
-      else if (path[1] === 'tribe') {
-        result = await handleTribes(path, method, request, db)
-      }
-      else if (path[1] === 'college-claims') {
-        result = await handleCollegeClaims(path, method, request, db)
-      }
-      else if (path[1] === 'resources') {
-        result = await handleResources(path, method, request, db)
-      }
-      else if (path[1] === 'pages') {
-        result = await handlePages(path, method, request, db)
-      }
-      // New /me/* routes — follow requests
-      if (!result) {
-        result = await handleFollowRequests(path, method, request, db)
-      }
-      // New /me/* routes go to users handler
-      if (!result) {
-        result = await handleUsers(path, method, request, db)
-      }
-      if (!result) {
-        result = await handleOnboarding(path, method, request, db)
-      }
-    } else if (path[0] === 'content' && path.length <= 2 && (method === 'POST' || method === 'GET' || method === 'DELETE' || method === 'PATCH')) {
-      result = await handleContent(path, method, request, db)
-    } else if (path[0] === 'feed' || path[0] === 'explore' || path[0] === 'trending') {
-      result = await handleFeed(path, method, request, db)
-    } else if (path[0] === 'follow') {
-      // Intercept follows for private accounts
-      result = await interceptFollowForPrivateAccount(path, method, request, db)
-      if (!result) {
-        result = await handleSocial(path, method, request, db)
-      }
-    } else if (path[0] === 'content' && path.length >= 3) {
-      // Phase D: Try content handler first for poll/thread endpoints, then fall back to social
-      result = await handleContent(path, method, request, db)
-      if (!result) {
-        result = await handleSocial(path, method, request, db)
-      }
-    } else if (path[0] === 'stories') {
-      result = await handleStories(path, method, request, db)
-    } else if (path[0] === 'reels') {
-      result = await handleReels(path, method, request, db)
-    } else if (path[0] === 'users') {
-      if (path.length === 3 && path[2] === 'stories') {
-        result = await handleStories(path, method, request, db)
-      }
-      else if (path.length === 3 && path[2] === 'highlights') {
-        result = await handleStories(path, method, request, db)
-      }
-      else if (path[2] === 'reels') {
-        result = await handleReels(path, method, request, db)
-      }
-      else if (path[2] === 'tribe') {
-        result = await handleTribes(path, method, request, db)
-      }
-      if (!result) {
-        result = await handleUsers(path, method, request, db)
-      }
-    } else if (path[0] === 'colleges' || path[0] === 'houses') {
-      if (path[0] === 'colleges' && path.length === 3 && path[2] === 'claim') {
-        result = await handleCollegeClaims(path, method, request, db)
-      }
-      else if (path[0] === 'colleges' && path.length === 3 && path[2] === 'notices') {
-        result = await handleBoardNotices(path, method, request, db)
-      }
-      if (!result) {
-        result = await handleDiscovery(path, method, request, db)
-      }
-    } else if (path[0] === 'media') {
-      startMediaCleanupWorker(db) // Lazy-init cleanup worker
-      startCleanupWorker(db) // Chunked upload + scheduled post cleanup
-      result = await handleMedia(path, method, request, db)
-      if (!result) {
-        result = await handleTranscode(path, method, request, db)
-      }
-    } else if (path[0] === 'search' || path[0] === 'hashtags') {
-      result = await handleSearch(path, method, request, db)
-      if (!result) result = await handleDiscovery(path, method, request, db)
-    } else if (path[0] === 'analytics') {
-      // Analytics uses read replica for heavy read queries
-      const aDb = await getAnalyticsDb()
-      result = await handleAnalytics(path, method, request, aDb)
-    } else if (path[0] === 'transcode') {
-      result = await handleTranscode(path, method, request, db)
-    } else if (path[0] === 'follow-requests') {
-      result = await handleFollowRequests(path, method, request, db)
-    } else if (path[0] === 'quality') {
-      result = await handleQuality(request, db, { method, path })
-    } else if (path[0] === 'recommendations') {
-      result = await handleRecommendations(request, db, { method, path })
-    } else if (path[0] === 'activity') {
-      result = await handleActivity(request, db, { method, path })
-    } else if (path[0] === 'suggestions') {
-      result = await handleSuggestions(request, db, { method, path })
-    } else if (path[0] === 'house-points') {
-      result = { error: 'House points system deprecated. Use tribe salutes via /tribe-contests', code: 'DEPRECATED', status: 410 }
-    } else if (path[0] === 'governance') {
-      result = await handleGovernance(path, method, request, db)
-    } else if (path[0] === 'notifications') {
-      result = await handleNotifications(path, method, request, db)
-    } else if (['reports', 'moderation', 'appeals', 'legal', 'admin', 'grievances'].includes(path[0])) {
-      // ---- ADMIN & MODERATION ROUTES (refactored from if/else chain) ----
-      const adminRouteMap = {
-        'college-claims': handleCollegeClaims,
-        'distribution': handleDistribution,
-        'resources': handleResources,
-        'stories': handleStories,
-        'reels': handleReels,
-        'pages': handlePages,
-        'events': handleEvents,
-        'board-notices': handleBoardNotices,
-        'authenticity': handleAuthenticityTags,
-        'media': handleMediaCleanup,
-        'tribes': handleTribeAdmin,
-        'tribe-seasons': handleTribeAdmin,
-        'tribe-awards': handleTribeAdmin,
-        'tribe-rivalries': handleTribeAdmin,
-        'tribe-contests': handleTribeContestAdmin,
-        'tribe-salutes': handleTribeContestAdmin,
-        'abuse-dashboard': handleAdmin,
-        'abuse-log': handleAdmin,
-      }
-
-      if (path[0] === 'appeals' && path.length === 3 && path[2] === 'decide') {
-        result = await handleAppealDecision(path, method, request, db)
-      } else if (path[0] === 'moderation' && path[1] === 'board-notices') {
-        result = await handleBoardNotices(path, method, request, db)
-      } else if (path[0] === 'admin' && adminRouteMap[path[1]]) {
-        result = await adminRouteMap[path[1]](path, method, request, db)
-      }
-      if (!result) {
-        result = await handleAdmin(path, method, request, db)
-      }
-    } else if (path[0] === 'pages') {
-      result = await handlePages(path, method, request, db)
-    } else if (path[0] === 'resources') {
-      result = await handleResources(path, method, request, db)
-    } else if (path[0] === 'events') {
-      result = await handleEvents(path, method, request, db)
-    } else if (path[0] === 'board') {
-      result = await handleBoardNotices(path, method, request, db)
-    } else if (path[0] === 'authenticity') {
-      result = await handleAuthenticityTags(path, method, request, db)
-    } else if (path[0] === 'tribe-contests') {
-      result = await handleTribeContests(path, method, request, db)
-    } else if (path[0] === 'tribe-rivalries') {
-      result = await handleTribes(path, method, request, db)
-    } else if (path[0] === 'tribes') {
-      result = await handleTribes(path, method, request, db)
-    }
-
-    // ---- Process result ----
     if (result === null) {
       reqCtx.errorCode = 'NOT_FOUND'
       return jsonErr(`Route ${route} [${method}] not found`, 'NOT_FOUND', 404)
@@ -604,7 +286,6 @@ async function handleRouteCore(request, { params }, reqCtx) {
     }
 
     const resp = jsonOk(result.data, result.status || 200)
-    // Apply any custom headers from handler (e.g., TUS headers)
     if (result.headers) {
       for (const [key, value] of Object.entries(result.headers)) {
         resp.headers.set(key, value)
@@ -629,9 +310,7 @@ async function handleRouteCore(request, { params }, reqCtx) {
   }
 }
 
-// ========== OBSERVABILITY WRAPPER (Stage 3B: with AsyncLocalStorage context) ==========
-// Every request flows through here: generates requestId, sets correlation context,
-// measures latency, emits structured access log, records metrics + error codes.
+// ========== OBSERVABILITY WRAPPER ==========
 async function handleRoute(request, context) {
   const requestId = crypto.randomUUID()
   const startTime = Date.now()
@@ -640,13 +319,9 @@ async function handleRoute(request, context) {
   const method = request.method
   const ip = extractIP(request)
 
-  // Request context: populated during lifecycle, read by observability + audit
   const reqCtx = { requestId, userId: null, rateLimited: false, errorCode: null }
-
-  // Correlation context: set in AsyncLocalStorage, auto-read by writeSecurityAudit
   const correlationStore = { requestId, ip, method, route, userId: null }
 
-  // Execute core handler within correlation context
   const response = await requestContext.run(correlationStore, () =>
     handleRouteCore(request, context, reqCtx)
   )
@@ -659,7 +334,7 @@ async function handleRoute(request, context) {
   response.headers.set('x-latency-ms', String(latencyMs))
   applyFreezeHeaders(response, route, method)
 
-  // Cache-Control headers for GET responses (client + CDN caching)
+  // Cache-Control for GET 200s
   if (method === 'GET' && statusCode === 200) {
     if (route.includes('/feed') || route.includes('/reels/feed') || route.includes('/discover')) {
       response.headers.set('Cache-Control', 'public, max-age=10, s-maxage=15, stale-while-revalidate=30')
@@ -674,26 +349,13 @@ async function handleRoute(request, context) {
     }
   }
 
-  // Structured access log (every request)
   logger.info('HTTP', 'request_completed', {
-    requestId,
-    method,
-    route,
-    statusCode,
-    latencyMs,
-    ip,
-    userId: reqCtx.userId,
-    rateLimited: reqCtx.rateLimited,
-    errorCode: reqCtx.errorCode,
+    requestId, method, route, statusCode, latencyMs, ip,
+    userId: reqCtx.userId, rateLimited: reqCtx.rateLimited, errorCode: reqCtx.errorCode,
   })
 
-  // Record metrics
   metrics.recordRequest(route, method, statusCode, latencyMs)
-
-  // Record error code if present (wires metrics.recordError to real data)
-  if (reqCtx.errorCode) {
-    metrics.recordError(reqCtx.errorCode)
-  }
+  if (reqCtx.errorCode) metrics.recordError(reqCtx.errorCode)
 
   return response
 }

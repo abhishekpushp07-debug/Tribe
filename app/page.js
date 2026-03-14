@@ -17,8 +17,9 @@ import {
   Home, Search, PlusSquare, User, Heart, MessageCircle, Bookmark, BookmarkCheck,
   MoreHorizontal, ArrowLeft, Camera, LogOut, Send, GraduationCap, Shield, Users,
   Flag, X, Loader2, ChevronRight, Eye, Globe, UserPlus, MapPin, Building2,
-  ThumbsDown, ImagePlus, Sparkles, TrendingUp, Flame, Crown, Check
+  ThumbsDown, ImagePlus, Sparkles, TrendingUp, Flame, Crown, Check, Film, Upload
 } from 'lucide-react'
+import { Progress } from '@/components/ui/progress'
 
 // ===== HELPERS =====
 function timeAgo(date) {
@@ -596,37 +597,81 @@ function PostCard({ post, currentUser, onUserClick, onLike, onSave, onComment, o
 // ===== COMPOSE DIALOG =====
 function ComposeDialog({ open, onClose, user, onPost }) {
   const [caption, setCaption] = useState('')
-  const [imageData, setImageData] = useState(null)
-  const [imagePreview, setImagePreview] = useState(null)
+  const [file, setFile] = useState(null)
+  const [filePreview, setFilePreview] = useState(null)
+  const [fileType, setFileType] = useState(null) // 'image' | 'video'
   const [loading, setLoading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [uploadPhase, setUploadPhase] = useState('')
   const fileRef = useRef(null)
 
-  function handleImage(e) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    if (file.size > 5 * 1024 * 1024) { alert('Max 5MB'); return }
-    const reader = new FileReader()
-    reader.onload = () => {
-      setImagePreview(reader.result)
-      setImageData({ base64: reader.result.split(',')[1], mimeType: file.type })
+  const CHUNK_THRESHOLD = 5 * 1024 * 1024 // 5MB — above this, use chunked upload
+
+  function handleFile(e) {
+    const f = e.target.files?.[0]
+    if (!f) return
+    const isVideo = f.type.startsWith('video/')
+    const maxSize = isVideo ? 200 * 1024 * 1024 : 50 * 1024 * 1024
+    if (f.size > maxSize) { alert(`Max ${Math.round(maxSize / 1024 / 1024)}MB`); return }
+
+    setFile(f)
+    setFileType(isVideo ? 'video' : 'image')
+
+    if (isVideo) {
+      setFilePreview(URL.createObjectURL(f))
+    } else {
+      const reader = new FileReader()
+      reader.onload = () => setFilePreview(reader.result)
+      reader.readAsDataURL(f)
     }
-    reader.readAsDataURL(file)
+  }
+
+  function clearFile() {
+    if (filePreview && fileType === 'video') URL.revokeObjectURL(filePreview)
+    setFile(null)
+    setFilePreview(null)
+    setFileType(null)
+    setUploadProgress(0)
+    setUploadPhase('')
   }
 
   async function handlePost() {
-    if (!caption.trim() && !imageData) return
+    if (!caption.trim() && !file) return
     setLoading(true)
+    setUploadProgress(0)
+    setUploadPhase('')
+
     try {
       let mediaIds = []
-      if (imageData) {
-        const media = await api.uploadMedia(imageData.base64, imageData.mimeType)
-        mediaIds = [media.id]
+
+      if (file) {
+        if (file.size > CHUNK_THRESHOLD) {
+          // Chunked upload for large files
+          const result = await api.uploadChunked(file, (pct, phase) => {
+            setUploadProgress(pct)
+            setUploadPhase(phase)
+          })
+          mediaIds = [result.id]
+        } else {
+          // Base64 upload for small files
+          setUploadPhase('Uploading...')
+          setUploadProgress(30)
+          const base64 = await new Promise((resolve) => {
+            const reader = new FileReader()
+            reader.onload = () => resolve(reader.result.split(',')[1])
+            reader.readAsDataURL(file)
+          })
+          setUploadProgress(60)
+          const media = await api.uploadMedia(base64, file.type, fileType === 'video' ? 'VIDEO' : 'IMAGE')
+          mediaIds = [media.id]
+          setUploadProgress(100)
+        }
       }
+
       const data = await api.createPost({ caption: caption.trim(), mediaIds })
       onPost(data.post)
       setCaption('')
-      setImageData(null)
-      setImagePreview(null)
+      clearFile()
       onClose()
     } catch (err) {
       alert(err.message)
@@ -634,9 +679,12 @@ function ComposeDialog({ open, onClose, user, onPost }) {
     setLoading(false)
   }
 
+  const fileSizeMB = file ? (file.size / (1024 * 1024)).toFixed(1) : 0
+  const isChunked = file && file.size > CHUNK_THRESHOLD
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg bg-card border-border/50 p-0">
+      <DialogContent className="sm:max-w-lg bg-card border-border/50 p-0" data-testid="compose-dialog">
         <DialogHeader className="p-4 pb-0">
           <DialogTitle className="text-center font-semibold">Create Post</DialogTitle>
         </DialogHeader>
@@ -654,27 +702,63 @@ function ComposeDialog({ open, onClose, user, onPost }) {
               onChange={e => setCaption(e.target.value)}
               className="min-h-[100px] bg-transparent border-none resize-none focus-visible:ring-0 text-sm"
               maxLength={2200}
+              data-testid="compose-caption"
             />
           </div>
 
-          {imagePreview && (
-            <div className="relative rounded-lg overflow-hidden">
-              <img src={imagePreview} alt="Preview" className="w-full max-h-80 object-cover rounded-lg" />
+          {/* Media Preview */}
+          {filePreview && (
+            <div className="relative rounded-lg overflow-hidden" data-testid="media-preview">
+              {fileType === 'video' ? (
+                <video
+                  src={filePreview}
+                  className="w-full max-h-80 object-cover rounded-lg bg-black"
+                  controls
+                  muted
+                />
+              ) : (
+                <img src={filePreview} alt="Preview" className="w-full max-h-80 object-cover rounded-lg" />
+              )}
               <button
-                onClick={() => { setImageData(null); setImagePreview(null) }}
-                className="absolute top-2 right-2 bg-black/60 rounded-full p-1"
+                onClick={clearFile}
+                className="absolute top-2 right-2 bg-black/60 rounded-full p-1 hover:bg-black/80 transition-colors"
+                data-testid="clear-media-btn"
               >
-                <X className="w-4 h-4" />
+                <X className="w-4 h-4 text-white" />
               </button>
+              {/* File info badge */}
+              <div className="absolute bottom-2 left-2 flex gap-1.5">
+                <Badge className="bg-black/60 text-white border-none text-[10px]">
+                  {fileType === 'video' ? <Film className="w-3 h-3 mr-1" /> : <ImagePlus className="w-3 h-3 mr-1" />}
+                  {fileSizeMB}MB
+                </Badge>
+                {isChunked && (
+                  <Badge className="bg-violet-600/80 text-white border-none text-[10px]">
+                    <Upload className="w-3 h-3 mr-1" />Chunked
+                  </Badge>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Upload Progress Bar */}
+          {loading && file && (
+            <div className="space-y-2" data-testid="upload-progress">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">{uploadPhase}</span>
+                <span className="text-xs font-medium text-violet-400">{uploadProgress}%</span>
+              </div>
+              <Progress value={uploadProgress} className="h-2" />
             </div>
           )}
 
           <div className="flex items-center justify-between">
             <div className="flex gap-2">
-              <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleImage} />
+              <input ref={fileRef} type="file" accept="image/*,video/*" className="hidden" onChange={handleFile} />
               {user?.ageStatus === 'ADULT' && (
-                <Button variant="ghost" size="sm" onClick={() => fileRef.current?.click()}>
-                  <ImagePlus className="w-5 h-5 text-violet-400" />
+                <Button variant="ghost" size="sm" onClick={() => fileRef.current?.click()} disabled={loading} data-testid="add-media-btn">
+                  <ImagePlus className="w-5 h-5 text-violet-400 mr-1" />
+                  <span className="text-xs text-muted-foreground">Photo/Video</span>
                 </Button>
               )}
             </div>
@@ -682,9 +766,10 @@ function ComposeDialog({ open, onClose, user, onPost }) {
               <span className="text-xs text-muted-foreground">{caption.length}/2200</span>
               <Button
                 onClick={handlePost}
-                disabled={loading || (!caption.trim() && !imageData)}
+                disabled={loading || (!caption.trim() && !file)}
                 className="gradient-bg hover:opacity-90 text-white px-6"
                 size="sm"
+                data-testid="share-post-btn"
               >
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Share'}
               </Button>
