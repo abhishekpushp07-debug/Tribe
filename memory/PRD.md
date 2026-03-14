@@ -127,10 +127,14 @@ Build the world's best social media application for Indian college students.
   - 26+ event types: post.liked, post.commented, follow.new, tribe.cheer, contest.resolved, etc.
   - Push events wired into social handler (likes, comments, follows)
   - 15s heartbeat, auto-reconnect, resumable via Last-Event-ID
-- **Route.js Refactoring (Mar 2026)**:
-  - Admin route block refactored from 50+ line if/else chain to map-based lookup
-  - Created route-registry.js for documentation and future migration
-  - Total route.js reduced while maintaining full backward compatibility
+- **World-Class Performance Optimization (Mar 2026)**:
+  - **MongoDB Indexes**: Added 20+ new compound indexes for rivalries, chunked uploads, feed visibility queries, content salutes
+  - **Redis Caching**: Added cache layers to tribe detail (60s TTL), contest list (30s), rivalry list (15s), feed filtering; warm queries now serve in 2-9ms
+  - **Projections**: All user enrichment queries now fetch only essential fields (id, displayName, username, avatar, role, tribeId) — no more leaking full user objects
+  - **Cache-Control Headers**: Automated per-route CDN caching: feeds (10s), tribes/contests (30s), media (1hr immutable), search (15s)
+  - **x-latency-ms Header**: Every response now includes server-side processing time
+  - **Batch Lookups**: Replaced N+1 queries with $in batch lookups for user enrichment, season enrichment, tribe enrichment
+  - **Route Refactoring**: Admin block reduced from 50+ if/else to map-based lookup
 
 ## Backlog
 - Frontend UI development
