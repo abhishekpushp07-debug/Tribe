@@ -12,7 +12,7 @@ import requests
 import time
 import random
 
-BASE_URL = "https://upload-overhaul.preview.emergentagent.com/api"
+BASE_URL = "https://latency-crusher.preview.emergentagent.com/api"
 
 # ======================== HELPERS ========================
 

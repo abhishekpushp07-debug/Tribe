@@ -12,7 +12,7 @@ import sys
 from typing import Dict, Any, Optional, List, Tuple
 
 # Test Configuration
-EXTERNAL_URL = "https://upload-overhaul.preview.emergentagent.com"
+EXTERNAL_URL = "https://latency-crusher.preview.emergentagent.com"
 INTERNAL_URL = "http://localhost:3000"
 TEST_USER1 = {"phone": "7777099001", "pin": "1234"}
 TEST_USER2 = {"phone": "7777099002", "pin": "1234"}

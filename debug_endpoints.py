@@ -7,7 +7,7 @@ import requests
 import json
 
 # Base configuration
-BASE_URL = "https://upload-overhaul.preview.emergentagent.com"
+BASE_URL = "https://latency-crusher.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api"
 
 # Test credentials

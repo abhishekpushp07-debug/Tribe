@@ -17,7 +17,7 @@
 
 set -e
 
-API="${1:-https://upload-overhaul.preview.emergentagent.com}"
+API="${1:-https://latency-crusher.preview.emergentagent.com}"
 PASS=0
 FAIL=0
 TOTAL=0

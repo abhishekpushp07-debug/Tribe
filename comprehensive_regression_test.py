@@ -3,7 +3,7 @@
 Comprehensive Regression Test Suite for Tribe Social Platform
 Focuses on recently changed/added features including Redis caching, metrics, health endpoints, and core functionality.
 
-Base URL: https://upload-overhaul.preview.emergentagent.com
+Base URL: https://latency-crusher.preview.emergentagent.com
 Test users: 7777099001 and 7777099002 with PIN 1234
 """
 
@@ -13,7 +13,7 @@ import time
 import uuid
 from typing import Dict, Any, Optional
 
-BASE_URL = "https://upload-overhaul.preview.emergentagent.com/api"
+BASE_URL = "https://latency-crusher.preview.emergentagent.com/api"
 
 class RegressionTester:
     def __init__(self):

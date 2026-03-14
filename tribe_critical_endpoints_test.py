@@ -24,7 +24,7 @@ import base64
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Any
 
-BASE_URL = "https://upload-overhaul.preview.emergentagent.com"
+BASE_URL = "https://latency-crusher.preview.emergentagent.com"
 API_URL = f"{BASE_URL}/api"
 
 @dataclass

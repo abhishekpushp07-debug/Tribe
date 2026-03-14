@@ -5,9 +5,9 @@
 
 ## 🔗 Backend URL (Production)
 ```
-https://upload-overhaul.preview.emergentagent.com
+https://latency-crusher.preview.emergentagent.com
 ```
-All API calls: `https://upload-overhaul.preview.emergentagent.com/api/*`
+All API calls: `https://latency-crusher.preview.emergentagent.com/api/*`
 
 ### Quick Health Check
 ```
@@ -95,7 +95,7 @@ Content-Type: application/json
 
 ### 1. Set Base URL
 ```javascript
-const API_BASE = 'https://upload-overhaul.preview.emergentagent.com/api';
+const API_BASE = 'https://latency-crusher.preview.emergentagent.com/api';
 ```
 
 ### 2. Register & Login

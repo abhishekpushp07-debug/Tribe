@@ -1,7 +1,7 @@
 # Tribe Backend — Proof-Based Acceptance Report
 
 **Date**: 2026-03-07
-**API URL**: https://upload-overhaul.preview.emergentagent.com
+**API URL**: https://latency-crusher.preview.emergentagent.com
 
 ---
 

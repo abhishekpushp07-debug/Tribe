@@ -9,7 +9,7 @@ This test suite validates:
 3. Cache functionality
 4. Error handling
 
-Base URL: https://upload-overhaul.preview.emergentagent.com
+Base URL: https://latency-crusher.preview.emergentagent.com
 """
 
 import requests
@@ -820,7 +820,7 @@ def main():
     if len(sys.argv) > 1:
         base_url = sys.argv[1]
     else:
-        base_url = "https://upload-overhaul.preview.emergentagent.com"
+        base_url = "https://latency-crusher.preview.emergentagent.com"
     
     print(f"Using base URL: {base_url}")
     

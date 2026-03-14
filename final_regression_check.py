@@ -7,7 +7,7 @@ Tests all routes mentioned in the review request specification
 import requests
 import json
 
-API_BASE = "https://upload-overhaul.preview.emergentagent.com"
+API_BASE = "https://latency-crusher.preview.emergentagent.com"
 
 def get_auth_token():
     """Get auth token for testing"""

@@ -1,7 +1,7 @@
 {
   "test_suite": "Comprehensive Regression Test",
   "timestamp": "2026-03-14 04:37:47",
-  "base_url": "https://upload-overhaul.preview.emergentagent.com/api",
+  "base_url": "https://latency-crusher.preview.emergentagent.com/api",
   "summary": {
     "total_tests": 27,
     "passed": 26,

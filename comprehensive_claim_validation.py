@@ -8,7 +8,7 @@ import requests
 import json
 import time
 
-BASE_URL = "https://upload-overhaul.preview.emergentagent.com/api"
+BASE_URL = "https://latency-crusher.preview.emergentagent.com/api"
 
 class ComprehensiveClaimValidation:
     def __init__(self):

@@ -16,7 +16,7 @@ Testing ALL endpoints for:
 
 Total: 67 endpoints + WebSocket testing
 
-Base URL: https://upload-overhaul.preview.emergentagent.com
+Base URL: https://latency-crusher.preview.emergentagent.com
 Auth: phone 7777099001, pin 1234 → token1 (ADMIN)
       phone 7777099002, pin 1234 → token2
 """
@@ -29,7 +29,7 @@ import requests
 from typing import Dict, List, Optional, Any
 
 # Configuration
-BASE_URL = "https://upload-overhaul.preview.emergentagent.com/api"
+BASE_URL = "https://latency-crusher.preview.emergentagent.com/api"
 WS_URL = "ws://localhost:3001"  # WebSocket endpoint
 
 # Test state

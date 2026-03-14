@@ -1,8 +1,8 @@
 # ============================================================================
 # TRIBE — COMPLETE FRONTEND HANDOFF PACKAGE
 # ============================================================================
-# Backend URL: https://upload-overhaul.preview.emergentagent.com
-# All APIs:    https://upload-overhaul.preview.emergentagent.com/api/*
+# Backend URL: https://latency-crusher.preview.emergentagent.com
+# All APIs:    https://latency-crusher.preview.emergentagent.com/api/*
 # Health:      GET /api/healthz → {"status":"ok"}
 # Auth:        Phone/PIN → Bearer token
 # Last Updated: 2026-03-11

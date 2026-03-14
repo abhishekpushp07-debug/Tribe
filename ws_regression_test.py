@@ -16,7 +16,7 @@ from datetime import datetime
 import uuid
 
 # Test Configuration
-API_BASE = "https://upload-overhaul.preview.emergentagent.com"
+API_BASE = "https://latency-crusher.preview.emergentagent.com"
 WS_URL = "ws://localhost:3001"
 TEST_USER1 = {"phone": "7777099001", "pin": "1234"}
 TEST_USER2 = {"phone": "7777099002", "pin": "1234"}
